@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Work_Sans } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
+import { AppProviders } from "@/components/providers/AppProviders";
 
 const workSans = Work_Sans({
   variable: "--font-work-sans",
@@ -23,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${workSans.variable} h-full antialiased`}>
       <body className="min-h-full bg-gray-100 text-white">
-        <AppShell>{children}</AppShell>
+        <AppProviders>
+          <AppShell>{children}</AppShell>
+        </AppProviders>
       </body>
     </html>
   );

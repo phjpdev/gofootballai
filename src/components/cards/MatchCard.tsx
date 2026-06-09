@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Clock, FileText } from "lucide-react";
 
 type MatchCardProps = {
@@ -8,6 +9,7 @@ type MatchCardProps = {
   movements: number;
   completion: number;
   imageSrc?: string;
+  href?: string;
 };
 
 export function MatchCard({
@@ -17,9 +19,10 @@ export function MatchCard({
   movements,
   completion,
   imageSrc = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&h=200&fit=crop",
+  href,
 }: MatchCardProps) {
-  return (
-    <div className="w-full rounded-[32px] bg-gray-90 p-3">
+  const content = (
+    <div className="w-full rounded-[32px] bg-gray-90 p-3 transition-colors hover:bg-gray-80">
       <div className="flex items-center gap-3">
         <div className="relative size-20 shrink-0 overflow-hidden rounded-[21px] bg-white">
           <Image
@@ -50,7 +53,7 @@ export function MatchCard({
             <div className="flex items-center gap-1">
               <FileText className="size-4 text-gray-40" strokeWidth={2} />
               <span className="text-sm font-medium tracking-[-0.028px] text-white">
-                Movement {movements}
+                Events {movements}
               </span>
             </div>
             <span className="size-1 rounded-full bg-gray-70" />
@@ -65,4 +68,10 @@ export function MatchCard({
       </div>
     </div>
   );
+
+  if (href) {
+    return <Link href={href}>{content}</Link>;
+  }
+
+  return content;
 }

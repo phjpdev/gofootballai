@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight, Clock, Flame } from "lucide-react";
 
 type FeaturedMatchCardProps = {
@@ -57,13 +58,13 @@ export function FeaturedMatchCard({
               </div>
             </div>
           </div>
-          <a
+          <Link
             href={href}
             aria-label={`View ${title}`}
             className="flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-orange-50 shadow-[0_0_0_4px_rgba(249,115,22,0.25)]"
           >
             <ArrowRight className="size-6 text-white" strokeWidth={2.5} />
-          </a>
+          </Link>
         </div>
       </div>
     </div>

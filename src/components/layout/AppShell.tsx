@@ -2,25 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BarChart3,
-  Calendar,
-  CheckCircle2,
-  Home,
-  TrendingUp,
-} from "lucide-react";
+import { BarChart3, FolderOpen, Home, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Fixtures", icon: Home },
-  { href: "/performance", label: "Performance", icon: TrendingUp },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/match-complete", label: "Complete", icon: CheckCircle2 },
+  { href: "/", label: "Home", icon: Home },
+  { href: "/analysis", label: "Analysis", icon: BarChart3 },
+  { href: "/records", label: "Records", icon: FolderOpen },
+  { href: "/member", label: "Member", icon: Users },
 ];
+
+function isNavActive(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname.startsWith(href);
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isFullScreen = pathname === "/match-complete";
 
   return (
     <div className="flex min-h-screen">
@@ -28,7 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="hidden border-b border-gray-90 px-6 py-6 lg:block">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex size-10 items-center justify-center rounded-xl bg-orange-50">
-              <Calendar className="size-5 text-white" />
+              <Home className="size-5 text-white" />
             </div>
             <div>
               <p className="text-lg font-bold tracking-[-0.1px]">GoFootball</p>
@@ -39,7 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <nav className="flex items-center justify-around px-2 py-2 lg:flex-1 lg:flex-col lg:items-stretch lg:gap-1 lg:p-4">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href;
+            const isActive = isNavActive(pathname, href);
             return (
               <Link
                 key={href}
@@ -61,19 +59,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
 
-      <main
-        className={cn(
-          "flex-1 pb-20 lg:ml-64 lg:pb-0",
-          isFullScreen && "pb-0 lg:ml-0",
-        )}
-      >
-        {isFullScreen ? (
-          children
-        ) : (
-          <div className="mx-auto w-full max-w-[375px] px-4 py-6 lg:max-w-6xl lg:px-8 lg:py-10">
-            {children}
-          </div>
-        )}
+      <main className="flex-1 pb-20 lg:ml-64 lg:pb-0">
+        <div className="mx-auto w-full max-w-[375px] px-4 py-6 lg:max-w-6xl lg:px-8 lg:py-10">
+          {children}
+        </div>
       </main>
     </div>
   );
