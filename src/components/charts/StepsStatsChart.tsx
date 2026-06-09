@@ -1,116 +1,209 @@
 "use client";
 
 import { TabGroup } from "@/components/ui/TabGroup";
+import { figmaAsset } from "@/lib/figma-assets";
 
-const Y_LABELS = ["1,000", "900", "800", "700", "600", "500"];
-const X_LABELS = ["11:00", "12:00", "13:00", "14:00", "15:00"];
+const GRID_LINE_TOP = figmaAsset("69924f3849c5c8526ac00831c57ba0941f64a0c9");
+const GRID_LINE = figmaAsset("ebe324ca7d3b816a4e52b79cbfcc80a40a655666");
+
+const Y_LABELS = ["1,000", "900", "800", "700", "600", "500"] as const;
+const X_LABELS = ["11:00", "12:00", "13:00", "14:00", "15:00"] as const;
+
+function ChartGridLine({
+  label,
+  lineSrc,
+}: {
+  label: string;
+  lineSrc: string;
+}) {
+  return (
+    <div className="flex w-full items-center gap-1">
+      <p className="shrink-0 text-[10px] font-medium leading-none tracking-[-0.01px] text-[#676c75] whitespace-nowrap">
+        {label}
+      </p>
+      <div className="relative min-w-0 flex-1">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img alt="" src={lineSrc} className="block h-px w-full max-w-none" />
+      </div>
+    </div>
+  );
+}
 
 export function StepsStatsChart() {
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-[30px] font-bold leading-[38px] tracking-[-0.3px] text-white">
-        Steps Stats
-      </h2>
-      <div className="w-full rounded-[32px] bg-gray-90 p-4">
+    <section className="flex w-full flex-col gap-2">
+      <div className="flex h-6 w-full items-center justify-between">
+        <p className="text-base font-bold leading-none tracking-[-0.048px] text-white">
+          Steps Stats
+        </p>
+        <button
+          type="button"
+          className="text-sm font-medium leading-none tracking-[-0.028px] text-[#f97316]"
+        >
+          See All
+        </button>
+      </div>
+
+      <div className="w-full rounded-[32px] bg-[#24262b] p-4">
         <div className="flex flex-col gap-4">
           <TabGroup variant="darker" />
 
-          <div className="relative h-[218px] w-full">
-            <div className="absolute inset-0 flex flex-col justify-between pb-5">
-              {Y_LABELS.map((label) => (
-                <div key={label} className="flex w-full items-center gap-1">
-                  <span className="text-[10px] font-medium tracking-[-0.01px] text-gray-60 whitespace-nowrap">
-                    {label}
-                  </span>
-                  <div className="h-px flex-1 bg-gray-80" />
-                </div>
-              ))}
-            </div>
-
-            <svg
-              className="absolute left-[23px] top-4 h-[174px] w-[calc(100%-23px)]"
-              viewBox="0 0 288 174"
-              preserveAspectRatio="none"
-              fill="none"
-            >
-              <defs>
-                <linearGradient id="stepsBlueGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2563EB" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#2563EB" stopOpacity="0" />
-                </linearGradient>
-                <linearGradient id="stepsOrangeGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#F97316" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#F97316" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M0 120 C30 100, 60 80, 100 90 C140 100, 180 60, 220 70 C250 78, 270 50, 288 40 L288 174 L0 174 Z"
-                fill="url(#stepsOrangeGrad)"
-              />
-              <path
-                d="M0 120 C30 100, 60 80, 100 90 C140 100, 180 60, 220 70 C250 78, 270 50, 288 40"
-                stroke="#F97316"
-                strokeWidth="2"
-                fill="none"
-              />
-              <path
-                d="M0 140 C30 130, 60 110, 100 100 C140 90, 180 80, 220 60 C250 45, 270 35, 288 25 L288 174 L0 174 Z"
-                fill="url(#stepsBlueGrad)"
-              />
-              <path
-                d="M0 140 C30 130, 60 110, 100 100 C140 90, 180 80, 220 60 C250 45, 270 35, 288 25"
-                stroke="#2563EB"
-                strokeWidth="2"
-                fill="none"
-              />
-              <line
-                x1="168"
-                y1="16"
-                x2="168"
-                y2="136"
-                stroke="#676C75"
-                strokeWidth="1"
-                strokeDasharray="4 4"
-              />
-            </svg>
-
-            <div className="absolute left-[54%] top-[21px] flex flex-col items-center">
-              <div className="rounded-[11px] bg-orange-50 px-3 py-2">
-                <span className="text-xs font-bold tracking-[-0.018px] text-white">
-                  825
-                </span>
+          <div className="relative h-[218px] w-full max-w-[311px]">
+            <div className="absolute inset-0 flex flex-col items-end justify-center gap-2">
+              <div className="flex h-[196px] w-full flex-col justify-between">
+                {Y_LABELS.map((label, i) => (
+                  <ChartGridLine
+                    key={label}
+                    label={label}
+                    lineSrc={i === 0 ? GRID_LINE_TOP : GRID_LINE}
+                  />
+                ))}
               </div>
-              <div className="size-0 border-x-[7px] border-t-[7px] border-x-transparent border-t-orange-50" />
+              <div className="flex w-[292px] items-start justify-between text-[10px] font-medium leading-none tracking-[-0.01px] text-[#676c75]">
+                {X_LABELS.map((label) => (
+                  <span key={label}>{label}</span>
+                ))}
+              </div>
             </div>
 
-            <div className="absolute bottom-0 left-[19px] flex w-[calc(100%-19px)] justify-between text-[10px] font-medium tracking-[-0.01px] text-gray-60">
-              {X_LABELS.map((label) => (
-                <span key={label}>{label}</span>
-              ))}
+            <div className="absolute left-[191px] top-[70px] h-[120px] w-0">
+              <div className="absolute inset-[0_-1px]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt=""
+                  src={figmaAsset("da318f84135a96d5c2865bdc7751c26f6e517d8b")}
+                  className="block size-full max-w-none"
+                />
+              </div>
+            </div>
+
+            <div className="absolute left-[23px] top-4 flex h-[165px] w-[288px] items-center justify-center">
+              <div className="-scale-y-100 rotate-180">
+                <div className="relative h-[165px] w-[288px]">
+                  <div className="absolute inset-[-3.64%_-3.27%_-8.13%_-2.78%]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      alt=""
+                      src={figmaAsset(
+                        "530e876853f9a63b85ec53e002fbf90446ea8de6",
+                      )}
+                      className="block size-full max-w-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute left-[23px] top-4 flex h-[173.5px] w-[288px] items-center justify-center">
+              <div className="-scale-y-100 rotate-180">
+                <div className="relative h-[173.5px] w-[288px]">
+                  <div className="absolute inset-[-2.31%_-2.78%_-6.92%_-2.78%]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      alt=""
+                      src={figmaAsset(
+                        "c203a26e206115110a3b5ecaca4db1e24042156e",
+                      )}
+                      className="block size-full max-w-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute left-[183px] top-[62px] size-4">
+              <div className="absolute inset-[-20.63%]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt=""
+                  src={figmaAsset("425be8b5c8efc5d3cd677263d83d829224a627a8")}
+                  className="block size-full max-w-none"
+                />
+              </div>
+            </div>
+
+            <div className="absolute left-[23px] top-[66px] h-[84px] w-[288px]">
+              <div className="absolute inset-[-7.14%_-2.78%_-16.67%_-2.78%]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt=""
+                  src={figmaAsset("09cfe02c2b78130de186ee0e9e8157d441c70b34")}
+                  className="block size-full max-w-none"
+                />
+              </div>
+            </div>
+
+            <div className="absolute left-[23px] top-[66px] h-[124px] w-[288px]">
+              <div className="absolute inset-[-3.23%_-2.78%_-9.68%_-2.78%]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt=""
+                  src={figmaAsset("76c2242ce4dbf6b074d62460a3f2bf76a00d08cc")}
+                  className="block size-full max-w-none"
+                />
+              </div>
+            </div>
+
+            <div className="absolute left-[168px] top-[21px] flex flex-col items-center">
+              <div className="rounded-[11px] bg-[#f97316] px-3 py-2">
+                <p className="text-center text-xs font-bold leading-none tracking-[-0.018px] text-white">
+                  825
+                </p>
+              </div>
+              <div className="relative h-[7px] w-[14px]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt=""
+                  src={figmaAsset("31e0e304ac8dc63022efce89126c3bb04eb8625a")}
+                  className="absolute inset-0 block size-full max-w-none"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex w-full items-center justify-between">
             <div className="flex items-end">
-              <span className="text-[36px] font-bold leading-[44px] tracking-[-0.432px] text-white">
+              <p className="text-[36px] font-bold leading-[44px] tracking-[-0.432px] text-white">
                 1,187
-              </span>
-              <span className="mb-1 ml-0 text-lg font-medium tracking-[-0.072px] text-gray-40">
+              </p>
+              <p className="h-[27px] w-11 text-lg font-medium leading-none tracking-[-0.072px] text-[#9ea0a5]">
                 Total
-              </span>
+              </p>
             </div>
-            <div className="flex gap-6">
+            <div className="flex items-start gap-6">
               <div className="flex items-center gap-1">
-                <span className="size-2 rounded-full bg-orange-50" />
-                <span className="text-xs font-medium tracking-[-0.018px] text-white">
+                <div className="relative size-2">
+                  <div className="absolute inset-[4.67%]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      alt=""
+                      src={figmaAsset(
+                        "39615eb904dd4db3a2486beaa57b925109643493",
+                      )}
+                      className="block size-full max-w-none"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs font-medium leading-none tracking-[-0.018px] text-white">
                   Current
-                </span>
+                </p>
               </div>
               <div className="flex items-center gap-1">
-                <span className="size-2 rounded-full bg-blue-60" />
-                <span className="text-xs font-medium tracking-[-0.018px] text-white">
+                <div className="relative size-2">
+                  <div className="absolute inset-[4.67%]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      alt=""
+                      src={figmaAsset(
+                        "1388bb961e978911ff4e719b8820cdd34856878f",
+                      )}
+                      className="block size-full max-w-none"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs font-medium leading-none tracking-[-0.018px] text-white">
                   Previous
-                </span>
+                </p>
               </div>
             </div>
           </div>
