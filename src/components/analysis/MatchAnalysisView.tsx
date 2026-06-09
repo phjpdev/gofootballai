@@ -38,7 +38,7 @@ export function MatchAnalysisView({ match }: MatchAnalysisViewProps) {
       </div>
 
       {/* Figma 22455:83934 — Score Breakdown (radar + 61 + legend) */}
-      <ScoreBreakdown score={61} />
+      <ScoreBreakdown />
 
       {/* Figma 22467:87017 — Athletic level slider */}
       <AthleticSlider />
