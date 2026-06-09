@@ -1,65 +1,91 @@
-import Image from "next/image";
+import { TopNav } from "@/components/layout/TopNav";
+import { DatePicker } from "@/components/layout/DatePicker";
+import { SubNav } from "@/components/layout/SubNav";
+import { FeaturedMatchCard } from "@/components/cards/FeaturedMatchCard";
+import { MatchCard } from "@/components/cards/MatchCard";
 
-export default function Home() {
+const FIXTURE_DATES = [
+  { day: "Sat", date: 7, hasEvent: true },
+  { day: "Sun", date: 8, hasEvent: true },
+  { day: "Mon", date: 9, hasEvent: true },
+  { day: "Tue", date: 10, hasEvent: true },
+  { day: "Wed", date: 11, hasEvent: true },
+  { day: "Thu", date: 12, hasEvent: true },
+];
+
+const FEATURED_IMAGE = "/images/featured-strength.png";
+
+const FEATURED_MATCHES = [
+  {
+    title: "Arnold's Pushups",
+    tag: "Upper Body",
+    duration: "50min",
+    stat: "215kcal",
+    imageSrc: FEATURED_IMAGE,
+  },
+  {
+    title: "Arnold's Pushups",
+    tag: "Upper Body",
+    duration: "50min",
+    stat: "215kcal",
+    imageSrc: FEATURED_IMAGE,
+  },
+];
+
+const OVERVIEW_MATCHES = [
+  {
+    title: "Zen Flow Yoga",
+    tag: "Yoga",
+    progress: 75,
+    movements: 4,
+    completion: 87,
+    imageSrc:
+      "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=200&h=200&fit=crop",
+  },
+  {
+    title: "HIIT Cardio Blast",
+    tag: "Cardio",
+    progress: 60,
+    movements: 6,
+    completion: 72,
+    imageSrc:
+      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&h=200&fit=crop",
+  },
+  {
+    title: "Power Lifting",
+    tag: "Strength",
+    progress: 45,
+    movements: 5,
+    completion: 55,
+    imageSrc:
+      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200&h=200&fit=crop",
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-col gap-8">
+      <header className="flex flex-col gap-8">
+        <TopNav title="Fixtures" />
+        <DatePicker dates={FIXTURE_DATES} selectedIndex={2} />
+      </header>
+
+      {/* Figma 216:47092 — Sub Nav + horizontal featured cards */}
+      <section className="flex flex-col gap-2">
+        <SubNav title="Strength" count={32} />
+        <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
+          {FEATURED_MATCHES.map((match) => (
+            <FeaturedMatchCard key={match.title} {...match} />
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
+
+      {/* Figma 216:47117 — compact workout overview list */}
+      <section className="flex flex-col gap-3">
+        {OVERVIEW_MATCHES.map((match) => (
+          <MatchCard key={match.title} {...match} />
+        ))}
+      </section>
     </div>
   );
 }
