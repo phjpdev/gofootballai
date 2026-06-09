@@ -4,7 +4,9 @@ import { useState } from "react";
 import { TopNav } from "@/components/layout/TopNav";
 import { DatePicker } from "@/components/layout/DatePicker";
 import { SubNav } from "@/components/layout/SubNav";
+import { FeaturedMatchCard } from "@/components/cards/FeaturedMatchCard";
 import { MatchCard } from "@/components/cards/MatchCard";
+import { FEATURED_COUNT, FEATURED_ITEMS } from "@/lib/data/featured";
 import { MATCH_DATES, getMatchesByDateIndex } from "@/lib/data/matches";
 
 export default function AnalysisPage() {
@@ -21,6 +23,15 @@ export default function AnalysisPage() {
           onSelect={setSelectedDate}
         />
       </header>
+
+      <section className="flex flex-col gap-2">
+        <SubNav title="Featured" count={FEATURED_COUNT} />
+        <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
+          {FEATURED_ITEMS.map((item) => (
+            <FeaturedMatchCard key={item.id} {...item} />
+          ))}
+        </div>
+      </section>
 
       <section className="flex flex-col gap-4">
         <SubNav title="Matches" count={matches.length} />

@@ -3,29 +3,7 @@ import { SystemIntro } from "@/components/home/SystemIntro";
 import { PostFeed } from "@/components/home/PostFeed";
 import { SubNav } from "@/components/layout/SubNav";
 import { FeaturedMatchCard } from "@/components/cards/FeaturedMatchCard";
-
-const FEATURED_IMAGE = "/images/featured-strength.png";
-
-const FEATURED_MATCHES = [
-  {
-    id: "featured-1",
-    title: "Arnold's Pushups",
-    tag: "Upper Body",
-    duration: "50min",
-    stat: "215kcal",
-    imageSrc: FEATURED_IMAGE,
-    href: "/analysis",
-  },
-  {
-    id: "featured-2",
-    title: "Arnold's Pushups",
-    tag: "Upper Body",
-    duration: "50min",
-    stat: "215kcal",
-    imageSrc: FEATURED_IMAGE,
-    href: "/analysis",
-  },
-];
+import { FEATURED_COUNT, FEATURED_ITEMS } from "@/lib/data/featured";
 
 export default function HomePage() {
   return (
@@ -37,9 +15,9 @@ export default function HomePage() {
       <PostFeed />
 
       <section className="flex flex-col gap-2">
-        <SubNav title="Featured" count={32} seeAllHref="/analysis" />
+        <SubNav title="Featured" count={FEATURED_COUNT} seeAllHref="/analysis" />
         <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
-          {FEATURED_MATCHES.map((match) => (
+          {FEATURED_ITEMS.map((match) => (
             <FeaturedMatchCard key={match.id} {...match} />
           ))}
         </div>
