@@ -7,6 +7,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "consvc.hkjc.com",
+      },
+      {
+        protocol: "https",
+        hostname: "r2.thesportsdb.com",
+      },
     ],
   },
 };

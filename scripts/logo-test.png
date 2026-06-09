@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>The Hong Kong Jockey Club</title>
+<link href="/CustomErrorHandler/Common/master.css" rel="stylesheet" type="text/css">
+<link href="/CustomErrorHandler/Common/style.css" rel="stylesheet" type="text/css">
+<link href="/CustomErrorHandler/Common/footer_header.css" rel="stylesheet" type="text/css">
+<link href="/CustomErrorHandler/Common/bootstrap.min.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+	body{
+		font-family: "微軟正黑體", arial;
+	}
+</style>
+<script type="text/javascript" src="/CustomErrorHandler/Common/VisitorAPI.js"></script><script data-dapp-detection="">!function(){let e=!1;function n(){if(!e){const n=document.createElement("meta");n.name="dapp-detected",document.head.appendChild(n),e=!0}}if(window.hasOwnProperty("ethereum")){if(window.__disableDappDetectionInsertion=!0,void 0===window.ethereum)return;n()}else{var t=window.ethereum;Object.defineProperty(window,"ethereum",{configurable:!0,enumerable:!1,set:function(e){window.__disableDappDetectionInsertion||n(),t=e},get:function(){if(!window.__disableDappDetectionInsertion){const e=arguments.callee;e&&e.caller&&e.caller.toString&&-1!==e.caller.toString().indexOf("getOwnPropertyNames")||n()}return t}})}}();</script>
+
+<script type="text/javascript" src="/CustomErrorHandler/Common/redirect-mapping.js"></script>
+<script type="text/javascript" src="/CustomErrorHandler/Common/redirect.min.js"></script>
+</head>
+ 
+<body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="width: 100%">
+	<div class="container" style="max-width: 1170px; min-width: 320px; width: 100%;">
+		<script type="text/JavaScript">
+		function MM_openBrWindow(theURL,winName,features) { //v2.0
+		  window.open(theURL,winName,features);
+		}
+		</script>
+		<div class="row">
+			<div class="col-md-4">
+				<a href="https://www.hkjc.com/home/chinese/index.aspx"><img src="/CustomErrorHandler/Common/logo_hkjc_bilingual.png" vspace="10" hspace="10" border="0"></a>
+			</div>	
+		</div>
+		<div class="row">
+			<div class="col-md-12"><p>&nbsp;</p><p></p></div>
+		</div>
+		<div class="row" id="main-content" style="visibility: visible;">
+			<div class="col-md-12" id="default-page">
+				<p class="header"><b>HTTP 404 - 很抱歉，您查詢的網頁並不存在</b></p>
+		
+				此網頁暫時無法使用或已經過期並移除，您可以使用下列方法來繼續查詢：
+				 
+				<ul style="list-style-type: none">
+					<li>- 再次檢視輸入的網址是否正確。 </li>
+					<li>- 按<a href="javascript:history.back(1)">上一頁</a>嘗試其他連結。</li>
+					<li>- 或前往<a href="https://www.hkjc.com/home/chinese/index.asp">www.hkjc.com</a>，並於頁面找尋所需資訊。</li>
+				</ul>
+				 
+				&nbsp;<p class="header"><b>HTTP 404 - We're sorry, the page cannot be found</b></p>
+					The page you are looking for might be outdated and removed, or is temporarily unavailable. Please try the following:
+				<ul style="list-style-type: none">
+					<li>- If you typed the page address in the Address bar, make sure that it is spelled correctly.
+					</li><li>- Click the <a href="javascript:history.back(1)">Back</a> button to try another link.
+					</li><li>- Go to <a href="https://www.hkjc.com/home/english/index.asp">www.hkjc.com</a> , and then look for links to the information you want.
+				</li></ul>
+					
+				&nbsp;<p>&nbsp;</p><p>
+			
+			</p></div>
+		</div>
+	</div>
+
+	 
+	<!-- START WA Tagging -->
+	<script src="/CustomErrorHandler/Common/wa_tracker.js" type="text/javascript"></script>
+	<script src="/CustomErrorHandler/Common/wa_tracker_config.js" type="text/javascript"></script>
+	<script type="text/javascript"> 
+		try {
+			WATracker.trackPageView('http-404');
+		} catch (e) {}
+	</script>
+	<!-- END WA Tagging -->
+
+	<script>
+		var mainContent = document.getElementById('main-content');
+		setTimeout(function () {
+			mainContent.style.visibility = 'visible';
+		}, 5000);
+
+		try {
+			redirectCheck();
+		} catch (err) {
+			console.log(err);
+		} finally {
+			mainContent.style.visibility = 'visible';
+		}
+	</script>
+
+</body></html>
