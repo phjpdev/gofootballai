@@ -21,13 +21,13 @@ export function FeaturedMatchCard({
 }: FeaturedMatchCardProps) {
   return (
     <div className="relative h-[225px] w-[261px] shrink-0 overflow-hidden rounded-[24px] bg-gray-90 p-4">
-      <div className="pointer-events-none absolute left-[calc(50%+62.5px)] top-[calc(50%+18.5px)] size-[334px] -translate-x-1/2 -translate-y-1/2 mix-blend-lighten">
+      <div className="pointer-events-none absolute inset-0">
         <Image
           src={imageSrc}
           alt=""
           fill
           className="object-cover"
-          sizes="334px"
+          sizes="261px"
         />
       </div>
       <div className="pointer-events-none absolute bottom-0 left-0 h-[144px] w-full bg-gradient-to-b from-transparent to-gray-90" />

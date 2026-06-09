@@ -8,8 +8,6 @@ export type FeaturedItem = {
   href?: string;
 };
 
-const FEATURED_IMAGE = "/images/featured-strength.png";
-
 export const FEATURED_ITEMS: FeaturedItem[] = [
   {
     id: "featured-1",
@@ -17,7 +15,7 @@ export const FEATURED_ITEMS: FeaturedItem[] = [
     tag: "Upper Body",
     duration: "50min",
     stat: "215kcal",
-    imageSrc: FEATURED_IMAGE,
+    imageSrc: "/images/featured-world-cup-color.png",
     href: "/analysis/man-city-arsenal",
   },
   {
@@ -26,7 +24,7 @@ export const FEATURED_ITEMS: FeaturedItem[] = [
     tag: "Upper Body",
     duration: "50min",
     stat: "215kcal",
-    imageSrc: FEATURED_IMAGE,
+    imageSrc: "/images/featured-world-cup-bw.png",
     href: "/analysis/man-city-arsenal",
   },
 ];
