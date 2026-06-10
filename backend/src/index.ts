@@ -6,6 +6,7 @@ import { initDb } from "./lib/db.js";
 import { ensureDatabase } from "./lib/ensure-database.js";
 import authRoutes from "./routes/auth.js";
 import recordsRoutes from "./routes/records.js";
+import usersRoutes from "./routes/users.js";
 
 const app = express();
 const port = Number(process.env.PORT ?? 4000);
@@ -26,6 +27,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/records", recordsRoutes);
+app.use("/api/users", usersRoutes);
 
 async function start() {
   if (!process.env.DATABASE_URL) {

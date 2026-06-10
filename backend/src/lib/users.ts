@@ -90,3 +90,99 @@ export async function verifyPassword(
 ): Promise<boolean> {
   return bcrypt.compare(password, user.passwordHash);
 }
+
+export type PublicUser = {
+  id: string;
+  username: string;
+  role: UserRole;
+  createdAt: string;
+};
+
+function mapPublicUser(row: Omit<UserRow, "password_hash"> & { created_at: Date }): PublicUser {
+  return {
+    id: row.id,
+    username: row.username,
+    role: row.role,
+    createdAt: row.created_at.toISOString(),
+  };
+}
+
+export async function listUsers(): Promise<PublicUser[]> {
+  const result = await query<Pick<UserRow, "id" | "username" | "role" | "created_at">>(
+    `SELECT id, username, role, created_at
+     FROM users
+     ORDER BY created_at DESC`,
+  );
+
+  return result.rows.map(mapPublicUser);
+}
+
+export async function updateUser(
+  id: string,
+  input: {
+    username?: string;
+    password?: string;
+    role?: UserRole;
+  },
+): Promise<PublicUser | null> {
+  const existing = await findUserById(id);
+  if (!existing) return null;
+
+  const fields: string[] = [];
+  const params: unknown[] = [id];
+  let index = 2;
+
+  if (input.username !== undefined) {
+    fields.push(`username = $${index}`);
+    params.push(input.username.trim());
+    index += 1;
+  }
+
+  if (input.password !== undefined) {
+    fields.push(`password_hash = $${index}`);
+    params.push(await bcrypt.hash(input.password, 12));
+    index += 1;
+  }
+
+  if (input.role !== undefined) {
+    fields.push(`role = $${index}`);
+    params.push(input.role);
+    index += 1;
+  }
+
+  if (fields.length === 0) {
+    return {
+      id: existing.id,
+      username: existing.username,
+      role: existing.role,
+      createdAt: existing.createdAt,
+    };
+  }
+
+  try {
+    const result = await query<Pick<UserRow, "id" | "username" | "role" | "created_at">>(
+      `UPDATE users
+       SET ${fields.join(", ")}
+       WHERE id = $1
+       RETURNING id, username, role, created_at`,
+      params,
+    );
+
+    const row = result.rows[0];
+    return row ? mapPublicUser(row) : null;
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      (error as { code?: string }).code === "23505"
+    ) {
+      throw new Error("USERNAME_TAKEN");
+    }
+    throw error;
+  }
+}
+
+export async function deleteUser(id: string): Promise<boolean> {
+  const result = await query("DELETE FROM users WHERE id = $1", [id]);
+  return (result.rowCount ?? 0) > 0;
+}
