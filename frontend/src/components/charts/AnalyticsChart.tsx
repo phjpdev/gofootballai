@@ -92,20 +92,20 @@ export function AnalyticsChart() {
               1,187
             </span>
             <span className="mb-1 ml-0 h-[27px] text-lg font-medium tracking-[-0.072px] text-gray-40">
-              Total
+              總計
             </span>
           </div>
           <div className="flex gap-6">
             <div className="flex items-center gap-1">
               <span className="size-2 rounded-full bg-orange-50" />
               <span className="text-xs font-medium tracking-[-0.018px] text-white">
-                Current
+                本場
               </span>
             </div>
             <div className="flex items-center gap-1">
               <span className="size-2 rounded-full bg-blue-60" />
               <span className="text-xs font-medium tracking-[-0.018px] text-white">
-                Previous
+                上場
               </span>
             </div>
           </div>

@@ -20,7 +20,7 @@ export const upload = multer({
       cb(null, true);
       return;
     }
-    cb(new Error("Only image and video files are allowed"));
+    cb(new Error("只允許上傳圖片或影片檔案"));
   },
 });
 

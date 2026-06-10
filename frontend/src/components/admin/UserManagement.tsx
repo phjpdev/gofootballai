@@ -11,6 +11,7 @@ import {
   type ManagedUser,
 } from "@/lib/users-api";
 import type { UserRole } from "@/lib/auth-api";
+import { formatRole } from "@/lib/i18n/zh-hk";
 import { cn } from "@/lib/utils";
 
 type UserFormState = {
@@ -26,10 +27,10 @@ const EMPTY_FORM: UserFormState = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
+  return new Date(iso).toLocaleDateString("zh-HK", {
     year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
@@ -73,7 +74,7 @@ function UserFormModal({
     e.preventDefault();
     if (!form.username.trim()) return;
     if (requirePassword && !form.password.trim()) {
-      setError("Password is required");
+      setError("請輸入密碼");
       return;
     }
 
@@ -83,7 +84,7 @@ function UserFormModal({
       await onSubmit(form);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save user");
+      setError(err instanceof Error ? err.message : "儲存用戶失敗");
     } finally {
       setSubmitting(false);
     }
@@ -95,7 +96,7 @@ function UserFormModal({
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <button
         type="button"
-        aria-label="Close modal"
+        aria-label="關閉"
         className="absolute inset-0 bg-black/70"
         onClick={onClose}
       />
@@ -114,7 +115,7 @@ function UserFormModal({
         <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4 p-5">
           <input
             type="text"
-            placeholder="Username"
+            placeholder="帳戶名稱"
             value={form.username}
             onChange={(e) => setForm((prev) => ({ ...prev, username: e.target.value }))}
             required
@@ -123,7 +124,7 @@ function UserFormModal({
 
           <input
             type="password"
-            placeholder={requirePassword ? "Password" : "New password (optional)"}
+            placeholder={requirePassword ? "密碼" : "新密碼（選填）"}
             value={form.password}
             onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
             required={requirePassword}
@@ -137,13 +138,13 @@ function UserFormModal({
                 type="button"
                 onClick={() => setForm((prev) => ({ ...prev, role }))}
                 className={cn(
-                  "flex-1 rounded-[14px] px-3 py-2 text-xs font-bold capitalize",
+                  "flex-1 rounded-[14px] px-3 py-2 text-xs font-bold",
                   form.role === role
                     ? "bg-orange-50 text-white"
                     : "bg-gray-80 text-gray-40",
                 )}
               >
-                {role}
+                {formatRole(role)}
               </button>
             ))}
           </div>
@@ -177,6 +178,7 @@ export function UserManagement() {
     return users.filter(
       (item) =>
         item.username.toLowerCase().includes(query) ||
+        formatRole(item.role).includes(query) ||
         item.role.toLowerCase().includes(query),
     );
   }, [users, search]);
@@ -200,7 +202,7 @@ export function UserManagement() {
 
   async function handleDelete(id: string) {
     if (!token) return;
-    const confirmed = window.confirm("Delete this user? This cannot be undone.");
+    const confirmed = window.confirm("確定刪除此用戶？此操作無法復原。");
     if (!confirmed) return;
     await deleteUser(token, id);
     setUsers((prev) => prev.filter((item) => item.id !== id));
@@ -209,14 +211,14 @@ export function UserManagement() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-white">Manage users</h1>
+        <h1 className="text-xl font-bold text-white">管理用戶</h1>
         <button
           type="button"
           onClick={() => setCreateOpen(true)}
           className="flex items-center gap-2 rounded-[14px] bg-orange-50 px-4 py-2 text-sm font-semibold text-white"
         >
           <Plus className="size-4" />
-          Add user
+          新增用戶
         </button>
       </div>
 
@@ -224,7 +226,7 @@ export function UserManagement() {
         <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-gray-40" />
         <input
           type="search"
-          placeholder="Search by username or role..."
+          placeholder="搜尋帳戶名稱或角色..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-[14px] bg-gray-90 py-3 pl-11 pr-4 text-sm text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40"
@@ -235,19 +237,19 @@ export function UserManagement() {
         <div className="h-40 animate-pulse rounded-[24px] bg-gray-90" />
       ) : users.length === 0 ? (
         <div className="rounded-[24px] bg-gray-90 p-6 text-center text-sm text-gray-40">
-          No users yet.
+          暫無用戶。
         </div>
       ) : filteredUsers.length === 0 ? (
         <div className="rounded-[24px] bg-gray-90 p-6 text-center text-sm text-gray-40">
-          No users match &ldquo;{search.trim()}&rdquo;.
+          找不到符合「{search.trim()}」的用戶。
         </div>
       ) : (
         <div className="overflow-hidden rounded-[24px] bg-gray-90">
-          <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_auto] gap-4 border-b border-gray-80 px-5 py-3 text-xs font-bold uppercase tracking-wide text-gray-40 lg:grid">
-            <span>Username</span>
-            <span>Role</span>
-            <span>Joined</span>
-            <span className="text-right">Actions</span>
+          <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_auto] gap-4 border-b border-gray-80 px-5 py-3 text-xs font-bold tracking-wide text-gray-40 lg:grid">
+            <span>帳戶名稱</span>
+            <span>角色</span>
+            <span>加入日期</span>
+            <span className="text-right">操作</span>
           </div>
 
           <div className="flex flex-col">
@@ -259,17 +261,15 @@ export function UserManagement() {
                 <div>
                   <p className="text-sm font-bold text-white">{item.username}</p>
                   {currentUser?.id === item.id && (
-                    <p className="text-xs text-orange-50">You</p>
+                    <p className="text-xs text-orange-50">你</p>
                   )}
                 </div>
-                <p className="text-sm capitalize text-gray-20 lg:capitalize">
-                  {item.role}
-                </p>
+                <p className="text-sm text-gray-20">{formatRole(item.role)}</p>
                 <p className="text-sm text-gray-40">{formatDate(item.createdAt)}</p>
                 <div className="flex gap-2 lg:justify-end">
                   <button
                     type="button"
-                    aria-label={`Edit ${item.username}`}
+                    aria-label={`編輯 ${item.username}`}
                     onClick={() => setEditingUser(item)}
                     className="flex size-9 items-center justify-center rounded-full bg-orange-50 text-white"
                   >
@@ -277,7 +277,7 @@ export function UserManagement() {
                   </button>
                   <button
                     type="button"
-                    aria-label={`Delete ${item.username}`}
+                    aria-label={`刪除 ${item.username}`}
                     onClick={() => void handleDelete(item.id)}
                     disabled={currentUser?.id === item.id}
                     className="flex size-9 items-center justify-center rounded-full bg-orange-50 text-white disabled:opacity-40"
@@ -293,8 +293,8 @@ export function UserManagement() {
 
       <UserFormModal
         open={createOpen}
-        title="Add user"
-        submitLabel="Create user"
+        title="新增用戶"
+        submitLabel="建立用戶"
         initial={EMPTY_FORM}
         requirePassword
         onClose={() => setCreateOpen(false)}
@@ -307,8 +307,8 @@ export function UserManagement() {
 
       <UserFormModal
         open={!!editingUser}
-        title="Edit user"
-        submitLabel="Save changes"
+        title="編輯用戶"
+        submitLabel="儲存變更"
         initial={
           editingUser
             ? {

@@ -60,7 +60,7 @@ export function PerformanceChart() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <p className="text-[30px] font-bold leading-[38px] tracking-[-0.3px] text-white">
-            24 Goals
+            24 入球
           </p>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -73,14 +73,14 @@ export function PerformanceChart() {
             <div className="flex items-center gap-1">
               <Lightbulb className="size-5 text-gray-20" strokeWidth={2} />
               <span className="text-sm font-medium tracking-[-0.028px] text-gray-20">
-                8 AI Insights
+                8 項 AI 洞察
               </span>
             </div>
           </div>
         </div>
         <button
           type="button"
-          aria-label="View details"
+          aria-label="查看詳情"
           className="flex size-14 shrink-0 items-center justify-center rounded-[19px] bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.25)]"
         >
           <ArrowRight className="size-6 text-gray-100" strokeWidth={2.5} />

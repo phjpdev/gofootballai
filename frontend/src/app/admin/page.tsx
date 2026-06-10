@@ -20,16 +20,15 @@ export default function ManagePage() {
           <div className="flex size-14 items-center justify-center rounded-full bg-gray-80">
             <Lock className="size-6 text-gray-40" />
           </div>
-          <h2 className="text-base font-bold text-white">Admin Only</h2>
+          <h2 className="text-base font-bold text-white">管理員專用</h2>
           <p className="text-sm leading-[1.6] text-gray-40">
-            This page is for administrators. Members can use the Member page
-            instead.
+            此頁面僅供管理員使用，會員請前往會員頁面。
           </p>
           <Link
             href="/member"
             className="rounded-[19px] bg-orange-50 px-6 py-3 text-sm font-semibold text-white"
           >
-            Go to Member
+            前往會員頁面
           </Link>
         </section>
       </div>
@@ -44,9 +43,9 @@ export default function ManagePage() {
         <UserManagement />
       ) : (
         <section className="rounded-[24px] bg-gray-90 p-4">
-          <h2 className="text-sm font-bold text-white">Admin access</h2>
+          <h2 className="text-sm font-bold text-white">管理員登入</h2>
           <p className="mt-2 text-sm leading-[1.6] text-gray-40">
-            Sign up or log in above to create an admin account.
+            請在上方登入或註冊管理員帳戶，以管理用戶及平台內容。
           </p>
         </section>
       )}

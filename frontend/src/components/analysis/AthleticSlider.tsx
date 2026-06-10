@@ -7,7 +7,7 @@ export function AthleticSlider() {
   return (
     <div className="flex flex-col items-center gap-8">
       <p className="w-full text-center text-sm font-extrabold uppercase leading-5 tracking-[1.4px] text-orange-50">
-        Level 4
+        等級 4
       </p>
 
       <div className="relative h-9 w-[343px] rounded-2xl bg-[#27272a] shadow-[0px_4px_4px_rgba(15,23,42,0.03),0px_8px_8px_rgba(15,23,42,0.02)]">
@@ -46,10 +46,10 @@ export function AthleticSlider() {
 
       <div className="flex w-full flex-col items-center gap-4">
         <p className="w-full text-center text-[36px] font-bold leading-[44px] tracking-[-0.504px] text-white">
-          Athletic
+          戰術強度
         </p>
         <p className="w-full text-center text-base leading-[1.6] text-[#d4d4d8]">
-          I can handle any intense workouts
+          球隊具備應對高強度對抗的戰術能力
         </p>
         <div className="flex items-center justify-center gap-2">
           <Image
@@ -60,7 +60,7 @@ export function AthleticSlider() {
             className="size-5"
           />
           <p className="text-sm leading-5 tracking-[-0.084px] text-[#d4d4d8]">
-            Drag the slider to adjust
+            拖曳滑桿以調整預測參數
           </p>
         </div>
       </div>

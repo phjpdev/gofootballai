@@ -56,7 +56,7 @@ function parseMatchDate(matchDate: string): string {
 function formatKickOff(kickOffTime: string): string {
   const date = new Date(kickOffTime);
   if (Number.isNaN(date.getTime())) return kickOffTime;
-  return date.toLocaleTimeString("en-GB", {
+  return date.toLocaleTimeString("zh-HK", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -66,7 +66,10 @@ function formatKickOff(kickOffTime: string): string {
 
 function formatDay(dateKey: string): string {
   const date = new Date(`${dateKey}T12:00:00+08:00`);
-  return date.toLocaleDateString("en-US", { weekday: "short", timeZone: "Asia/Hong_Kong" });
+  return date.toLocaleDateString("zh-HK", {
+    weekday: "short",
+    timeZone: "Asia/Hong_Kong",
+  });
 }
 
 export function isActiveHkjcMatch(match: RawMatch): boolean {
@@ -83,14 +86,14 @@ export function transformHkjcMatch(raw: RawMatch): HkjcMatch {
   return {
     id: raw.id,
     frontEndId: raw.frontEndId,
-    title: `${raw.homeTeam.name_en} vs ${raw.awayTeam.name_en}`,
-    homeTeam: raw.homeTeam.name_en,
-    awayTeam: raw.awayTeam.name_en,
+    title: `${raw.homeTeam.name_ch} 對 ${raw.awayTeam.name_ch}`,
+    homeTeam: raw.homeTeam.name_ch,
+    awayTeam: raw.awayTeam.name_ch,
     homeTeamId: raw.homeTeam.id,
     awayTeamId: raw.awayTeam.id,
     tournamentId: raw.tournament.id,
     tournamentCode: raw.tournament.code,
-    tournamentName: raw.tournament.name_en,
+    tournamentName: raw.tournament.name_ch,
     matchDate: dateKey,
     kickOffTime: raw.kickOffTime,
     kickOffLabel: formatKickOff(raw.kickOffTime),

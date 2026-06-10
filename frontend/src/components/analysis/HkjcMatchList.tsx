@@ -41,12 +41,12 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       const response = await fetch("/api/hkjc/matches");
-      if (!response.ok) throw new Error("Failed to load matches");
+      if (!response.ok) throw new Error("載入賽事失敗");
       const json = (await response.json()) as HkjcMatchesResponse;
       setData(json);
       setSelectedIndex(findDefaultDateIndex());
     } catch {
-      setError("Unable to load HKJC matches. Please try again.");
+      setError("無法載入馬會賽事資料，請稍後再試。");
     } finally {
       setLoading(false);
     }
@@ -139,7 +139,7 @@ export function HkjcMatchesSection() {
           onClick={() => void reload()}
           className="mt-3 text-sm font-medium text-orange-50"
         >
-          Retry
+          重試
         </button>
       </div>
     );
@@ -148,17 +148,17 @@ export function HkjcMatchesSection() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-end justify-between gap-3">
-        <SubNav title="Matches" count={matches.length} />
+        <SubNav title="賽事列表" count={matches.length} />
         {data?.updatedAt && (
           <p className="pb-0.5 text-[10px] font-medium text-gray-60">
-            HKJC · {data.total} active
+            馬會 · {data.total} 場進行中
           </p>
         )}
       </div>
 
       {matches.length === 0 ? (
         <div className="rounded-[24px] bg-gray-90 p-6 text-center">
-          <p className="text-sm text-gray-40">No HKJC matches on this date.</p>
+          <p className="text-sm text-gray-40">此日期暫無馬會賽事。</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">

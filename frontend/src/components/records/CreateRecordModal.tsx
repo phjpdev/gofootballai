@@ -6,10 +6,16 @@ import { usePosts } from "@/context/PostsContext";
 import type { Post, PostType } from "@/types";
 
 const POST_TYPES: { value: PostType; label: string }[] = [
-  { value: "text", label: "Text" },
-  { value: "photo", label: "Photo" },
-  { value: "video", label: "Video" },
+  { value: "text", label: "文字" },
+  { value: "photo", label: "相片" },
+  { value: "video", label: "影片" },
 ];
+
+const TYPE_LABEL: Record<PostType, string> = {
+  text: "文字",
+  photo: "相片",
+  video: "影片",
+};
 
 export function CreateRecordModal({
   open,
@@ -101,7 +107,7 @@ export function CreateRecordModal({
       (!isEditing || !record?.mediaUrl || type !== record.type);
 
     if (needsNewFile) {
-      setError(`Please select a ${type} file to upload`);
+      setError(`請選擇要上傳的${TYPE_LABEL[type]}檔案`);
       return;
     }
 
@@ -123,7 +129,7 @@ export function CreateRecordModal({
       }
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save record");
+      setError(err instanceof Error ? err.message : "儲存紀錄失敗");
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +144,7 @@ export function CreateRecordModal({
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <button
         type="button"
-        aria-label="Close modal"
+        aria-label="關閉"
         className="absolute inset-0 bg-black/70"
         onClick={handleClose}
       />
@@ -147,12 +153,12 @@ export function CreateRecordModal({
         <div className="flex items-center justify-between border-b border-gray-80 px-5 py-4">
           <div>
             <h2 className="text-base font-bold text-white">
-              {isEditing ? "Edit Record" : "Create Record"}
+              {isEditing ? "編輯紀錄" : "新增紀錄"}
             </h2>
             <p className="text-xs text-gray-40">
               {isEditing
-                ? "Update the title, description, or media."
-                : "Upload photos, videos, or text for members."}
+                ? "更新標題、描述或媒體內容。"
+                : "上傳相片、影片或文字公告予會員。"}
             </p>
           </div>
           <button
@@ -187,7 +193,7 @@ export function CreateRecordModal({
 
           <input
             type="text"
-            placeholder="Title"
+            placeholder="標題"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -195,7 +201,7 @@ export function CreateRecordModal({
           />
 
           <textarea
-            placeholder="Description (optional)"
+            placeholder="描述（選填）"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={4}
@@ -225,12 +231,12 @@ export function CreateRecordModal({
                   {file
                     ? file.name
                     : isEditing && record?.mediaUrl && type === record.type
-                      ? "Tap to replace current file"
-                      : `Tap to upload ${type}`}
+                      ? "點擊以替換現有檔案"
+                      : `點擊上傳${TYPE_LABEL[type]}`}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-gray-40">
                   <Upload className="size-3" />
-                  Max 50 MB
+                  上限 50 MB
                 </span>
               </button>
 
@@ -238,7 +244,7 @@ export function CreateRecordModal({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={previewUrl}
-                  alt="Preview"
+                  alt="預覽"
                   className="max-h-48 w-full rounded-[14px] object-contain"
                 />
               )}
@@ -260,7 +266,7 @@ export function CreateRecordModal({
             disabled={submitting}
             className="h-14 rounded-[19px] bg-white text-base font-semibold tracking-[-0.048px] text-gray-100 disabled:opacity-60"
           >
-            {isEditing ? "Save Changes" : "Publish to Records"}
+            {isEditing ? "儲存變更" : "發佈至紀錄"}
           </button>
         </form>
       </div>

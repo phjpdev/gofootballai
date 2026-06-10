@@ -1,6 +1,6 @@
 import { figmaAsset } from "@/lib/figma-assets";
 
-const DAYS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+const DAYS = ["一", "二", "三", "四", "五", "六", "日"] as const;
 
 const CHEVRON = figmaAsset("44fa759040c464414aab1abfac01547773dd8246");
 
@@ -8,13 +8,13 @@ function SectionHeader() {
   return (
     <div className="flex h-[22px] w-full items-center gap-4">
       <p className="min-w-0 flex-1 text-base font-bold leading-[22px] tracking-[-0.112px] text-white">
-        Fitness Metrics
+        賽事數據
       </p>
       <button
         type="button"
         className="shrink-0 text-sm font-medium leading-5 tracking-[-0.084px] text-[#f97316]"
       >
-        See All
+        查看全部
       </button>
     </div>
   );
@@ -48,7 +48,7 @@ function CardHeader({
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <p className="text-sm font-normal leading-5 tracking-[-0.084px] text-[#d4d4d8]">
-          Today
+          本場
         </p>
         <div className="relative size-5">
           <div className="absolute inset-[12.84%_28.44%_12.84%_31.69%]">
@@ -276,13 +276,13 @@ export function FitnessMetrics() {
             <CardHeader
               iconSrc="3828572d53de36e9a9f754969a933d536579e779"
               iconInset="inset-[9.33%_6.16%_9.71%_6.15%]"
-              title="Weight"
+              title="控球率"
             />
             <div className="flex w-full items-center gap-3">
               <ValueBlock
-                value="70.00"
-                unit="kg"
-                subtitle="Stable weight"
+                value="58"
+                unit="%"
+                subtitle="主隊優勢"
               />
               <WeightChart />
             </div>
@@ -294,13 +294,13 @@ export function FitnessMetrics() {
             <CardHeader
               iconSrc="7852f61e478f16e05a54fc12a8e9a1648b49cfdb"
               iconInset="inset-[9.93%_12.96%_8.94%_12.96%]"
-              title="Blood Pressure"
+              title="預期進球 (xG)"
             />
             <div className="flex w-full items-center gap-3">
               <ValueBlock
-                value="128/80"
-                unit="mmHg"
-                subtitle="Stable Range"
+                value="1.8"
+                unit=""
+                subtitle="高於賽事平均"
               />
               <BloodPressureChart />
             </div>
@@ -312,10 +312,10 @@ export function FitnessMetrics() {
             <CardHeader
               iconSrc="d875ca6469c77364cca0fb8f503099d9d04a3005"
               iconInset="inset-[13.09%_4.47%_9.1%_4.48%]"
-              title="Heart Rate"
+              title="射門次數"
             />
             <div className="flex w-full items-center gap-3">
-              <ValueBlock value="72" unit="bpm" subtitle="Resting Rate" />
+              <ValueBlock value="14" unit="次" subtitle="近 7 場趨勢" />
               <HeartRateChart />
             </div>
           </div>

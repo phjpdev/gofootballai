@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id");
 
   if (!id || (type !== "team" && type !== "tournament")) {
-    return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
+    return NextResponse.json({ error: "參數無效" }, { status: 400 });
   }
 
   const url = `https://consvc.hkjc.com/football/info/logo/${type}/${id}.png`;
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      return NextResponse.json({ error: "Logo not found" }, { status: 404 });
+      return NextResponse.json({ error: "找不到球隊標誌" }, { status: 404 });
     }
 
     const buffer = await response.arrayBuffer();
@@ -34,6 +34,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch {
-    return NextResponse.json({ error: "Failed to fetch logo" }, { status: 502 });
+    return NextResponse.json({ error: "無法取得球隊標誌" }, { status: 502 });
   }
 }

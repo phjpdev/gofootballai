@@ -11,9 +11,9 @@ const workSans = Work_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "GO Football AI — AI-Powered Football Analytics",
+  title: "世界盃 AI — 2026 世界盃賽事分析平台",
   description:
-    "GO Football AI delivers AI-driven match analysis, player performance insights, and football analytics.",
+    "專為香港球迷而設的 2026 世界盃 AI 分析平台，提供賽事預測、戰術拆解、球隊數據及會員最新資訊。",
 };
 
 export default function RootLayout({
@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${workSans.variable} h-full antialiased`}>
+    <html lang="zh-HK" className={`${workSans.variable} h-full antialiased`}>
       <body className="min-h-full bg-gray-100 text-white">
         <AppProviders>
           <AppShell>{children}</AppShell>

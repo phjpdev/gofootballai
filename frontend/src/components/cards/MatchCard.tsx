@@ -53,7 +53,7 @@ export function MatchCard({
             <div className="flex items-center gap-1">
               <FileText className="size-4 text-gray-40" strokeWidth={2} />
               <span className="text-sm font-medium tracking-[-0.028px] text-white">
-                Events {movements}
+                事件 {movements}
               </span>
             </div>
             <span className="size-1 rounded-full bg-gray-70" />

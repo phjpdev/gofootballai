@@ -19,7 +19,7 @@ export function SubNav({ title, count, seeAllHref = "#" }: SubNavProps) {
         href={seeAllHref}
         className="text-sm font-medium tracking-[-0.028px] text-orange-50"
       >
-        See All
+        查看全部
       </Link>
     </div>
   );

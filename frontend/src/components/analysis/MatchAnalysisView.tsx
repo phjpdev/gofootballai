@@ -20,7 +20,7 @@ export function MatchAnalysisView({ match }: MatchAnalysisViewProps) {
         className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white"
       >
         <ChevronLeft className="size-4" />
-        Back to Analysis
+        返回賽事分析
       </Link>
 
       <div className="flex flex-col gap-3">

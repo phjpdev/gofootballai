@@ -3,21 +3,21 @@ import { Brain, LineChart, Shield } from "lucide-react";
 const FEATURES = [
   {
     icon: Brain,
-    title: "AI Match Analysis",
+    title: "AI 賽事分析",
     description:
-      "Deep learning models analyze every pass, shot, and tactical shift in real time.",
+      "深度學習模型即時拆解每一腳傳球、射門與戰術變化，掌握 2026 世界盃每場對決。",
   },
   {
     icon: LineChart,
-    title: "Performance Tracking",
+    title: "數據追蹤",
     description:
-      "xG charts, possession stats, and player ratings updated live during matches.",
+      "xG 圖表、控球率、球員評分及進攻威脅指數，賽事中即時更新。",
   },
   {
     icon: Shield,
-    title: "Trusted Insights",
+    title: "專業預測",
     description:
-      "Data-driven predictions and reports used by coaches and analysts worldwide.",
+      "結合歷史數據與 AI 模型，為香港球迷提供可靠的賽果參考與戰術洞察。",
   },
 ];
 
@@ -26,12 +26,10 @@ export function SystemIntro() {
     <section className="flex flex-col gap-4">
       <div className="rounded-[24px] bg-gray-90 p-4">
         <h2 className="text-xl font-bold tracking-[-0.1px] text-white">
-          GoFootball.ai
+          2026 世界盃 AI 分析平台
         </h2>
         <p className="mt-2 text-sm leading-[1.6] tracking-[-0.028px] text-gray-20">
-          Your AI-powered football intelligence platform. Analyze matches,
-          track performance, and stay updated with the latest from your
-          favorite leagues.
+          專為香港球迷而設，一站式掌握世界盃賽程、AI 戰術分析、球隊數據及最新會員資訊。
         </p>
       </div>
 

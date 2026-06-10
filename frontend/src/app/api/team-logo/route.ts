@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const name = request.nextUrl.searchParams.get("name")?.trim();
 
   if (!name) {
-    return NextResponse.json({ error: "Missing team name" }, { status: 400 });
+    return NextResponse.json({ error: "缺少球隊名稱" }, { status: 400 });
   }
 
   const url = await resolveTeamLogoUrl(name);

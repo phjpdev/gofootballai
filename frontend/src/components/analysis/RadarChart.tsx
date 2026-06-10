@@ -74,22 +74,22 @@ export function RadarChart() {
       />
 
       <p className="absolute left-[150.5px] top-0 text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        Calorie
+        進攻
       </p>
       <p className="absolute left-0 top-[78px] text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        Steps
+        控球
       </p>
       <p className="absolute left-[343px] top-[78px] -translate-x-full text-right text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        BMI
+        防守
       </p>
       <p className="absolute left-0 top-[252px] text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        Sleep
+        體能
       </p>
       <p className="absolute left-[343px] top-[252px] -translate-x-full text-right text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        BPM
+        戰術
       </p>
       <p className="absolute left-[171.5px] top-[330px] -translate-x-1/2 text-center text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        Hydration
+        士氣
       </p>
 
       <PolygonLayer

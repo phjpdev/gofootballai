@@ -57,13 +57,13 @@ export function ActivitiesChart() {
     <section className="flex w-full flex-col gap-2">
       <div className="flex h-6 w-full items-center justify-between">
         <p className="text-base font-bold leading-none tracking-[-0.048px] text-white">
-          Activities
+          進攻趨勢
         </p>
         <button
           type="button"
           className="text-sm font-medium leading-none tracking-[-0.028px] text-[#f97316]"
         >
-          See All
+          查看全部
         </button>
       </div>
 
@@ -142,7 +142,7 @@ export function ActivitiesChart() {
                   </div>
                 </div>
                 <p className="text-sm font-medium leading-none tracking-[-0.028px] text-[#d7d8d9]">
-                  8 Suggestions
+                  8 項建議
                 </p>
               </div>
             </div>
@@ -150,7 +150,7 @@ export function ActivitiesChart() {
 
           <button
             type="button"
-            aria-label="View details"
+            aria-label="查看詳情"
             className="relative size-14 shrink-0 overflow-hidden rounded-[19px] bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.25)]"
           >
             <div className="absolute left-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2">

@@ -17,9 +17,7 @@ export function RecordList({
   const [viewingRecord, setViewingRecord] = useState<Post | null>(null);
 
   async function handleDelete(id: string) {
-    const confirmed = window.confirm(
-      "Delete this record? This cannot be undone.",
-    );
+    const confirmed = window.confirm("確定刪除此紀錄？此操作無法復原。");
     if (!confirmed) return;
     await removePost(id);
     setViewingRecord((current) => (current?.id === id ? null : current));
@@ -47,7 +45,7 @@ export function RecordList({
     return (
       <div className="flex h-[320px] items-center justify-center rounded-[20px] bg-gray-90 p-6 text-center lg:max-w-md">
         <p className="text-sm leading-[1.6] text-gray-40">
-          No records yet. Admin uploads will appear here.
+          暫無紀錄，管理員上傳後會顯示於此。
         </p>
       </div>
     );
