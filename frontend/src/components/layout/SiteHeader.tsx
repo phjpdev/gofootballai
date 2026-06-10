@@ -16,7 +16,7 @@ import { formatRole, NAV } from "@/lib/i18n/zh-hk";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/", label: NAV.home, icon: Home },
+  { href: "/home", label: NAV.home, icon: Home },
   { href: "/analysis", label: NAV.analysis, icon: BarChart3 },
   { href: "/records", label: NAV.records, icon: FolderOpen },
   { href: "/member", label: NAV.member, icon: Users },
@@ -29,8 +29,7 @@ const ADMIN_NAV = {
 } as const;
 
 function isNavActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
-  return pathname.startsWith(href);
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function UserMenu({
@@ -80,7 +79,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-90 bg-gray-100">
       <div className="mx-auto flex h-[72px] w-full max-w-6xl items-center justify-between gap-3 px-4 lg:h-24 lg:gap-4 lg:px-8">
-        <Link href="/" className="min-w-0 shrink">
+        <Link href="/analysis" className="min-w-0 shrink">
           <BrandLogo size="header" />
         </Link>
 

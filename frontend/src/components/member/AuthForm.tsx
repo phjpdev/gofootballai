@@ -47,7 +47,7 @@ export function AuthForm({
       setUsername("");
       setPassword("");
       setAcceptedTerms(false);
-      router.push("/");
+      router.push("/analysis");
     } catch (err) {
       setError(err instanceof Error ? err.message : "發生錯誤，請稍後再試");
     } finally {

@@ -3,7 +3,7 @@ import { BrandLogo } from "@/components/brand/BrandLogo";
 import { NAV } from "@/lib/i18n/zh-hk";
 
 const NAV_ITEMS = [
-  { href: "/", label: NAV.home },
+  { href: "/home", label: NAV.home },
   { href: "/analysis", label: NAV.analysis },
   { href: "/records", label: NAV.records },
   { href: "/member", label: NAV.member },
