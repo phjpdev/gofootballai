@@ -1,0 +1,9 @@
+[
+  {
+    "id": "3159f99b-ca53-4373-aff0-ea4e549a2aec",
+    "username": "testuser",
+    "passwordHash": "$2b$12$gS9ZQiA57VyhxYPwQumCcOwHgZMBNOrGu6LgThRBOZ2/fp7lpmZiG",
+    "role": "admin",
+    "createdAt": "2026-06-10T17:06:27.535Z"
+  }
+]
