@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GO Football AI
 
-## Getting Started
+Monorepo with separate frontend and backend.
 
-First, run the development server:
+## Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+├── frontend/   # Next.js app
+├── backend/    # Express API (JWT auth + PostgreSQL)
+└── .gitignore
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### PostgreSQL
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The backend creates the `gofootball_ai` database automatically on startup.
 
-## Learn More
+**Option A — pgAdmin:** Right-click **Databases** → **Create** → **Database…** → name it `gofootball_ai`.
 
-To learn more about Next.js, take a look at the following resources:
+**Option B — SQL in pgAdmin Query Tool:**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```sql
+CREATE DATABASE gofootball_ai;
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Option C — setup script:**
 
-## Deploy on Vercel
+```bash
+cd backend
+npm run db:setup
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Option D — Docker:**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+docker compose up -d
+```
+
+Make sure `DATABASE_URL` in `backend/.env` uses your real PostgreSQL username and password (not necessarily `postgres` / `postgres`).
+
+### Backend
+
+```bash
+cd backend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Set `DATABASE_URL` in `.env`, for example:
+
+```
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/gofootball_ai
+```
+
+Runs on `http://localhost:4000`. Tables are created automatically on startup.
+
+### Frontend
+
+```bash
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+Runs on `http://localhost:3000`.
+
+## Auth & roles
+
+| Page | Sign up role | Login |
+|------|--------------|-------|
+| `/member` | `member` | Members only |
+| `/admin` | `admin` | Admins only |
+
+- `POST /api/auth/signup` — `{ username, password, role, acceptedTerms }`
+- `POST /api/auth/login` — `{ username, password, role? }`
+- `POST /api/auth/logout` — Bearer JWT
+- `GET /api/auth/me` — Bearer JWT
+
+## Records
+
+- `GET /api/records/public` — public feed (Home page)
+- `GET /api/records` — member/admin (Records page)
+- `POST /api/records` — admin only (upload photo/video/text)
+- `DELETE /api/records/:id` — admin only
