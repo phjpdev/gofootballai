@@ -1,8 +1,44 @@
 import Link from "next/link";
 import { Clock, FileText } from "lucide-react";
 import { TeamLogoImage } from "@/components/cards/TeamLogoImage";
-import { TournamentFlag } from "@/components/cards/TournamentFlag";
 import type { HkjcMatch } from "@/types/hkjc";
+
+function MatchLogoBox({
+  homeLogo,
+  homeTeam,
+  awayLogo,
+  awayTeam,
+}: {
+  homeLogo?: string;
+  homeTeam: string;
+  awayLogo?: string;
+  awayTeam: string;
+}) {
+  return (
+    <div className="relative size-20 shrink-0 overflow-hidden rounded-[21px] bg-white">
+      <div
+        className="absolute inset-0"
+        style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
+      >
+        <div className="flex h-full w-full items-center justify-center pb-3 pr-3">
+          <TeamLogoImage src={homeLogo} name={homeTeam} />
+        </div>
+      </div>
+      <div
+        className="absolute inset-0"
+        style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }}
+      >
+        <div className="flex h-full w-full items-center justify-center pt-3 pl-3">
+          <TeamLogoImage src={awayLogo} name={awayTeam} />
+        </div>
+      </div>
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[142%] w-px -translate-x-1/2 -translate-y-1/2 rotate-45 bg-gray-90"
+        aria-hidden
+      />
+    </div>
+  );
+}
 
 type HkjcMatchCardProps = {
   match: HkjcMatch;
@@ -16,23 +52,12 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
   const content = (
     <div className="w-full rounded-[32px] bg-gray-90 p-3 transition-colors hover:bg-gray-80">
       <div className="flex items-center gap-3">
-        <div className="relative size-20 shrink-0 overflow-hidden rounded-[21px] bg-white">
-          <div className="absolute inset-0 grid grid-cols-2">
-            <div className="relative h-full border-r border-gray-90">
-              <TeamLogoImage src={match.homeLogo} name={match.homeTeam} />
-            </div>
-            <div className="relative h-full">
-              <TeamLogoImage src={match.awayLogo} name={match.awayTeam} />
-            </div>
-          </div>
-          <div className="absolute bottom-1 right-1 size-5 overflow-hidden rounded-full border border-white bg-white">
-            <TournamentFlag
-              src={match.tournamentLogo}
-              code={match.tournamentCode}
-              name={match.tournamentName}
-            />
-          </div>
-        </div>
+        <MatchLogoBox
+          homeLogo={match.homeLogo}
+          homeTeam={match.homeTeam}
+          awayLogo={match.awayLogo}
+          awayTeam={match.awayTeam}
+        />
 
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <div className="flex items-center gap-2">
