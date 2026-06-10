@@ -111,7 +111,7 @@ export function MatchComplete() {
           </div>
 
           <Link
-            href="/"
+            href="/analysis"
             className="flex h-14 w-full items-center justify-center gap-3 rounded-[19px] bg-white px-7 py-4"
           >
             <span className="text-base font-semibold tracking-[-0.048px] text-gray-100">
