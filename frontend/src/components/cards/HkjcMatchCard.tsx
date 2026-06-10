@@ -45,7 +45,7 @@ function MatchLogoBox({
         </div>
       </div>
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[142%] w-px -translate-x-1/2 -translate-y-1/2 rotate-45 bg-gray-90"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[142%] w-1.5 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-orange-50"
         aria-hidden
       />
     </div>

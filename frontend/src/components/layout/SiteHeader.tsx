@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
   FolderOpen,
@@ -40,9 +40,16 @@ function UserMenu({
   className?: string;
   onLogout?: () => void;
 }) {
+  const router = useRouter();
   const { user, logout } = useAuth();
 
   if (!user) return null;
+
+  async function handleLogout() {
+    await logout();
+    onLogout?.();
+    router.push("/member");
+  }
 
   return (
     <div className={cn("flex items-center gap-3", className)}>
@@ -54,10 +61,7 @@ function UserMenu({
       </div>
       <button
         type="button"
-        onClick={() => {
-          void logout();
-          onLogout?.();
-        }}
+        onClick={() => void handleLogout()}
         className="flex shrink-0 items-center gap-2 rounded-[14px] bg-gray-90 px-3 py-2 text-sm font-medium text-gray-20 transition-colors hover:text-white"
       >
         <LogOut className="size-4" />
