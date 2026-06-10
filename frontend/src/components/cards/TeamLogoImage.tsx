@@ -7,11 +7,14 @@ import { fetchTeamLogo } from "@/lib/team-logos/client-cache";
 type TeamLogoImageProps = {
   src?: string;
   name: string;
+  /** English team name used for external logo lookup when `src` is empty */
+  lookupName?: string;
 };
 
-export function TeamLogoImage({ src, name }: TeamLogoImageProps) {
+export function TeamLogoImage({ src, name, lookupName }: TeamLogoImageProps) {
   const [logoUrl, setLogoUrl] = useState(src ?? "");
   const [failed, setFailed] = useState(false);
+  const queryName = lookupName?.trim() || name;
 
   useEffect(() => {
     if (src) {
@@ -23,7 +26,7 @@ export function TeamLogoImage({ src, name }: TeamLogoImageProps) {
     let cancelled = false;
 
     async function loadLogo() {
-      const url = await fetchTeamLogo(name);
+      const url = await fetchTeamLogo(queryName);
       if (!cancelled && url) {
         setLogoUrl(url);
         setFailed(false);
@@ -35,7 +38,7 @@ export function TeamLogoImage({ src, name }: TeamLogoImageProps) {
     return () => {
       cancelled = true;
     };
-  }, [src, name]);
+  }, [src, queryName]);
 
   if (!logoUrl || failed) {
     return <TeamInitialBadge name={name} />;

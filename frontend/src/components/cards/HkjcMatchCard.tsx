@@ -6,13 +6,17 @@ import type { HkjcMatch } from "@/types/hkjc";
 function MatchLogoBox({
   homeLogo,
   homeTeam,
+  homeTeamEn,
   awayLogo,
   awayTeam,
+  awayTeamEn,
 }: {
   homeLogo?: string;
   homeTeam: string;
+  homeTeamEn: string;
   awayLogo?: string;
   awayTeam: string;
+  awayTeamEn: string;
 }) {
   return (
     <div className="relative size-20 shrink-0 overflow-hidden rounded-[21px] bg-white">
@@ -21,7 +25,11 @@ function MatchLogoBox({
         style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
       >
         <div className="flex h-full w-full items-center justify-center pb-3 pr-3">
-          <TeamLogoImage src={homeLogo} name={homeTeam} />
+          <TeamLogoImage
+            src={homeLogo}
+            name={homeTeam}
+            lookupName={homeTeamEn}
+          />
         </div>
       </div>
       <div
@@ -29,7 +37,11 @@ function MatchLogoBox({
         style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }}
       >
         <div className="flex h-full w-full items-center justify-center pt-3 pl-3">
-          <TeamLogoImage src={awayLogo} name={awayTeam} />
+          <TeamLogoImage
+            src={awayLogo}
+            name={awayTeam}
+            lookupName={awayTeamEn}
+          />
         </div>
       </div>
       <div
@@ -55,8 +67,10 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
         <MatchLogoBox
           homeLogo={match.homeLogo}
           homeTeam={match.homeTeam}
+          homeTeamEn={match.homeTeamEn}
           awayLogo={match.awayLogo}
           awayTeam={match.awayTeam}
+          awayTeamEn={match.awayTeamEn}
         />
 
         <div className="flex min-w-0 flex-1 flex-col gap-3">

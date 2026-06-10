@@ -95,7 +95,9 @@ export async function enrichMatchesWithLogos(
   matches: HkjcMatch[],
 ): Promise<HkjcMatch[]> {
   const uniqueNames = [
-    ...new Set(matches.flatMap((match) => [match.homeTeam, match.awayTeam])),
+    ...new Set(
+      matches.flatMap((match) => [match.homeTeamEn, match.awayTeamEn]),
+    ),
   ];
 
   for (const name of uniqueNames) {
@@ -104,7 +106,7 @@ export async function enrichMatchesWithLogos(
 
   return matches.map((match) => ({
     ...match,
-    homeLogo: logoCache.get(normalize(match.homeTeam)) ?? "",
-    awayLogo: logoCache.get(normalize(match.awayTeam)) ?? "",
+    homeLogo: logoCache.get(normalize(match.homeTeamEn)) ?? "",
+    awayLogo: logoCache.get(normalize(match.awayTeamEn)) ?? "",
   }));
 }

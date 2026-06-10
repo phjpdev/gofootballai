@@ -89,6 +89,8 @@ export function transformHkjcMatch(raw: RawMatch): HkjcMatch {
     title: `${raw.homeTeam.name_ch} 對 ${raw.awayTeam.name_ch}`,
     homeTeam: raw.homeTeam.name_ch,
     awayTeam: raw.awayTeam.name_ch,
+    homeTeamEn: raw.homeTeam.name_en,
+    awayTeamEn: raw.awayTeam.name_en,
     homeTeamId: raw.homeTeam.id,
     awayTeamId: raw.awayTeam.id,
     tournamentId: raw.tournament.id,
