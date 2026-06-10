@@ -34,7 +34,7 @@ export function RecordList({
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="aspect-[3/5] animate-pulse rounded-[16px] bg-gray-90"
+            className="aspect-[3/5] animate-pulse rounded-[8px] bg-gray-90"
           />
         ))}
       </div>
