@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { LogIn, LogOut, UserPlus } from "lucide-react";
 import Link from "next/link";
-import { BrandLogo } from "@/components/brand/BrandLogo";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/lib/auth-api";
 
@@ -41,7 +40,7 @@ export function AuthForm({
         }
         await signup(username, password, acceptedTerms, portalRole);
       } else {
-        await login(username, password, portalRole);
+        await login(username, password);
       }
       setUsername("");
       setPassword("");
@@ -60,21 +59,12 @@ export function AuthForm({
   }
 
   if (isAuthenticated && user) {
-    const matchesPortal = user.role === portalRole;
-
     return (
       <div className="flex flex-col gap-4 rounded-[24px] bg-gray-90 p-4">
-        <BrandLogo size="sm" />
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-bold text-white">{user.username}</p>
             <p className="text-xs capitalize text-gray-40">{user.role}</p>
-            {!matchesPortal && (
-              <p className="mt-1 text-xs text-orange-50">
-                Logged in as {user.role}. Use the{" "}
-                {user.role === "admin" ? "Admin" : "Member"} page instead.
-              </p>
-            )}
           </div>
           <button
             type="button"
@@ -91,8 +81,6 @@ export function AuthForm({
 
   return (
     <div className="flex flex-col gap-4 rounded-[24px] bg-gray-90 p-4">
-      <BrandLogo size="sm" />
-
       <p className="text-sm font-medium text-gray-40">{portalLabel} portal</p>
 
       <div className="flex rounded-[14px] bg-gray-80 p-1">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { TopNav } from "@/components/layout/TopNav";
 import { CreateRecordModal } from "@/components/records/CreateRecordModal";
 import { RecordList } from "@/components/records/RecordList";
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +14,6 @@ export default function RecordsPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-8">
-        <TopNav title="Records" />
         <div className="h-[420px] animate-pulse rounded-[20px] bg-gray-90" />
       </div>
     );
@@ -23,8 +21,6 @@ export default function RecordsPage() {
 
   return (
     <div className="relative flex flex-col gap-8 pb-8">
-      <TopNav title="Records" />
-
       {isAuthenticated && (isMember || isAdmin) ? (
         <section className="flex flex-col gap-4">
           {isAdmin && (
@@ -58,7 +54,7 @@ export default function RecordsPage() {
             type="button"
             aria-label="Create record"
             onClick={() => setModalOpen(true)}
-            className="fixed bottom-24 right-5 z-40 flex size-14 items-center justify-center rounded-full bg-orange-50 text-white shadow-lg"
+            className="fixed bottom-6 right-5 z-40 flex size-14 items-center justify-center rounded-full bg-orange-50 text-white shadow-lg"
           >
             <Plus className="size-7" strokeWidth={2.5} />
           </button>

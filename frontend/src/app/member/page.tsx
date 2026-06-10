@@ -1,4 +1,3 @@
-import { TopNav } from "@/components/layout/TopNav";
 import { AuthForm } from "@/components/member/AuthForm";
 import { QAAccordion } from "@/components/member/QAAccordion";
 import { QA_ITEMS, POLICY_SECTIONS } from "@/lib/data/member";
@@ -6,8 +5,6 @@ import { QA_ITEMS, POLICY_SECTIONS } from "@/lib/data/member";
 export default function MemberPage() {
   return (
     <div className="flex flex-col gap-8">
-      <TopNav title="Member" />
-
       <AuthForm portalRole="member" termsHref="/member#terms" />
 
       <section className="flex flex-col gap-3">
