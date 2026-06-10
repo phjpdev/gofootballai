@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LogIn, LogOut, UserPlus } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/lib/auth-api";
@@ -17,7 +17,7 @@ export function AuthForm({
   portalRole,
   termsHref = "/member#terms",
 }: AuthFormProps) {
-  const { user, isAuthenticated, isLoading, login, signup, logout } = useAuth();
+  const { isAuthenticated, isLoading, login, signup } = useAuth();
   const [mode, setMode] = useState<AuthMode>("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -58,25 +58,8 @@ export function AuthForm({
     );
   }
 
-  if (isAuthenticated && user) {
-    return (
-      <div className="flex flex-col gap-4 rounded-[24px] bg-gray-90 p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-bold text-white">{user.username}</p>
-            <p className="text-xs capitalize text-gray-40">{user.role}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="flex items-center gap-2 rounded-[14px] bg-gray-80 px-4 py-2 text-sm font-medium text-gray-20"
-          >
-            <LogOut className="size-4" />
-            Logout
-          </button>
-        </div>
-      </div>
-    );
+  if (isAuthenticated) {
+    return null;
   }
 
   return (
