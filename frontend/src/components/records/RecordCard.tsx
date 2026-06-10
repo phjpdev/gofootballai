@@ -138,13 +138,13 @@ export function RecordCard({
 
       <div
         className={cn(
-          "absolute inset-0 z-[1] flex flex-col items-center justify-center text-center",
-          compact ? "gap-1.5 px-3 py-4" : "gap-3 px-5 py-6",
-          showAdminActions && "pt-10",
+          "absolute inset-x-0 bottom-0 z-[1] flex flex-col items-center overflow-hidden text-center",
+          compact ? "h-[44%] gap-1 px-3 pb-4 pt-2" : "h-[40%] gap-1.5 px-5 pb-6 pt-3",
         )}
       >
         <time
           className={cn(
+            "shrink-0",
             hasMedia ? "text-white/80" : "text-gray-500",
             compact ? "text-[10px] leading-tight lg:text-[11px]" : "text-sm",
           )}
@@ -154,7 +154,7 @@ export function RecordCard({
 
         <h3
           className={cn(
-            "font-bold leading-snug",
+            "shrink-0 font-bold leading-snug",
             hasMedia ? "text-white" : "text-gray-900",
             compact ? "line-clamp-2 text-xs lg:text-sm" : "text-lg",
           )}
@@ -165,7 +165,7 @@ export function RecordCard({
         {previewContent && (
           <p
             className={cn(
-              "whitespace-pre-wrap",
+              "min-h-0 flex-1 overflow-hidden whitespace-pre-wrap",
               hasMedia ? "text-white/90" : "text-gray-700",
               compact
                 ? "line-clamp-3 text-[10px] leading-snug lg:text-[11px]"
