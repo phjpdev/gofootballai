@@ -1,6 +1,5 @@
 "use client";
 
-import { TopNav } from "@/components/layout/TopNav";
 import { SubNav } from "@/components/layout/SubNav";
 import { FeaturedMatchCard } from "@/components/cards/FeaturedMatchCard";
 import {
@@ -15,7 +14,6 @@ export default function AnalysisPage() {
     <HkjcProvider>
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-8">
-          <TopNav title="Analysis" />
           <HkjcDatePicker />
         </header>
 

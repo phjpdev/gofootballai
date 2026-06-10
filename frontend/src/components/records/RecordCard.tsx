@@ -1,10 +1,10 @@
 "use client";
 
 import { Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
 import type { Post } from "@/types";
+import { cn } from "@/lib/utils";
 
-const CONTENT_PREVIEW_LENGTH = 140;
+const CONTENT_PREVIEW_LENGTH = 80;
 
 function formatRecordDate(iso: string): string {
   const date = new Date(iso);
@@ -21,47 +21,88 @@ function formatRecordDate(iso: string): string {
 
 export function RecordCard({
   post,
+  compact = false,
   showAdminActions,
+  onOpen,
   onEdit,
   onDelete,
 }: {
   post: Post;
+  compact?: boolean;
   showAdminActions?: boolean;
+  onOpen?: (post: Post) => void;
   onEdit?: (post: Post) => void;
   onDelete?: (id: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const hasLongContent =
-    !!post.content && post.content.length > CONTENT_PREVIEW_LENGTH;
-  const displayContent =
-    expanded || !hasLongContent
-      ? post.content
-      : `${post.content!.slice(0, CONTENT_PREVIEW_LENGTH).trim()}…`;
   const hasMedia =
     (post.type === "photo" || post.type === "video") && !!post.mediaUrl;
+  const previewContent =
+    post.content && post.content.length > CONTENT_PREVIEW_LENGTH
+      ? `${post.content.slice(0, CONTENT_PREVIEW_LENGTH).trim()}…`
+      : post.content;
+
+  function handleCardClick() {
+    onOpen?.(post);
+  }
 
   return (
-    <article className="relative w-full overflow-hidden rounded-[20px] bg-white text-gray-900 shadow-sm">
+    <article
+      role={onOpen ? "button" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onClick={onOpen ? handleCardClick : undefined}
+      onKeyDown={
+        onOpen
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleCardClick();
+              }
+            }
+          : undefined
+      }
+      className={cn(
+        "relative w-full overflow-hidden rounded-[16px] bg-white text-gray-900 shadow-sm lg:rounded-[20px]",
+        onOpen && "cursor-pointer transition-transform hover:scale-[1.01]",
+      )}
+    >
       {showAdminActions && (onEdit || onDelete) && (
-        <div className="absolute right-3 top-3 z-10 flex gap-2">
+        <div className="absolute right-2 top-2 z-10 flex gap-1.5">
           {onEdit && (
             <button
               type="button"
               aria-label="Edit record"
-              onClick={() => onEdit(post)}
-              className="flex size-9 items-center justify-center rounded-full bg-orange-50 text-white shadow-lg"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(post);
+              }}
+              className={cn(
+                "flex items-center justify-center rounded-full bg-orange-50 text-white shadow-lg",
+                compact ? "size-7 lg:size-8" : "size-9",
+              )}
             >
-              <Pencil className="size-4" strokeWidth={2} />
+              <Pencil
+                className={compact ? "size-3 lg:size-3.5" : "size-4"}
+                strokeWidth={2}
+              />
             </button>
           )}
           {onDelete && (
             <button
               type="button"
               aria-label="Delete record"
-              onClick={() => onDelete(post.id)}
-              className="flex size-9 items-center justify-center rounded-full bg-orange-50 text-white shadow-lg"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(post.id);
+              }}
+              className={cn(
+                "flex items-center justify-center rounded-full bg-orange-50 text-white shadow-lg",
+                compact ? "size-7 lg:size-8" : "size-9",
+              )}
             >
-              <Trash2 className="size-4" strokeWidth={2} />
+              <Trash2
+                className={compact ? "size-3 lg:size-3.5" : "size-4"}
+                strokeWidth={2}
+              />
             </button>
           )}
         </div>
@@ -73,7 +114,12 @@ export function RecordCard({
           <img
             src={post.mediaUrl}
             alt={post.title}
-            className="aspect-[4/5] max-h-[420px] w-full object-contain"
+            className={cn(
+              "w-full object-cover",
+              compact
+                ? "aspect-[3/4] max-h-[200px] lg:max-h-none"
+                : "aspect-[4/5] max-h-[420px] object-contain",
+            )}
           />
         </div>
       )}
@@ -84,36 +130,55 @@ export function RecordCard({
             src={post.mediaUrl}
             controls
             playsInline
-            className="aspect-[4/5] max-h-[420px] w-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              "w-full",
+              compact
+                ? "aspect-[3/4] max-h-[200px] object-cover lg:max-h-none"
+                : "aspect-[4/5] max-h-[420px] object-contain",
+            )}
           />
         </div>
       )}
 
       <div
-        className={`flex flex-col gap-3 px-5 pb-5 ${hasMedia ? "pt-4" : "pt-14"}`}
+        className={cn(
+          "flex flex-col",
+          compact
+            ? "gap-1.5 px-3 pb-3 pt-2 lg:gap-2 lg:px-3 lg:pb-3 lg:pt-2"
+            : "gap-3 px-5 pb-5 pt-4",
+          !hasMedia && showAdminActions && "pt-12",
+        )}
       >
-        <time className="text-sm text-gray-500">
+        <time
+          className={cn(
+            "text-gray-500",
+            compact ? "text-[10px] leading-tight lg:text-[11px]" : "text-sm",
+          )}
+        >
           {formatRecordDate(post.createdAt)}
         </time>
 
-        <h3 className="text-lg font-bold leading-snug text-gray-900">
+        <h3
+          className={cn(
+            "font-bold leading-snug text-gray-900",
+            compact ? "line-clamp-2 text-xs lg:text-sm" : "text-lg",
+          )}
+        >
           {post.title}
         </h3>
 
-        {displayContent && (
-          <p className="whitespace-pre-wrap text-sm leading-[1.7] text-gray-700">
-            {displayContent}
-          </p>
-        )}
-
-        {hasLongContent && (
-          <button
-            type="button"
-            onClick={() => setExpanded((prev) => !prev)}
-            className="self-start text-sm font-medium text-blue-600"
+        {previewContent && (
+          <p
+            className={cn(
+              "whitespace-pre-wrap text-gray-700",
+              compact
+                ? "line-clamp-2 text-[10px] leading-snug lg:text-[11px]"
+                : "text-sm leading-[1.7]",
+            )}
           >
-            {expanded ? "收起" : "閱讀更多"}
-          </button>
+            {previewContent}
+          </p>
         )}
       </div>
     </article>

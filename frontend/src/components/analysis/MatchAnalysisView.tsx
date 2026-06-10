@@ -1,4 +1,4 @@
-import { TopNav } from "@/components/layout/TopNav";
+import Link from "next/link";
 import { SandowScoreCard } from "@/components/analysis/SandowScoreCard";
 import { ScoreBreakdown } from "@/components/analysis/ScoreBreakdown";
 import { AthleticSlider } from "@/components/analysis/AthleticSlider";
@@ -6,7 +6,7 @@ import { FitnessMetrics } from "@/components/analysis/FitnessMetrics";
 import { ActivitiesChart } from "@/components/charts/ActivitiesChart";
 import { StepsStatsChart } from "@/components/charts/StepsStatsChart";
 import type { Match } from "@/types";
-import { Clock, MapPin } from "lucide-react";
+import { ChevronLeft, Clock, MapPin } from "lucide-react";
 
 type MatchAnalysisViewProps = {
   match: Match;
@@ -15,7 +15,13 @@ type MatchAnalysisViewProps = {
 export function MatchAnalysisView({ match }: MatchAnalysisViewProps) {
   return (
     <div className="flex flex-col gap-6">
-      <TopNav title="Match Analysis" showBack />
+      <Link
+        href="/analysis"
+        className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white"
+      >
+        <ChevronLeft className="size-4" />
+        Back to Analysis
+      </Link>
 
       <div className="flex flex-col gap-3">
         <div className="rounded-[24px] bg-gray-90 p-4">
