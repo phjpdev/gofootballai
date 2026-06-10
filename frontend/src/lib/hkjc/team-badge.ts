@@ -1,4 +1,9 @@
 export function getTeamInitials(name: string): string {
+  const cjk = name.match(/[\u4e00-\u9fff]/g);
+  if (cjk?.length) {
+    return cjk.slice(0, 2).join("");
+  }
+
   const words = name
     .replace(/[^a-zA-Z0-9\s]/g, " ")
     .trim()

@@ -10,6 +10,8 @@ export type HkjcMatch = {
   title: string;
   homeTeam: string;
   awayTeam: string;
+  homeTeamEn: string;
+  awayTeamEn: string;
   homeTeamId: string;
   awayTeamId: string;
   tournamentId: string;
