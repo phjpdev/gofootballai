@@ -2,16 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   BarChart3,
   FolderOpen,
   Home,
   LayoutDashboard,
   LogOut,
-  Menu,
   Users,
-  X,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { useAuth } from "@/context/AuthContext";
@@ -73,20 +70,8 @@ function UserMenu({
 export function SiteHeader() {
   const pathname = usePathname();
   const { isAdmin, isAuthenticated } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const navItems = isAdmin ? [...NAV_ITEMS, ADMIN_NAV] : [...NAV_ITEMS];
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [menuOpen]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-90 bg-gray-100">
@@ -125,53 +110,8 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2 lg:hidden">
           {isAuthenticated && <UserMenu />}
-          <button
-            type="button"
-            aria-label={menuOpen ? "關閉選單" : "開啟選單"}
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((prev) => !prev)}
-            className="flex size-11 items-center justify-center rounded-[16px] bg-gray-90 text-white"
-          >
-            {menuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
-          </button>
         </div>
       </div>
-
-      {menuOpen && (
-        <>
-          <button
-            type="button"
-            aria-label="關閉選單"
-            className="fixed inset-0 top-[72px] z-40 bg-black/60 lg:hidden"
-            onClick={() => setMenuOpen(false)}
-          />
-          <nav className="absolute left-0 right-0 top-[72px] z-50 border-b border-gray-90 bg-gray-100 px-4 py-3 lg:hidden">
-            <div className="flex flex-col gap-1">
-              {navItems.map(({ href, label, icon: Icon }) => {
-                const isActive = isNavActive(pathname, href);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={cn(
-                      "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium",
-                      isActive
-                        ? "bg-gray-90 text-orange-50"
-                        : "text-gray-40 hover:text-white",
-                    )}
-                  >
-                    <Icon
-                      className="size-5"
-                      strokeWidth={isActive ? 2.5 : 2}
-                    />
-                    {label}
-                  </Link>
-                );
-              })}
-            </div>
-          </nav>
-        </>
-      )}
     </header>
   );
 }
