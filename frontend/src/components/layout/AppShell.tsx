@@ -1,5 +1,6 @@
 "use client";
 
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -11,6 +12,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

@@ -13,20 +13,33 @@ export default function RecordsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-4">
         <div className="h-[420px] animate-pulse rounded-[20px] bg-gray-90" />
       </div>
     );
   }
 
   return (
-    <div className="relative flex flex-col gap-8 pb-8">
+    <div className="flex flex-col gap-4 lg:gap-6">
       {isAuthenticated && (isMember || isAdmin) ? (
         <section className="flex flex-col gap-4">
           {isAdmin && (
-            <p className="text-sm leading-[1.6] text-gray-40">
-              Tap + to upload photos, videos, or text announcements.
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <p className="text-sm leading-[1.6] text-gray-40">
+                Tap + to upload photos, videos, or text announcements.
+              </p>
+              <button
+                type="button"
+                aria-label="Create record"
+                onClick={() => setModalOpen(true)}
+                className="flex size-12 shrink-0 items-center justify-center rounded-full bg-orange-50 text-white shadow-lg lg:size-16"
+              >
+                <Plus
+                  className="size-6 lg:size-8"
+                  strokeWidth={2.5}
+                />
+              </button>
+            </div>
           )}
           <RecordList showAdminActions={isAdmin} />
         </section>
@@ -49,20 +62,10 @@ export default function RecordsPage() {
       )}
 
       {isAdmin && (
-        <>
-          <button
-            type="button"
-            aria-label="Create record"
-            onClick={() => setModalOpen(true)}
-            className="fixed bottom-6 right-5 z-40 flex size-14 items-center justify-center rounded-full bg-orange-50 text-white shadow-lg"
-          >
-            <Plus className="size-7" strokeWidth={2.5} />
-          </button>
-          <CreateRecordModal
-            open={modalOpen}
-            onClose={() => setModalOpen(false)}
-          />
-        </>
+        <CreateRecordModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+        />
       )}
     </div>
   );
