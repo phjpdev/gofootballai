@@ -19,17 +19,17 @@ const router = Router();
 const usernameSchema = z
   .string()
   .trim()
-  .min(3, "Account name must be at least 3 characters")
-  .max(32, "Account name must be at most 32 characters")
+  .min(3, "帳戶名稱至少需要 3 個字元")
+  .max(32, "帳戶名稱最多 32 個字元")
   .regex(
     /^[a-zA-Z0-9_]+$/,
-    "Account name can only contain letters, numbers, and underscores",
+    "帳戶名稱只能包含英文字母、數字及底線",
   );
 
 const passwordSchema = z
   .string()
-  .min(6, "Password must be at least 6 characters")
-  .max(128, "Password must be at most 128 characters");
+  .min(6, "密碼至少需要 6 個字元")
+  .max(128, "密碼最多 128 個字元");
 
 const createUserSchema = z.object({
   username: usernameSchema,
@@ -48,7 +48,7 @@ const updateUserSchema = z
       data.username !== undefined ||
       data.password !== undefined ||
       data.role !== undefined,
-    { message: "At least one field is required" },
+    { message: "請至少填寫一項欄位" },
   );
 
 router.use(requireAuth, requireAdmin);
@@ -62,7 +62,7 @@ router.post("/", async (req, res) => {
   const parsed = createUserSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({
-      error: parsed.error.issues[0]?.message ?? "Invalid request",
+      error: parsed.error.issues[0]?.message ?? "請求無效",
     });
     return;
   }
@@ -81,10 +81,10 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     if (error instanceof Error && error.message === "USERNAME_TAKEN") {
-      res.status(409).json({ error: "Account name is already taken" });
+      res.status(409).json({ error: "此帳戶名稱已被使用" });
       return;
     }
-    res.status(500).json({ error: "Failed to create user" });
+    res.status(500).json({ error: "建立用戶失敗" });
   }
 });
 
@@ -93,35 +93,35 @@ router.patch("/:id", async (req: AuthedRequest, res) => {
   const parsed = updateUserSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({
-      error: parsed.error.issues[0]?.message ?? "Invalid request",
+      error: parsed.error.issues[0]?.message ?? "請求無效",
     });
     return;
   }
 
   const existing = await findUserById(id);
   if (!existing) {
-    res.status(404).json({ error: "User not found" });
+    res.status(404).json({ error: "找不到用戶" });
     return;
   }
 
   if (req.user?.sub === id && parsed.data.role && parsed.data.role !== "admin") {
-    res.status(400).json({ error: "You cannot remove your own admin role" });
+    res.status(400).json({ error: "無法移除自己的管理員權限" });
     return;
   }
 
   try {
     const user = await updateUser(id, parsed.data);
     if (!user) {
-      res.status(404).json({ error: "User not found" });
+      res.status(404).json({ error: "找不到用戶" });
       return;
     }
     res.json({ user });
   } catch (error) {
     if (error instanceof Error && error.message === "USERNAME_TAKEN") {
-      res.status(409).json({ error: "Account name is already taken" });
+      res.status(409).json({ error: "此帳戶名稱已被使用" });
       return;
     }
-    res.status(500).json({ error: "Failed to update user" });
+    res.status(500).json({ error: "更新用戶失敗" });
   }
 });
 
@@ -129,13 +129,13 @@ router.delete("/:id", async (req: AuthedRequest, res) => {
   const id = String(req.params.id);
 
   if (req.user?.sub === id) {
-    res.status(400).json({ error: "You cannot delete your own account" });
+    res.status(400).json({ error: "無法刪除自己的帳戶" });
     return;
   }
 
   const deleted = await deleteUser(id);
   if (!deleted) {
-    res.status(404).json({ error: "User not found" });
+    res.status(404).json({ error: "找不到用戶" });
     return;
   }
 

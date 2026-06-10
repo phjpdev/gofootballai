@@ -15,18 +15,19 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { useAuth } from "@/context/AuthContext";
+import { formatRole, NAV } from "@/lib/i18n/zh-hk";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/analysis", label: "Analysis", icon: BarChart3 },
-  { href: "/records", label: "Records", icon: FolderOpen },
-  { href: "/member", label: "Member", icon: Users },
+  { href: "/", label: NAV.home, icon: Home },
+  { href: "/analysis", label: NAV.analysis, icon: BarChart3 },
+  { href: "/records", label: NAV.records, icon: FolderOpen },
+  { href: "/member", label: NAV.member, icon: Users },
 ] as const;
 
 const ADMIN_NAV = {
   href: "/admin",
-  label: "Manage",
+  label: NAV.manage,
   icon: LayoutDashboard,
 } as const;
 
@@ -52,7 +53,7 @@ function UserMenu({
         <p className="truncate text-sm font-semibold text-white">
           {user.username}
         </p>
-        <p className="text-xs capitalize text-orange-50">{user.role}</p>
+        <p className="text-xs text-orange-50">{formatRole(user.role)}</p>
       </div>
       <button
         type="button"
@@ -63,7 +64,7 @@ function UserMenu({
         className="flex shrink-0 items-center gap-2 rounded-[14px] bg-gray-90 px-3 py-2 text-sm font-medium text-gray-20 transition-colors hover:text-white"
       >
         <LogOut className="size-4" />
-        <span className="hidden sm:inline">Logout</span>
+        <span className="hidden sm:inline">登出</span>
       </button>
     </div>
   );
@@ -126,7 +127,7 @@ export function SiteHeader() {
           {isAuthenticated && <UserMenu />}
           <button
             type="button"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-label={menuOpen ? "關閉選單" : "開啟選單"}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((prev) => !prev)}
             className="flex size-11 items-center justify-center rounded-[16px] bg-gray-90 text-white"
@@ -140,7 +141,7 @@ export function SiteHeader() {
         <>
           <button
             type="button"
-            aria-label="Close menu"
+            aria-label="關閉選單"
             className="fixed inset-0 top-[72px] z-40 bg-black/60 lg:hidden"
             onClick={() => setMenuOpen(false)}
           />

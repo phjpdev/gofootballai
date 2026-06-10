@@ -60,7 +60,7 @@ export function FeaturedMatchCard({
           </div>
           <Link
             href={href}
-            aria-label={`View ${title}`}
+            aria-label={`查看 ${title}`}
             className="flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-orange-50 shadow-[0_0_0_4px_rgba(249,115,22,0.25)]"
           >
             <ArrowRight className="size-6 text-white" strokeWidth={2.5} />

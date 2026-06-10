@@ -9,14 +9,14 @@ export default function MemberPage() {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-bold tracking-[-0.048px] text-white">
-          Q&amp;A
+          常見問題
         </h2>
         <QAAccordion items={QA_ITEMS} />
       </section>
 
       <section id="terms" className="flex flex-col gap-3 scroll-mt-24">
         <h2 className="text-base font-bold tracking-[-0.048px] text-white">
-          Policy
+          政策條款
         </h2>
         {POLICY_SECTIONS.map((section) => (
           <div

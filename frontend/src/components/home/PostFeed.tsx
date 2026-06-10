@@ -14,10 +14,10 @@ export function PostFeed() {
   if (posts.length === 0) {
     return (
       <section className="flex flex-col gap-3">
-        <SubNav title="Latest Updates" />
+        <SubNav title="最新動態" />
         <div className="flex h-[320px] items-center justify-center rounded-[20px] bg-gray-90 p-6 text-center lg:max-w-md">
           <p className="text-sm leading-[1.6] text-gray-40">
-            No updates yet. Admin posts will appear here.
+            暫無最新資訊，管理員上傳後會顯示於此。
           </p>
         </div>
       </section>
@@ -26,7 +26,7 @@ export function PostFeed() {
 
   return (
     <section className="flex flex-col gap-4">
-      <SubNav title="Latest Updates" count={posts.length} />
+      <SubNav title="最新動態" count={posts.length} />
       <div className="record-grid">
         {posts.map((post) => (
           <RecordCard

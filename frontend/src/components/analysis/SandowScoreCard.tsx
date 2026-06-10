@@ -13,7 +13,7 @@ export function SandowScoreCard({ score = 61 }: { score?: number }) {
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <p className="w-full text-base font-bold leading-[22px] tracking-[-0.112px] text-white">
-          Sandow Score
+          AI 戰力評分
         </p>
         <div className="flex w-full items-center gap-2">
           <div className="flex items-center gap-1">
@@ -28,7 +28,7 @@ export function SandowScoreCard({ score = 61 }: { score?: number }) {
               </div>
             </div>
             <p className="text-sm font-normal leading-[1.6] text-white whitespace-nowrap">
-              Average Fitness
+              綜合實力
             </p>
           </div>
           <div className="relative size-1.5 shrink-0">
@@ -46,7 +46,7 @@ export function SandowScoreCard({ score = 61 }: { score?: number }) {
               </div>
             </div>
             <p className="text-sm font-normal leading-[1.6] text-white whitespace-nowrap">
-              plus
+              進階分析
             </p>
           </div>
         </div>

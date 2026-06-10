@@ -62,7 +62,7 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <div className="flex items-center gap-2">
             <h3 className="truncate text-lg font-bold tracking-[-0.072px] text-white">
-              {match.homeTeam} vs {match.awayTeam}
+              {match.homeTeam} 對 {match.awayTeam}
             </h3>
             <span className="flex h-6 shrink-0 items-center justify-center rounded-lg bg-gray-80 px-2 py-1 text-xs font-semibold tracking-[-0.018px] text-white">
               {match.tournamentCode}
@@ -95,7 +95,7 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
               <>
                 <span className="size-1 rounded-full bg-gray-70" />
                 <span className="text-sm font-medium tracking-[-0.028px] text-white">
-                  H {match.hadOdds.home}
+                  主 {match.hadOdds.home}
                 </span>
                 <span className="text-sm font-medium tracking-[-0.028px] text-gray-40">
                   {implied}%

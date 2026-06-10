@@ -55,7 +55,7 @@ export function RecordDetailModal({
           {showAdminActions && onEdit && (
             <button
               type="button"
-              aria-label="Edit record"
+              aria-label="編輯紀錄"
               onClick={() => onEdit(post)}
               className="flex size-10 items-center justify-center rounded-full bg-orange-50 text-white"
             >
@@ -65,7 +65,7 @@ export function RecordDetailModal({
           {showAdminActions && onDelete && (
             <button
               type="button"
-              aria-label="Delete record"
+              aria-label="刪除紀錄"
               onClick={() => onDelete(post.id)}
               className="flex size-10 items-center justify-center rounded-full bg-orange-50 text-white"
             >
@@ -74,7 +74,7 @@ export function RecordDetailModal({
           )}
           <button
             type="button"
-            aria-label="Close"
+            aria-label="關閉"
             onClick={onClose}
             className="flex size-10 items-center justify-center rounded-full bg-gray-90 text-white"
           >

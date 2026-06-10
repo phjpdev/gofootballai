@@ -26,7 +26,7 @@ export function BrandLogo({
     <div className={cn("flex items-center gap-2 lg:gap-3", className)}>
       <Image
         src="/images/go-football-logo.png"
-        alt="GO Football"
+        alt="GO Football AI"
         width={isHeader ? 64 : config.mark}
         height={isHeader ? 64 : config.mark}
         className={cn(

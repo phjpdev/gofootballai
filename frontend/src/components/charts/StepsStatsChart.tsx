@@ -34,13 +34,13 @@ export function StepsStatsChart() {
     <section className="flex w-full flex-col gap-2">
       <div className="flex h-6 w-full items-center justify-between">
         <p className="text-base font-bold leading-none tracking-[-0.048px] text-white">
-          Steps Stats
+          比分走勢
         </p>
         <button
           type="button"
           className="text-sm font-medium leading-none tracking-[-0.028px] text-[#f97316]"
         >
-          See All
+          查看全部
         </button>
       </div>
 
@@ -167,7 +167,7 @@ export function StepsStatsChart() {
                 1,187
               </p>
               <p className="h-[27px] w-11 text-lg font-medium leading-none tracking-[-0.072px] text-[#9ea0a5]">
-                Total
+                總計
               </p>
             </div>
             <div className="flex items-start gap-6">
@@ -185,7 +185,7 @@ export function StepsStatsChart() {
                   </div>
                 </div>
                 <p className="text-xs font-medium leading-none tracking-[-0.018px] text-white">
-                  Current
+                  本場
                 </p>
               </div>
               <div className="flex items-center gap-1">
@@ -202,7 +202,7 @@ export function StepsStatsChart() {
                   </div>
                 </div>
                 <p className="text-xs font-medium leading-none tracking-[-0.018px] text-white">
-                  Previous
+                  上場
                 </p>
               </div>
             </div>

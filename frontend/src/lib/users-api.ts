@@ -12,9 +12,9 @@ export type ManagedUser = {
 async function parseError(response: Response): Promise<string> {
   try {
     const data = (await response.json()) as { error?: string };
-    return data.error ?? "Request failed";
+    return data.error ?? "請求失敗，請稍後再試";
   } catch {
-    return "Request failed";
+    return "請求失敗，請稍後再試";
   }
 }
 

@@ -16,22 +16,22 @@ const credentialsSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(3, "Account name must be at least 3 characters")
-    .max(32, "Account name must be at most 32 characters")
+    .min(3, "帳戶名稱至少需要 3 個字元")
+    .max(32, "帳戶名稱最多 32 個字元")
     .regex(
       /^[a-zA-Z0-9_]+$/,
-      "Account name can only contain letters, numbers, and underscores",
+      "帳戶名稱只能包含英文字母、數字及底線",
     ),
   password: z
     .string()
-    .min(6, "Password must be at least 6 characters")
-    .max(128, "Password must be at most 128 characters"),
+    .min(6, "密碼至少需要 6 個字元")
+    .max(128, "密碼最多 128 個字元"),
 });
 
 const signupSchema = credentialsSchema.extend({
   role: z.enum(["member", "admin"]),
   acceptedTerms: z.literal(true, {
-    errorMap: () => ({ message: "You must accept the Terms of Service" }),
+    errorMap: () => ({ message: "請勾選並同意服務條款" }),
   }),
 });
 
@@ -51,7 +51,7 @@ router.post("/signup", async (req, res) => {
   const parsed = signupSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({
-      error: parsed.error.issues[0]?.message ?? "Invalid request",
+      error: parsed.error.issues[0]?.message ?? "請求無效",
     });
     return;
   }
@@ -64,10 +64,10 @@ router.post("/signup", async (req, res) => {
     res.status(201).json({ token, user: publicUser(user) });
   } catch (error) {
     if (error instanceof Error && error.message === "USERNAME_TAKEN") {
-      res.status(409).json({ error: "Account name is already taken" });
+      res.status(409).json({ error: "此帳戶名稱已被使用" });
       return;
     }
-    res.status(500).json({ error: "Failed to create account" });
+    res.status(500).json({ error: "建立帳戶失敗" });
   }
 });
 
@@ -75,7 +75,7 @@ router.post("/login", async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({
-      error: parsed.error.issues[0]?.message ?? "Invalid request",
+      error: parsed.error.issues[0]?.message ?? "請求無效",
     });
     return;
   }
@@ -84,7 +84,7 @@ router.post("/login", async (req, res) => {
   const user = await findUserByUsername(username);
 
   if (!user || !(await verifyPassword(user, password))) {
-    res.status(401).json({ error: "Invalid account name or password" });
+    res.status(401).json({ error: "帳戶名稱或密碼不正確" });
     return;
   }
 
@@ -92,8 +92,8 @@ router.post("/login", async (req, res) => {
     res.status(403).json({
       error:
         role === "admin"
-          ? "This account is not an admin. Use the Member page to log in."
-          : "This account is an admin. Use the Admin page to log in.",
+          ? "此帳戶並非管理員，請前往會員頁面登入。"
+          : "此帳戶為管理員，請前往管理頁面登入。",
     });
     return;
   }
@@ -109,7 +109,7 @@ router.post("/logout", requireAuth, (_req, res) => {
 router.get("/me", requireAuth, async (req: AuthedRequest, res) => {
   const user = await findUserById(req.user!.sub);
   if (!user) {
-    res.status(401).json({ error: "User not found" });
+    res.status(401).json({ error: "找不到用戶" });
     return;
   }
   res.json({ user: publicUser(user) });

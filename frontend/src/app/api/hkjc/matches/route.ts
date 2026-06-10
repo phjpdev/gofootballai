@@ -14,7 +14,7 @@ export async function GET() {
   } catch (error) {
     console.error("HKJC matches fetch failed:", error);
     return NextResponse.json(
-      { error: "Failed to fetch HKJC matches" },
+      { error: "無法取得馬會賽事資料" },
       { status: 502 },
     );
   }

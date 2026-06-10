@@ -2,11 +2,20 @@
 
 import { cn } from "@/lib/utils";
 
-const TABS = ["1d", "1w", "1m", "1y", "All"] as const;
+const TABS = ["1d", "1w", "1m", "1y", "all"] as const;
+type TabKey = (typeof TABS)[number];
+
+const TAB_LABEL: Record<TabKey, string> = {
+  "1d": "1日",
+  "1w": "1週",
+  "1m": "1月",
+  "1y": "1年",
+  all: "全部",
+};
 
 type TabGroupProps = {
-  activeTab?: (typeof TABS)[number];
-  onTabChange?: (tab: (typeof TABS)[number]) => void;
+  activeTab?: TabKey;
+  onTabChange?: (tab: TabKey) => void;
   variant?: "dark" | "darker";
   className?: string;
 };
@@ -43,7 +52,7 @@ export function TabGroup({
                 isActive ? "text-white" : "text-gray-40",
               )}
             >
-              {tab}
+              {TAB_LABEL[tab]}
             </span>
           </button>
         );

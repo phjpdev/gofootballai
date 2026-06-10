@@ -18,7 +18,7 @@ export default function AnalysisPage() {
         </header>
 
         <section className="flex flex-col gap-2">
-          <SubNav title="Featured" count={FEATURED_COUNT} />
+          <SubNav title="精選賽事" count={FEATURED_COUNT} />
           <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
             {FEATURED_ITEMS.map((item) => (
               <FeaturedMatchCard key={item.id} {...item} />

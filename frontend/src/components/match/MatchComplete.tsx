@@ -53,12 +53,12 @@ export function MatchComplete() {
       <div className="flex flex-col items-center gap-8 px-4 pt-[113px]">
         <div className="flex w-full flex-col items-center gap-4 text-center">
           <h1 className="text-[30px] font-bold leading-[38px] tracking-[-0.3px] text-white">
-            Match Analysis
+            賽事分析
             <br />
-            Complete!
+            完成！
           </h1>
           <p className="text-base leading-[1.6] tracking-[-0.048px] text-gray-20">
-            AI Rating +8 added.
+            AI 評分 +8 已加入。
           </p>
         </div>
 
@@ -67,7 +67,7 @@ export function MatchComplete() {
             <StatColumn
               icon={<Timer className="size-6 text-gray-30" strokeWidth={2} />}
               value="90"
-              unit="min"
+              unit="分鐘"
               bgColor="#24262B"
               fillColor="#D7D8D9"
               fillHeight="93px"
@@ -75,7 +75,7 @@ export function MatchComplete() {
             <StatColumn
               icon={<Flame className="size-6 text-blue-40" strokeWidth={2} />}
               value="3"
-              unit="goals"
+              unit="入球"
               bgColor="#1E3A8A"
               fillColor="#2563EB"
               fillHeight="157px"
@@ -83,7 +83,7 @@ export function MatchComplete() {
             <StatColumn
               icon={<Dumbbell className="size-6 text-orange-30" strokeWidth={2} />}
               value="68"
-              unit="% poss"
+              unit="% 控球"
               bgColor="#7C2D12"
               fillColor="#F97316"
               fillHeight="228px"
@@ -94,15 +94,15 @@ export function MatchComplete() {
             <div className="flex items-center justify-between">
               <div className="flex flex-col gap-2">
                 <p className="text-lg font-bold tracking-[-0.072px] text-white">
-                  More AI Insights
+                  更多 AI 洞察
                 </p>
                 <p className="text-sm leading-[1.6] tracking-[-0.028px] text-gray-40">
-                  +12 More Suggestions
+                  另有 12 項建議
                 </p>
               </div>
               <button
                 type="button"
-                aria-label="View suggestions"
+                aria-label="查看建議"
                 className="flex size-16 shrink-0 items-center justify-center rounded-[21px] bg-orange-50"
               >
                 <ArrowRight className="size-6 text-white" strokeWidth={2.5} />
@@ -115,7 +115,7 @@ export function MatchComplete() {
             className="flex h-14 w-full items-center justify-center gap-3 rounded-[19px] bg-white px-7 py-4"
           >
             <span className="text-base font-semibold tracking-[-0.048px] text-gray-100">
-              Great, Thanks!
+              好的，謝謝！
             </span>
             <Check className="size-6 text-gray-100" strokeWidth={2.5} />
           </Link>

@@ -70,7 +70,7 @@ export function RecordCard({
           {onEdit && (
             <button
               type="button"
-              aria-label="Edit record"
+              aria-label="編輯紀錄"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(post);
@@ -89,7 +89,7 @@ export function RecordCard({
           {onDelete && (
             <button
               type="button"
-              aria-label="Delete record"
+              aria-label="刪除紀錄"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(post.id);

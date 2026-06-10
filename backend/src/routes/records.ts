@@ -58,32 +58,32 @@ router.post(
     const content = String(req.body.content ?? "").trim();
 
     if (!type) {
-      res.status(400).json({ error: "Invalid record type" });
+      res.status(400).json({ error: "紀錄類型無效" });
       return;
     }
 
     if (!title) {
-      res.status(400).json({ error: "Title is required" });
+      res.status(400).json({ error: "請填寫標題" });
       return;
     }
 
     if (title.length > 200) {
-      res.status(400).json({ error: "Title must be at most 200 characters" });
+      res.status(400).json({ error: "標題最多 200 個字元" });
       return;
     }
 
     if ((type === "photo" || type === "video") && !req.file) {
-      res.status(400).json({ error: "Please upload a photo or video file" });
+      res.status(400).json({ error: "請上傳相片或影片檔案" });
       return;
     }
 
     if (type === "photo" && !req.file?.mimetype.startsWith("image/")) {
-      res.status(400).json({ error: "Photo records require an image file" });
+      res.status(400).json({ error: "相片紀錄需要圖片檔案" });
       return;
     }
 
     if (type === "video" && !req.file?.mimetype.startsWith("video/")) {
-      res.status(400).json({ error: "Video records require a video file" });
+      res.status(400).json({ error: "影片紀錄需要影片檔案" });
       return;
     }
 
@@ -101,7 +101,7 @@ router.post(
       res.status(201).json({ record });
     } catch {
       if (mediaUrl) deleteUploadedFile(mediaUrl);
-      res.status(500).json({ error: "Failed to create record" });
+      res.status(500).json({ error: "建立紀錄失敗" });
     }
   },
 );
@@ -116,7 +116,7 @@ router.patch(
     const existing = await getRecordById(id);
 
     if (!existing) {
-      res.status(404).json({ error: "Record not found" });
+      res.status(404).json({ error: "找不到紀錄" });
       return;
     }
 
@@ -125,12 +125,12 @@ router.patch(
     const content = String(req.body.content ?? "").trim();
 
     if (!title) {
-      res.status(400).json({ error: "Title is required" });
+      res.status(400).json({ error: "請填寫標題" });
       return;
     }
 
     if (title.length > 200) {
-      res.status(400).json({ error: "Title must be at most 200 characters" });
+      res.status(400).json({ error: "標題最多 200 個字元" });
       return;
     }
 
@@ -141,25 +141,25 @@ router.patch(
     } else if (req.file) {
       if (type === "photo" && !req.file.mimetype.startsWith("image/")) {
         deleteUploadedFile(publicUploadPath(req.file.filename));
-        res.status(400).json({ error: "Photo records require an image file" });
+        res.status(400).json({ error: "相片紀錄需要圖片檔案" });
         return;
       }
       if (type === "video" && !req.file.mimetype.startsWith("video/")) {
         deleteUploadedFile(publicUploadPath(req.file.filename));
-        res.status(400).json({ error: "Video records require a video file" });
+        res.status(400).json({ error: "影片紀錄需要影片檔案" });
         return;
       }
       mediaUrl = publicUploadPath(req.file.filename);
     } else if (type !== existing.type) {
       res.status(400).json({
-        error: "Please upload a new file when changing the record type",
+        error: "更改紀錄類型時請上傳新檔案",
       });
       return;
     } else if (
       (type === "photo" || type === "video") &&
       !existing.mediaUrl
     ) {
-      res.status(400).json({ error: "Please upload a photo or video file" });
+      res.status(400).json({ error: "請上傳相片或影片檔案" });
       return;
     }
 
@@ -173,7 +173,7 @@ router.patch(
 
       if (!record) {
         if (req.file) deleteUploadedFile(publicUploadPath(req.file.filename));
-        res.status(404).json({ error: "Record not found" });
+        res.status(404).json({ error: "找不到紀錄" });
         return;
       }
 
@@ -187,7 +187,7 @@ router.patch(
       res.json({ record });
     } catch {
       if (req.file) deleteUploadedFile(publicUploadPath(req.file.filename));
-      res.status(500).json({ error: "Failed to update record" });
+      res.status(500).json({ error: "更新紀錄失敗" });
     }
   },
 );
@@ -200,7 +200,7 @@ router.delete(
     const id = String(req.params.id);
     const deleted = await deleteRecord(id);
     if (!deleted) {
-      res.status(404).json({ error: "Record not found" });
+      res.status(404).json({ error: "找不到紀錄" });
       return;
     }
 

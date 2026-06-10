@@ -12,7 +12,7 @@ export default function HomePage() {
       <section className="relative aspect-[4/3] w-full overflow-hidden rounded-[24px] sm:aspect-[16/9] lg:aspect-[21/9]">
         <Image
           src="/images/featured-home-hero.png"
-          alt="Soccer match action"
+          alt="2026 世界盃足球賽事"
           fill
           className="object-cover object-center"
           sizes="(max-width: 1024px) 100vw, 1152px"

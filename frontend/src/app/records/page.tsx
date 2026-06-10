@@ -26,11 +26,11 @@ export default function RecordsPage() {
           {isAdmin && (
             <div className="flex items-start justify-between gap-4">
               <p className="text-sm leading-[1.6] text-gray-40">
-                Tap + to upload photos, videos, or text announcements.
+                點擊 + 上傳相片、影片或文字公告。
               </p>
               <button
                 type="button"
-                aria-label="Create record"
+                aria-label="新增紀錄"
                 onClick={() => setModalOpen(true)}
                 className="flex size-12 shrink-0 items-center justify-center rounded-full bg-orange-50 text-white shadow-lg lg:size-16"
               >
@@ -48,15 +48,15 @@ export default function RecordsPage() {
           <div className="flex size-14 items-center justify-center rounded-full bg-gray-80">
             <Lock className="size-6 text-gray-40" />
           </div>
-          <h2 className="text-base font-bold text-white">Members Only</h2>
+          <h2 className="text-base font-bold text-white">會員專區</h2>
           <p className="text-sm leading-[1.6] text-gray-40">
-            Log in or sign up on the Member page to view admin uploads.
+            請先登入或註冊會員帳戶，以查看管理員上傳的內容。
           </p>
           <Link
             href="/member"
             className="rounded-[19px] bg-orange-50 px-6 py-3 text-sm font-semibold text-white"
           >
-            Go to Member
+            前往會員頁面
           </Link>
         </section>
       )}

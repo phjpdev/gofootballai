@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { NAV } from "@/lib/i18n/zh-hk";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Home" },
-  { href: "/analysis", label: "Analysis" },
-  { href: "/records", label: "Records" },
-  { href: "/member", label: "Member" },
+  { href: "/", label: NAV.home },
+  { href: "/analysis", label: NAV.analysis },
+  { href: "/records", label: NAV.records },
+  { href: "/member", label: NAV.member },
 ] as const;
 
 const LEGAL_ITEMS = [
-  { href: "/member#terms", label: "Terms of Service" },
-  { href: "/member#terms", label: "Privacy Policy" },
-  { href: "/member#terms", label: "Content Policy" },
+  { href: "/member#terms", label: "服務條款" },
+  { href: "/member#terms", label: "私隱政策" },
+  { href: "/member#terms", label: "內容政策" },
 ] as const;
 
 export function SiteFooter() {
@@ -24,14 +25,13 @@ export function SiteFooter() {
           <div className="flex flex-col gap-4">
             <BrandLogo size="md" />
             <p className="max-w-sm text-sm leading-[1.7] text-gray-40">
-              AI-powered football analytics, live match insights, and member
-              updates from GO Football AI.
+              專為香港球迷打造的 2026 世界盃 AI 分析平台，提供賽事預測、戰術數據及會員最新資訊。
             </p>
           </div>
 
           <div className="flex flex-col gap-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-40">
-              Navigate
+            <p className="text-xs font-bold tracking-[0.12em] text-gray-40">
+              網站導覽
             </p>
             <nav className="flex flex-col gap-2">
               {NAV_ITEMS.map(({ href, label }) => (
@@ -47,8 +47,8 @@ export function SiteFooter() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-40">
-              Legal
+            <p className="text-xs font-bold tracking-[0.12em] text-gray-40">
+              法律條款
             </p>
             <nav className="flex flex-col gap-2">
               {LEGAL_ITEMS.map(({ href, label }) => (
@@ -65,7 +65,7 @@ export function SiteFooter() {
         </div>
 
         <div className="border-t border-gray-90 pt-6 text-xs text-gray-40">
-          © {year} GO Football AI. All rights reserved.
+          © {year} 世界盃 AI。版權所有。
         </div>
       </div>
     </footer>

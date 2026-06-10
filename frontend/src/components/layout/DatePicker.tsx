@@ -44,7 +44,7 @@ export function DatePicker({
                 allActive ? "text-white" : "text-gray-40",
               )}
             >
-              All
+              全部
             </span>
             <span
               className={cn(

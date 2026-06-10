@@ -75,7 +75,7 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
       file?: File;
     }) => {
       if (!token) {
-        throw new Error("Not authenticated");
+        throw new Error("請先登入");
       }
       const record = await createRecord(token, input);
       setPosts((prev) => [record, ...prev]);
@@ -94,7 +94,7 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
       },
     ) => {
       if (!token) {
-        throw new Error("Not authenticated");
+        throw new Error("請先登入");
       }
       const record = await updateRecord(token, id, input);
       setPosts((prev) =>
@@ -107,7 +107,7 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
   const removePost = useCallback(
     async (id: string) => {
       if (!token) {
-        throw new Error("Not authenticated");
+        throw new Error("請先登入");
       }
       await deleteRecord(token, id);
       setPosts((prev) => prev.filter((post) => post.id !== id));

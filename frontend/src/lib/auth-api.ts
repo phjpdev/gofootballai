@@ -16,9 +16,9 @@ type AuthResponse = {
 async function parseError(response: Response): Promise<string> {
   try {
     const data = (await response.json()) as { error?: string };
-    return data.error ?? "Request failed";
+    return data.error ?? "請求失敗，請稍後再試";
   } catch {
-    return "Request failed";
+    return "請求失敗，請稍後再試";
   }
 }
 
@@ -72,7 +72,7 @@ export async function meRequest(token: string): Promise<AuthUser> {
   });
 
   if (!response.ok) {
-    throw new Error("Session expired");
+    throw new Error("登入已過期，請重新登入");
   }
 
   const data = (await response.json()) as { user: AuthUser };
