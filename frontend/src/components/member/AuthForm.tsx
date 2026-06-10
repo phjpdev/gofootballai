@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LogIn, UserPlus } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/lib/auth-api";
 
@@ -17,6 +18,7 @@ export function AuthForm({
   portalRole,
   termsHref = "/member#terms",
 }: AuthFormProps) {
+  const router = useRouter();
   const { isAuthenticated, isLoading, login, signup } = useAuth();
   const [mode, setMode] = useState<AuthMode>("login");
   const [username, setUsername] = useState("");
@@ -40,11 +42,12 @@ export function AuthForm({
         }
         await signup(username, password, acceptedTerms, portalRole);
       } else {
-        await login(username, password);
+        await login(username, password, portalRole);
       }
       setUsername("");
       setPassword("");
       setAcceptedTerms(false);
+      router.push("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "發生錯誤，請稍後再試");
     } finally {

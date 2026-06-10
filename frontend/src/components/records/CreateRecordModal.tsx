@@ -141,7 +141,7 @@ export function CreateRecordModal({
     type === "photo" ? "image/*" : type === "video" ? "video/*" : undefined;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
       <button
         type="button"
         aria-label="關閉"
@@ -149,8 +149,8 @@ export function CreateRecordModal({
         onClick={handleClose}
       />
 
-      <div className="relative z-10 flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-gray-90 sm:rounded-[24px]">
-        <div className="flex items-center justify-between border-b border-gray-80 px-5 py-4">
+      <div className="relative z-10 flex max-h-[85dvh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-gray-90 sm:max-h-[90vh] sm:rounded-[24px]">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-80 px-5 py-4">
           <div>
             <h2 className="text-base font-bold text-white">
               {isEditing ? "編輯紀錄" : "新增紀錄"}
@@ -172,8 +172,9 @@ export function CreateRecordModal({
 
         <form
           onSubmit={(e) => void handleSubmit(e)}
-          className="flex flex-col gap-4 overflow-y-auto p-5"
+          className="flex min-h-0 flex-1 flex-col"
         >
+          <div className="flex flex-col gap-4 overflow-y-auto p-5">
           <div className="flex gap-2">
             {POST_TYPES.map(({ value, label }) => (
               <button
@@ -259,15 +260,18 @@ export function CreateRecordModal({
             </div>
           )}
 
-          {error && <p className="text-xs text-orange-50">{error}</p>}
+            {error && <p className="text-xs text-orange-50">{error}</p>}
+          </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="h-14 rounded-[19px] bg-white text-base font-semibold tracking-[-0.048px] text-gray-100 disabled:opacity-60"
-          >
-            {isEditing ? "儲存變更" : "發佈至紀錄"}
-          </button>
+          <div className="shrink-0 border-t border-gray-80 bg-gray-90 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="h-14 w-full rounded-[19px] bg-white text-base font-semibold tracking-[-0.048px] text-gray-100 disabled:opacity-60"
+            >
+              {isEditing ? "儲存變更" : "發佈至紀錄"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
