@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
 :root {
+  --mobile-nav-bar: 4.125rem;
+  --mobile-nav-inset: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  --mobile-nav-total: calc(var(--mobile-nav-bar) + var(--mobile-nav-inset));
+  --header-height: 4.5rem;
+  --header-inset: env(safe-area-inset-top, 0px);
+  --header-total: calc(var(--header-height) + var(--header-inset));
   --gray-100: #111214;
   --gray-90: #24262b;
   --gray-80: #393c43;
@@ -67,6 +73,12 @@ body {
 }
 
 @media (min-width: 1024px) {
+  :root {
+    --header-height: 6rem;
+    --header-inset: 0px;
+    --header-total: var(--header-height);
+  }
+
   .record-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.5rem;
@@ -76,5 +88,65 @@ body {
 @media (min-width: 1280px) {
   .record-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-2.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(2.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes flip-in {
+  0% {
+    opacity: 0;
+    transform: perspective(1100px) rotateX(78deg) translateY(1.25rem) scale(0.94);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1100px) rotateX(0deg) translateY(0) scale(1);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 2.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-flip-in {
+  transform-origin: center bottom;
+  backface-visibility: hidden;
+  animation: flip-in 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-in-left,
+  .animate-slide-in-right,
+  .animate-flip-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

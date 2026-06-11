@@ -77,8 +77,8 @@ export function SiteHeader() {
   const navItems = isAdmin ? [...NAV_ITEMS, ADMIN_NAV] : [...NAV_ITEMS];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-90 bg-gray-100">
-      <div className="mx-auto flex h-[72px] w-full max-w-6xl items-center justify-between gap-3 px-4 lg:h-24 lg:gap-4 lg:px-8">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-gray-90 bg-gray-100 pt-[var(--header-inset)] lg:relative lg:sticky lg:top-0 lg:pt-0">
+      <div className="mx-auto flex h-[var(--header-height)] w-full max-w-6xl items-center justify-between gap-3 px-4 lg:gap-4 lg:px-8">
         <Link href="/analysis" className="min-w-0 shrink">
           <BrandLogo size="header" />
         </Link>

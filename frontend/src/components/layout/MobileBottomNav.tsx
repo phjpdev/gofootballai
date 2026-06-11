@@ -34,13 +34,19 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const { isAdmin } = useAuth();
   const navItems = isAdmin ? [...NAV_ITEMS, ADMIN_NAV] : [...NAV_ITEMS];
+  const compact = navItems.length >= 5;
 
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-90 bg-gray-100 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 flex flex-col border-t border-gray-90 bg-gray-100 shadow-[0_-8px_32px_rgba(0,0,0,0.35)] lg:hidden"
     >
-      <div className="mx-auto flex max-w-[375px] items-center justify-around px-1 py-2">
+      <div
+        className={cn(
+          "mx-auto flex h-[var(--mobile-nav-bar)] w-full max-w-[375px] items-center justify-around px-1",
+          compact ? "pt-1.5 pb-1" : "pt-2 pb-1.5",
+        )}
+      >
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = isNavActive(pathname, href);
           return (
@@ -48,18 +54,31 @@ export function MobileBottomNav() {
               key={href}
               href={href}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5",
+                "flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center",
+                compact ? "gap-0.5 px-0.5 py-0.5" : "gap-1 px-1 py-0.5",
                 isActive ? "text-orange-50" : "text-gray-40",
               )}
             >
-              <Icon className="size-5" strokeWidth={isActive ? 2.5 : 2} />
-              <span className="w-full truncate text-center text-[10px] font-medium">
+              <Icon
+                className={compact ? "size-[18px]" : "size-5"}
+                strokeWidth={isActive ? 2.5 : 2}
+              />
+              <span
+                className={cn(
+                  "w-full truncate text-center font-medium leading-none",
+                  compact ? "text-[9px] leading-tight" : "text-[10px] leading-tight",
+                )}
+              >
                 {label}
               </span>
             </Link>
           );
         })}
       </div>
+      <div
+        className="h-[var(--mobile-nav-inset)] shrink-0"
+        aria-hidden
+      />
     </nav>
   );
 }
