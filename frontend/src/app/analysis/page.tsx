@@ -20,7 +20,7 @@ export default function AnalysisPage() {
 
         <section className="flex flex-col gap-2">
           <SubNav title="精選賽事" count={FEATURED_COUNT} />
-          <div className="perspective-[1200px] scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
+          <div className="perspective-[1200px] scrollbar-hide -mx-2 flex gap-2 overflow-x-auto px-2 lg:mx-0 lg:px-0">
             {FEATURED_ITEMS.map((item, index) => (
               <AnimateIn
                 key={item.id}
