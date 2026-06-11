@@ -50,7 +50,7 @@ export function RecordDetailModal({
     (post.type === "photo" || post.type === "video") && !!post.mediaUrl;
 
   return (
-    <div className="fixed inset-x-0 top-[72px] bottom-20 z-40 flex flex-col bg-gray-100 lg:top-24 lg:bottom-0">
+    <div className="fixed inset-x-0 top-[var(--header-total)] bottom-[var(--mobile-nav-total)] z-40 flex flex-col bg-gray-100 lg:bottom-0">
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-90 px-4 py-3">
         <time className="text-sm text-gray-40">
           {formatRecordDate(post.createdAt)}

@@ -10,6 +10,7 @@ import {
 } from "react";
 import { DatePicker } from "@/components/layout/DatePicker";
 import { SubNav } from "@/components/layout/SubNav";
+import { AnimateIn } from "@/components/motion/AnimateIn";
 import { HkjcMatchCard } from "@/components/cards/HkjcMatchCard";
 import { filterMatchesByDate } from "@/lib/hkjc/transform";
 import type { HkjcDateItem, HkjcMatch, HkjcMatchesResponse } from "@/types/hkjc";
@@ -108,6 +109,7 @@ export function HkjcDatePicker() {
 
 export function HkjcMatchesSection() {
   const { data, loading, error, selectedIndex, reload } = useHkjc();
+  const listKey = `${selectedIndex}-${data?.updatedAt ?? "loading"}`;
 
   const matches = useMemo(() => {
     if (!data) return [] as HkjcMatch[];
@@ -161,13 +163,18 @@ export function HkjcMatchesSection() {
           <p className="text-sm text-gray-40">此日期暫無馬會賽事。</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {matches.map((match) => (
-            <HkjcMatchCard
+        <div key={listKey} className="flex flex-col gap-3">
+          {matches.map((match, index) => (
+            <AnimateIn
               key={match.id}
-              match={match}
-              href={`/analysis/${match.id}`}
-            />
+              variant="slide-right"
+              delay={Math.min(index * 270, 2360)}
+            >
+              <HkjcMatchCard
+                match={match}
+                href={`/analysis/${match.id}`}
+              />
+            </AnimateIn>
           ))}
         </div>
       )}
