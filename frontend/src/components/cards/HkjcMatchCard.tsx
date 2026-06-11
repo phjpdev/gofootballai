@@ -64,8 +64,8 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
   const content = (
     <div className="hkjc-match-card-shell w-full">
       <div className="hkjc-match-card w-full">
-        <div className="hkjc-match-card-inner p-2 sm:p-2.5">
-          <div className="relative z-[1] flex items-center gap-2 sm:gap-2.5">
+        <div className="hkjc-match-card-inner p-2.5 sm:p-3">
+          <div className="relative z-[1] flex items-center gap-2.5 sm:gap-3">
           <MatchLogoBox
             homeLogo={match.homeLogo}
             homeTeam={match.homeTeam}
@@ -75,7 +75,7 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
             awayTeamEn={match.awayTeamEn}
           />
 
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:gap-2.5">
             <div className="flex items-center gap-1.5">
               <h3 className="truncate text-sm font-bold tracking-[-0.04px] text-white sm:text-base">
                 {match.homeTeam} 對 {match.awayTeam}
