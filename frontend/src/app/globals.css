@@ -141,6 +141,35 @@ body {
   animation: flip-in 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.hkjc-match-card {
+  border-radius: 16px;
+  padding: 1px;
+  background:
+    radial-gradient(
+      43.86% 110.38% at 35.02% 2.44%,
+      #b469b8 0%,
+      rgba(89, 58, 106, 0) 100%
+    ),
+    radial-gradient(43.5% 100% at 35.38% 0%, #b469b8 0%, #593a6a 100%);
+}
+
+.hkjc-match-card-inner {
+  border-radius: 15px;
+  background: radial-gradient(
+    84.3% 209.6% at 27.8% 7.32%,
+    #7a3d85 0%,
+    #1b1827 100%
+  );
+}
+
+.hkjc-match-card:hover .hkjc-match-card-inner {
+  background: radial-gradient(
+    84.3% 209.6% at 27.8% 7.32%,
+    #8a4a95 0%,
+    #221f30 100%
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-slide-in-left,
   .animate-slide-in-right,
