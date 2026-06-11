@@ -62,9 +62,10 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
   const implied = Math.min(95, Math.round((1 / homeOdds) * 100));
 
   const content = (
-    <div className="hkjc-match-card w-full transition-opacity hover:opacity-95">
-      <div className="hkjc-match-card-inner p-2 sm:p-2.5">
-        <div className="flex items-center gap-2 sm:gap-2.5">
+    <div className="hkjc-match-card-shell w-full">
+      <div className="hkjc-match-card w-full">
+        <div className="hkjc-match-card-inner p-2 sm:p-2.5">
+          <div className="relative z-[1] flex items-center gap-2 sm:gap-2.5">
           <MatchLogoBox
             homeLogo={match.homeLogo}
             homeTeam={match.homeTeam}
@@ -119,6 +120,8 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
               )}
             </div>
           </div>
+          </div>
+          <div className="hkjc-match-card-fade" aria-hidden />
         </div>
       </div>
     </div>

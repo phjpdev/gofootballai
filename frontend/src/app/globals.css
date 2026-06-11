@@ -141,19 +141,73 @@ body {
   animation: flip-in 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes hkjc-card-glow {
+  0% {
+    opacity: 0.45;
+    transform: scale(0.985);
+    filter: blur(10px);
+  }
+  50% {
+    opacity: 0.9;
+    filter: blur(18px);
+  }
+  100% {
+    opacity: 0.55;
+    transform: scale(1.015);
+    filter: blur(12px);
+  }
+}
+
+@keyframes hkjc-card-border-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.hkjc-match-card-shell {
+  position: relative;
+  isolation: isolate;
+  border-radius: 16px;
+}
+
+.hkjc-match-card-shell::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: 0;
+  border-radius: 19px;
+  background: linear-gradient(
+    270deg,
+    rgba(254, 168, 118, 0.6) 0%,
+    rgba(119, 114, 231, 0.6) 100%
+  );
+  filter: blur(11px);
+  backdrop-filter: blur(22.712px);
+  animation: hkjc-card-glow 3.5s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
 .hkjc-match-card {
+  position: relative;
+  z-index: 1;
   border-radius: 16px;
   padding: 1px;
-  background:
-    radial-gradient(
-      43.86% 110.38% at 35.02% 2.44%,
-      #b469b8 0%,
-      rgba(89, 58, 106, 0) 100%
-    ),
-    radial-gradient(43.5% 100% at 35.38% 0%, #b469b8 0%, #593a6a 100%);
+  background: linear-gradient(
+    270deg,
+    rgba(254, 168, 118, 0.75) 0%,
+    rgba(119, 114, 231, 0.75) 50%,
+    rgba(254, 168, 118, 0.75) 100%
+  );
+  background-size: 200% 100%;
+  animation: hkjc-card-border-shimmer 4s linear infinite;
 }
 
 .hkjc-match-card-inner {
+  position: relative;
+  overflow: hidden;
   border-radius: 15px;
   background: radial-gradient(
     84.3% 209.6% at 27.8% 7.32%,
@@ -162,7 +216,20 @@ body {
   );
 }
 
-.hkjc-match-card:hover .hkjc-match-card-inner {
+.hkjc-match-card-fade {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  background: linear-gradient(
+    180deg,
+    rgba(18, 17, 29, 0) 46.34%,
+    #12111d 101.22%
+  );
+  opacity: 0.42;
+}
+
+.hkjc-match-card-shell:hover .hkjc-match-card-inner {
   background: radial-gradient(
     84.3% 209.6% at 27.8% 7.32%,
     #8a4a95 0%,
@@ -173,7 +240,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-slide-in-left,
   .animate-slide-in-right,
-  .animate-flip-in {
+  .animate-flip-in,
+  .hkjc-match-card,
+  .hkjc-match-card-shell::before {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
