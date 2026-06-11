@@ -121,11 +121,11 @@ export function HkjcMatchesSection() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="h-[76px] animate-pulse rounded-[16px] bg-gray-90"
+            className="h-[84px] animate-pulse rounded-[16px] bg-gray-90"
           />
         ))}
       </div>
@@ -163,7 +163,7 @@ export function HkjcMatchesSection() {
           <p className="text-sm text-gray-40">此日期暫無馬會賽事。</p>
         </div>
       ) : (
-        <div key={listKey} className="flex flex-col gap-2">
+        <div key={listKey} className="flex flex-col gap-3">
           {matches.map((match, index) => (
             <AnimateIn
               key={match.id}
