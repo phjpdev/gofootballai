@@ -229,7 +229,7 @@ export function UserManagement() {
           placeholder="搜尋帳戶名稱或角色..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-[14px] bg-gray-90 py-3 pl-11 pr-4 text-sm text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40"
+          className="w-full rounded-[14px] bg-gray-90 py-2.5 pl-11 pr-4 text-sm text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40"
         />
       </div>
 
@@ -256,33 +256,48 @@ export function UserManagement() {
             {filteredUsers.map((item) => (
               <div
                 key={item.id}
-                className="grid gap-3 border-b border-gray-80 px-5 py-4 last:border-b-0 lg:grid-cols-[1.4fr_0.8fr_0.8fr_auto] lg:items-center lg:gap-4"
+                className="flex items-center justify-between gap-2 border-b border-gray-80 px-3 py-2.5 last:border-b-0 sm:px-4 sm:py-3 lg:grid lg:grid-cols-[1.4fr_0.8fr_0.8fr_auto] lg:items-center lg:gap-4 lg:px-5"
               >
-                <div>
-                  <p className="text-sm font-bold text-white">{item.username}</p>
-                  {currentUser?.id === item.id && (
-                    <p className="text-xs text-orange-50">你</p>
-                  )}
+                <div className="min-w-0 flex-1 lg:contents">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate text-sm font-bold text-white">
+                        {item.username}
+                      </p>
+                      {currentUser?.id === item.id && (
+                        <span className="shrink-0 text-[10px] font-medium text-orange-50">
+                          你
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-xs text-gray-40 lg:hidden">
+                      {formatRole(item.role)} · {formatDate(item.createdAt)}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-20">{formatRole(item.role)}</p>
-                <p className="text-sm text-gray-40">{formatDate(item.createdAt)}</p>
-                <div className="flex gap-2 lg:justify-end">
+                <p className="hidden text-sm text-gray-20 lg:block">
+                  {formatRole(item.role)}
+                </p>
+                <p className="hidden text-sm text-gray-40 lg:block">
+                  {formatDate(item.createdAt)}
+                </p>
+                <div className="flex shrink-0 gap-1.5 lg:justify-end">
                   <button
                     type="button"
                     aria-label={`編輯 ${item.username}`}
                     onClick={() => setEditingUser(item)}
-                    className="flex size-9 items-center justify-center rounded-full bg-orange-50 text-white"
+                    className="flex size-8 items-center justify-center rounded-full bg-orange-50 text-white sm:size-9"
                   >
-                    <Pencil className="size-4" />
+                    <Pencil className="size-3.5 sm:size-4" />
                   </button>
                   <button
                     type="button"
                     aria-label={`刪除 ${item.username}`}
                     onClick={() => void handleDelete(item.id)}
                     disabled={currentUser?.id === item.id}
-                    className="flex size-9 items-center justify-center rounded-full bg-orange-50 text-white disabled:opacity-40"
+                    className="flex size-8 items-center justify-center rounded-full bg-orange-50 text-white disabled:opacity-40 sm:size-9"
                   >
-                    <Trash2 className="size-4" />
+                    <Trash2 className="size-3.5 sm:size-4" />
                   </button>
                 </div>
               </div>
