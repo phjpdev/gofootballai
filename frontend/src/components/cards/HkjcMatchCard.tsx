@@ -19,10 +19,20 @@ function MatchLogoBox({
   awayTeamEn: string;
 }) {
   return (
-    <div className="relative size-14 shrink-0 overflow-hidden rounded-[12px] bg-white sm:size-16 sm:rounded-[14px]">
+    <div className="relative size-14 shrink-0 overflow-hidden rounded-[12px] sm:size-16 sm:rounded-[14px]">
       <div
-        className="absolute inset-0"
-        style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
+        className="pointer-events-none absolute inset-0 rounded-[inherit]"
+        style={{
+          background:
+            "linear-gradient(135deg, transparent 42%, rgba(122, 61, 133, 0.85) 50%, transparent 58%)",
+        }}
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 bg-white"
+        style={{
+          clipPath: "polygon(0 0, calc(100% - 4px) 0, 0 calc(100% - 4px))",
+        }}
       >
         <div className="flex h-full w-full items-center justify-center pb-2 pr-2 sm:pb-2.5 sm:pr-2.5">
           <TeamLogoImage
@@ -33,8 +43,10 @@ function MatchLogoBox({
         </div>
       </div>
       <div
-        className="absolute inset-0"
-        style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }}
+        className="absolute inset-0 bg-white"
+        style={{
+          clipPath: "polygon(100% 4px, 100% 100%, 4px 100%)",
+        }}
       >
         <div className="flex h-full w-full items-center justify-center pt-2 pl-2 sm:pt-2.5 sm:pl-2.5">
           <TeamLogoImage
@@ -44,10 +56,6 @@ function MatchLogoBox({
           />
         </div>
       </div>
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[142%] w-1 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-[#7a3d85] sm:w-1.5"
-        aria-hidden
-      />
     </div>
   );
 }
