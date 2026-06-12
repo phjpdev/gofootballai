@@ -70,12 +70,11 @@ export function MobileBottomNav() {
                 <Image
                   src="/images/go-football-logo.png"
                   alt=""
-                  width={44}
-                  height={44}
+                  width={60}
+                  height={60}
                   aria-hidden
                   className={cn(
-                    "shrink-0 object-contain",
-                    compact ? "size-10" : "size-11",
+                    "size-[60px] shrink-0 object-contain",
                     isActive ? "opacity-100" : "opacity-70",
                   )}
                 />
