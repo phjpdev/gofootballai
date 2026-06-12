@@ -1,24 +1,29 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3,
   FolderOpen,
   Home,
   LayoutDashboard,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { NAV } from "@/lib/i18n/zh-hk";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+type NavItem =
+  | { href: string; label: string; icon: LucideIcon; logo?: false }
+  | { href: string; label: string; logo: true; hideLabel?: boolean; icon?: never };
+
+const NAV_ITEMS: NavItem[] = [
   { href: "/home", label: NAV.home, icon: Home },
-  { href: "/analysis", label: NAV.analysis, icon: BarChart3 },
+  { href: "/analysis", label: NAV.analysis, logo: true, hideLabel: true },
   { href: "/records", label: NAV.records, icon: FolderOpen },
   { href: "/member", label: NAV.member, icon: Users },
-] as const;
+];
 
 const ADMIN_NAV = {
   href: "/admin",
@@ -47,30 +52,49 @@ export function MobileBottomNav() {
           compact ? "pt-1.5 pb-1" : "pt-2 pb-1.5",
         )}
       >
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {navItems.map((item) => {
+          const { href, label } = item;
           const isActive = isNavActive(pathname, href);
           return (
             <Link
               key={href}
               href={href}
+              aria-label={label}
               className={cn(
                 "flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center",
                 compact ? "gap-0.5 px-0.5 py-0.5" : "gap-1 px-1 py-0.5",
                 isActive ? "text-orange-50" : "text-gray-40",
               )}
             >
-              <Icon
-                className={compact ? "size-[18px]" : "size-5"}
-                strokeWidth={isActive ? 2.5 : 2}
-              />
-              <span
-                className={cn(
-                  "w-full truncate text-center font-medium leading-none",
-                  compact ? "text-[9px] leading-tight" : "text-[10px] leading-tight",
-                )}
-              >
-                {label}
-              </span>
+              {item.logo ? (
+                <Image
+                  src="/images/go-football-logo.png"
+                  alt=""
+                  width={44}
+                  height={44}
+                  aria-hidden
+                  className={cn(
+                    "shrink-0 object-contain",
+                    compact ? "size-10" : "size-11",
+                    isActive ? "opacity-100" : "opacity-70",
+                  )}
+                />
+              ) : (
+                <item.icon
+                  className={compact ? "size-[18px]" : "size-5"}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+              )}
+              {!(item.logo && item.hideLabel) && (
+                <span
+                  className={cn(
+                    "w-full truncate text-center font-medium leading-none",
+                    compact ? "text-[9px] leading-tight" : "text-[10px] leading-tight",
+                  )}
+                >
+                  {label}
+                </span>
+              )}
             </Link>
           );
         })}
