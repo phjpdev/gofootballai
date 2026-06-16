@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Clock, Flame } from "lucide-react";
+import { LedBorder } from "@/components/motion/LedBorder";
 
 type FeaturedMatchCardProps = {
   title: string;
@@ -20,7 +21,8 @@ export function FeaturedMatchCard({
   href = "#",
 }: FeaturedMatchCardProps) {
   return (
-    <div className="relative h-[225px] w-[261px] shrink-0 overflow-hidden rounded-[24px] bg-gray-90 p-4">
+    <LedBorder className="h-[225px] w-[261px] shrink-0">
+      <div className="relative h-full bg-gray-90 p-4">
       <div className="pointer-events-none absolute inset-0">
         <Image
           src={imageSrc}
@@ -67,6 +69,7 @@ export function FeaturedMatchCard({
           </Link>
         </div>
       </div>
-    </div>
+      </div>
+    </LedBorder>
   );
 }
