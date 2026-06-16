@@ -25,11 +25,11 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/member", label: NAV.member, icon: Users },
 ];
 
-const ADMIN_NAV = {
+const ADMIN_NAV: NavItem = {
   href: "/admin",
   label: NAV.manage,
   icon: LayoutDashboard,
-} as const;
+};
 
 function isNavActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -55,6 +55,7 @@ export function MobileBottomNav() {
         {navItems.map((item) => {
           const { href, label } = item;
           const isActive = isNavActive(pathname, href);
+          const isLogoItem = "logo" in item && item.logo;
           return (
             <Link
               key={href}
@@ -66,7 +67,7 @@ export function MobileBottomNav() {
                 isActive ? "text-orange-50" : "text-gray-40",
               )}
             >
-              {item.logo ? (
+              {isLogoItem ? (
                 <Image
                   src="/images/go-football-logo.png"
                   alt=""
@@ -84,7 +85,7 @@ export function MobileBottomNav() {
                   strokeWidth={isActive ? 2.5 : 2}
                 />
               )}
-              {!(item.logo && item.hideLabel) && (
+              {!(isLogoItem && item.hideLabel) && (
                 <span
                   className={cn(
                     "w-full truncate text-center font-medium leading-none",
