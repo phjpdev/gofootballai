@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           showMobileHeader ? "pt-[var(--header-total)]" : "pt-0",
         )}
       >
-        <div className="mx-auto w-full max-w-[375px] px-2 py-6 lg:max-w-6xl lg:px-8 lg:py-10">
+        <div className="mx-auto w-full max-w-[375px] px-2 pt-6 pb-3 lg:max-w-6xl lg:px-8 lg:py-10">
           {children}
         </div>
       </main>

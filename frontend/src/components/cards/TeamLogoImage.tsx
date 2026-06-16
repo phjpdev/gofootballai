@@ -9,9 +9,15 @@ type TeamLogoImageProps = {
   name: string;
   /** English team name used for external logo lookup when `src` is empty */
   lookupName?: string;
+  fit?: "default" | "triangle";
 };
 
-export function TeamLogoImage({ src, name, lookupName }: TeamLogoImageProps) {
+export function TeamLogoImage({
+  src,
+  name,
+  lookupName,
+  fit = "default",
+}: TeamLogoImageProps) {
   const [logoUrl, setLogoUrl] = useState(src ?? "");
   const [failed, setFailed] = useState(false);
   const queryName = lookupName?.trim() || name;
@@ -41,7 +47,7 @@ export function TeamLogoImage({ src, name, lookupName }: TeamLogoImageProps) {
   }, [src, queryName]);
 
   if (!logoUrl || failed) {
-    return <TeamInitialBadge name={name} />;
+    return <TeamInitialBadge name={name} compact={fit === "triangle"} />;
   }
 
   return (
@@ -50,7 +56,11 @@ export function TeamLogoImage({ src, name, lookupName }: TeamLogoImageProps) {
       <img
         src={logoUrl}
         alt={name}
-        className="absolute inset-0 m-auto max-h-[85%] max-w-[85%] object-contain"
+        className={
+          fit === "triangle"
+            ? "absolute inset-0 m-auto max-h-full max-w-full object-contain"
+            : "absolute inset-0 m-auto max-h-[85%] max-w-[85%] object-contain"
+        }
         onError={() => setFailed(true)}
       />
     </div>

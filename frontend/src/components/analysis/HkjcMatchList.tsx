@@ -163,7 +163,7 @@ export function HkjcMatchesSection() {
           <p className="text-sm text-gray-40">此日期暫無馬會賽事。</p>
         </div>
       ) : (
-        <div key={listKey} className="flex flex-col gap-3">
+        <div key={listKey} className="flex flex-col gap-2.5">
           {matches.map((match, index) => (
             <AnimateIn
               key={match.id}

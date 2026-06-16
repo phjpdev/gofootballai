@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --mobile-nav-bar: 4.125rem;
-  --mobile-nav-inset: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  --mobile-nav-bar: 3.5rem;
+  --mobile-nav-inset: env(safe-area-inset-bottom, 0px);
   --mobile-nav-total: calc(var(--mobile-nav-bar) + var(--mobile-nav-inset));
   --header-height: 4.5rem;
   --header-inset: env(safe-area-inset-top, 0px);

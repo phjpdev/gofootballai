@@ -18,44 +18,48 @@ function MatchLogoBox({
   awayTeam: string;
   awayTeamEn: string;
 }) {
+  const strip = 6;
+
   return (
     <div className="relative size-14 shrink-0 overflow-hidden rounded-[12px] sm:size-16 sm:rounded-[14px]">
       <div
-        className="pointer-events-none absolute inset-0 rounded-[inherit]"
+        className="absolute inset-0 z-[1] bg-white"
         style={{
-          background:
-            "linear-gradient(135deg, transparent 42%, rgba(122, 61, 133, 0.85) 50%, transparent 58%)",
-        }}
-        aria-hidden
-      />
-      <div
-        className="absolute inset-0 bg-white"
-        style={{
-          clipPath: "polygon(0 0, calc(100% - 4px) 0, 0 calc(100% - 4px))",
+          clipPath: `polygon(0 0, calc(100% - ${strip}px) 0, 0 calc(100% - ${strip}px))`,
         }}
       >
-        <div className="flex h-full w-full items-center justify-center pb-2 pr-2 sm:pb-2.5 sm:pr-2.5">
+        <div className="absolute left-[5%] top-[5%] size-[58%]">
           <TeamLogoImage
             src={homeLogo}
             name={homeTeam}
             lookupName={homeTeamEn}
+            fit="triangle"
           />
         </div>
       </div>
+
       <div
-        className="absolute inset-0 bg-white"
+        className="absolute inset-0 z-[1] bg-white"
         style={{
-          clipPath: "polygon(100% 4px, 100% 100%, 4px 100%)",
+          clipPath: `polygon(100% ${strip}px, 100% 100%, ${strip}px 100%)`,
         }}
       >
-        <div className="flex h-full w-full items-center justify-center pt-2 pl-2 sm:pt-2.5 sm:pl-2.5">
+        <div className="absolute bottom-[5%] right-[5%] size-[58%]">
           <TeamLogoImage
             src={awayLogo}
             name={awayTeam}
             lookupName={awayTeamEn}
+            fit="triangle"
           />
         </div>
       </div>
+
+      <span
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[2] -translate-x-1/2 -translate-y-1/2 text-xl font-black leading-none tracking-tight text-orange-50 drop-shadow-[0_1px_4px_rgba(0,0,0,0.55)] sm:text-2xl"
+        aria-hidden
+      >
+        vs
+      </span>
     </div>
   );
 }
@@ -83,7 +87,7 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
             awayTeamEn={match.awayTeamEn}
           />
 
-          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:gap-2.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:gap-2">
             <div className="flex items-center gap-1.5">
               <h3 className="truncate text-sm font-bold tracking-[-0.04px] text-white sm:text-base">
                 {match.homeTeam} 對 {match.awayTeam}
@@ -93,7 +97,7 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
               </span>
             </div>
 
-            <div className="relative h-1.5 w-full sm:h-2">
+            <div className="relative h-1 w-full sm:h-1.5">
               <div className="absolute inset-0 rounded-[2px] bg-white/20 sm:rounded-[3px]" />
               <div
                 className="absolute inset-y-0 left-0 rounded-[2px] bg-white sm:rounded-[3px]"
