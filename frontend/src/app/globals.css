@@ -244,22 +244,22 @@ body {
 }
 
 .led-border__track--dim {
-  stroke: rgba(34, 211, 238, 0.14);
+  stroke: rgba(34, 211, 238, 0.35);
   stroke-width: 2px;
 }
 
 .led-border__track--beam {
   stroke: #67e8f9;
-  stroke-width: 2px;
-  stroke-dasharray: 0.14 0.86;
+  stroke-width: 2.5px;
+  stroke-dasharray: 0.12 0.88;
   animation: led-border-travel 2.8s linear infinite;
 }
 
 .led-border__track--glow {
   stroke: #22d3ee;
-  stroke-width: 5px;
-  stroke-dasharray: 0.14 0.86;
-  opacity: 0.55;
+  stroke-width: 6px;
+  stroke-dasharray: 0.12 0.88;
+  opacity: 0.7;
   animation: led-border-travel 2.8s linear infinite;
 }
 

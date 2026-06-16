@@ -16,7 +16,7 @@ export function LedBorder({
   className,
   contentClassName,
   borderRadius = 24,
-  borderWidth = 2,
+  borderWidth = 3,
 }: LedBorderProps) {
   const uid = useId().replace(/:/g, "");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -38,6 +38,7 @@ export function LedBorder({
     return () => observer.disconnect();
   }, []);
 
+  const innerRadius = Math.max(0, borderRadius - borderWidth);
   const inset = borderWidth / 2;
   const rectRadius = Math.max(0, borderRadius - inset);
   const rectWidth = Math.max(0, size.w - borderWidth);
@@ -48,23 +49,26 @@ export function LedBorder({
     <div
       ref={containerRef}
       className={cn("led-border relative isolate", className)}
-      style={{ borderRadius: `${borderRadius}px` }}
+      style={{
+        borderRadius: `${borderRadius}px`,
+        padding: `${borderWidth}px`,
+      }}
     >
       {hasSize && (
         <svg
-          className="pointer-events-none absolute inset-0 z-20 size-full overflow-visible"
+          className="pointer-events-none absolute inset-0 z-0 size-full overflow-visible"
           viewBox={`0 0 ${size.w} ${size.h}`}
           aria-hidden
         >
           <defs>
             <filter
               id={`led-glow-${uid}`}
-              x="-40%"
-              y="-40%"
-              width="180%"
-              height="180%"
+              x="-50%"
+              y="-50%"
+              width="200%"
+              height="200%"
             >
-              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -106,10 +110,10 @@ export function LedBorder({
       )}
       <div
         className={cn(
-          "led-border__content relative z-10 h-full w-full overflow-hidden",
+          "led-border__content relative z-[1] h-full w-full overflow-hidden",
           contentClassName,
         )}
-        style={{ borderRadius: `${borderRadius}px` }}
+        style={{ borderRadius: `${innerRadius}px` }}
       >
         {children}
       </div>
