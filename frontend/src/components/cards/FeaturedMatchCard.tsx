@@ -21,7 +21,7 @@ export function FeaturedMatchCard({
   href = "#",
 }: FeaturedMatchCardProps) {
   return (
-    <LedBorder className="h-[225px] w-[261px] shrink-0">
+    <LedBorder className="h-[225px] w-[261px] shrink-0" borderWidth={3}>
       <div className="relative h-full bg-gray-90 p-4">
       <div className="pointer-events-none absolute inset-0">
         <Image

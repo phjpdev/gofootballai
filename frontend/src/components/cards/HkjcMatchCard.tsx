@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Clock, FileText } from "lucide-react";
 import { TeamLogoImage } from "@/components/cards/TeamLogoImage";
@@ -18,7 +19,7 @@ function MatchLogoBox({
   awayTeam: string;
   awayTeamEn: string;
 }) {
-  const strip = 6;
+  const strip = 4;
 
   return (
     <div className="relative size-14 shrink-0 overflow-hidden rounded-[12px] sm:size-16 sm:rounded-[14px]">
@@ -54,12 +55,15 @@ function MatchLogoBox({
         </div>
       </div>
 
-      <span
-        className="pointer-events-none absolute left-1/2 top-1/2 z-[2] -translate-x-1/2 -translate-y-1/2 text-xl font-black leading-none tracking-tight text-orange-50 drop-shadow-[0_1px_4px_rgba(0,0,0,0.55)] sm:text-2xl"
+      <Image
+        src="/images/vs-badge.png"
+        alt=""
+        width={44}
+        height={44}
+        unoptimized
         aria-hidden
-      >
-        vs
-      </span>
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[3] size-10 -translate-x-1/2 -translate-y-1/2 object-contain sm:size-11"
+      />
     </div>
   );
 }
