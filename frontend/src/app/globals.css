@@ -228,11 +228,48 @@ body {
   );
 }
 
+@keyframes led-border-travel {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+
+.led-border__track {
+  fill: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.led-border__track--dim {
+  stroke: rgba(34, 211, 238, 0.14);
+  stroke-width: 2px;
+}
+
+.led-border__track--beam {
+  stroke: #67e8f9;
+  stroke-width: 2px;
+  stroke-dasharray: 0.14 0.86;
+  animation: led-border-travel 2.8s linear infinite;
+}
+
+.led-border__track--glow {
+  stroke: #22d3ee;
+  stroke-width: 5px;
+  stroke-dasharray: 0.14 0.86;
+  opacity: 0.55;
+  animation: led-border-travel 2.8s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-slide-in-left,
   .animate-slide-in-right,
   .animate-flip-in,
-  .hkjc-match-card-shell::before {
+  .hkjc-match-card-shell::before,
+  .led-border__track--beam,
+  .led-border__track--glow {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
