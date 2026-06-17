@@ -1,16 +1,15 @@
-import { ACTIVE_MATCH_STATUSES, HKJC_TOURNAMENT_FLAG } from "@/lib/hkjc/constants";
+import { ACTIVE_MATCH_STATUSES } from "./constants.js";
 import {
   bracketHandicapLine,
   flipHandicapLine,
   formatHandicapLine,
-} from "@/lib/hkjc/handicap";
+} from "./handicap.js";
 import type {
-  HkjcDateItem,
   HkjcHadOdds,
   HkjcHdcOdds,
   HkjcHilOdds,
   HkjcMatch,
-} from "@/types/hkjc";
+} from "./types.js";
 
 type RawTeam = { id: string; name_en: string; name_ch: string };
 type RawTournament = {
@@ -32,7 +31,7 @@ type RawPool = {
     combinations?: RawCombination[];
   }>;
 };
-type RawMatch = {
+export type RawMatch = {
   id: string;
   frontEndId: string;
   matchDate: string;
@@ -65,7 +64,7 @@ function parseHadOdds(foPools?: RawPool[]): HkjcHadOdds | null {
   return odds as HkjcHadOdds;
 }
 
-function parseHdcOdds(foPools?: RawPool[]): HkjcHdcOdds | null {
+export function parseHdcOdds(foPools?: RawPool[]): HkjcHdcOdds | null {
   const hdc = foPools?.find((pool) => pool.oddsType === "HDC");
   const mainLine = getMainLine(hdc);
   if (!mainLine?.condition || !mainLine.combinations?.length) return null;
@@ -74,15 +73,18 @@ function parseHdcOdds(foPools?: RawPool[]): HkjcHdcOdds | null {
   const away = mainLine.combinations.find((c) => c.str === "A");
   if (!home?.currentOdds || !away?.currentOdds) return null;
 
+  const homeLine = bracketHandicapLine(mainLine.condition);
+  const awayLine = bracketHandicapLine(flipHandicapLine(mainLine.condition));
+
   return {
-    homeLine: bracketHandicapLine(mainLine.condition),
+    homeLine,
     homeOdds: home.currentOdds,
-    awayLine: bracketHandicapLine(flipHandicapLine(mainLine.condition)),
+    awayLine,
     awayOdds: away.currentOdds,
   };
 }
 
-function parseHilOdds(foPools?: RawPool[]): HkjcHilOdds | null {
+export function parseHilOdds(foPools?: RawPool[]): HkjcHilOdds | null {
   const hil = foPools?.find((pool) => pool.oddsType === "HIL");
   const mainLine = getMainLine(hil);
   if (!mainLine?.condition || !mainLine.combinations?.length) return null;
@@ -109,14 +111,6 @@ function formatKickOff(kickOffTime: string): string {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: "Asia/Hong_Kong",
-  });
-}
-
-function formatDay(dateKey: string): string {
-  const date = new Date(`${dateKey}T12:00:00+08:00`);
-  return date.toLocaleDateString("zh-HK", {
-    weekday: "short",
     timeZone: "Asia/Hong_Kong",
   });
 }
@@ -149,9 +143,6 @@ export function transformHkjcMatch(raw: RawMatch): HkjcMatch {
     kickOffTime: raw.kickOffTime,
     kickOffLabel: formatKickOff(raw.kickOffTime),
     status: raw.status,
-    homeLogo: "",
-    awayLogo: "",
-    tournamentLogo: HKJC_TOURNAMENT_FLAG(raw.tournament.code),
     hadOdds: parseHadOdds(raw.foPools),
     hdcOdds: parseHdcOdds(raw.foPools),
     hilOdds: parseHilOdds(raw.foPools),
@@ -160,22 +151,43 @@ export function transformHkjcMatch(raw: RawMatch): HkjcMatch {
   };
 }
 
-export function buildDateItems(matches: HkjcMatch[]): HkjcDateItem[] {
-  const dateKeys = [...new Set(matches.map((match) => match.matchDate))].sort();
-  return dateKeys.map((key) => {
-    const [, , day] = key.split("-").map(Number);
-    return {
-      key,
-      day: formatDay(key),
-      date: day,
-      hasEvent: true,
-    };
-  });
+export function mergeRawMatches(batches: RawMatch[][]): RawMatch[] {
+  const map = new Map<string, RawMatch>();
+
+  for (const batch of batches) {
+    for (const match of batch) {
+      const existing = map.get(match.id);
+      if (!existing) {
+        map.set(match.id, { ...match, foPools: [...(match.foPools ?? [])] });
+        continue;
+      }
+
+      const poolByType = new Map<string, RawPool>();
+      for (const pool of [...(existing.foPools ?? []), ...(match.foPools ?? [])]) {
+        poolByType.set(pool.oddsType, pool);
+      }
+
+      map.set(match.id, {
+        ...existing,
+        ...match,
+        foPools: [...poolByType.values()],
+      });
+    }
+  }
+
+  return [...map.values()];
 }
 
-export function filterMatchesByDate(
-  matches: HkjcMatch[],
-  dateKey: string,
-): HkjcMatch[] {
-  return matches.filter((match) => match.matchDate === dateKey);
+export function toInputSnapshot(match: HkjcMatch) {
+  return {
+    matchId: match.id,
+    frontEndId: match.frontEndId,
+    homeTeam: match.homeTeam,
+    awayTeam: match.awayTeam,
+    tournamentName: match.tournamentName,
+    kickOffTime: match.kickOffTime,
+    hadOdds: match.hadOdds,
+    hdcOdds: match.hdcOdds,
+    hilOdds: match.hilOdds,
+  };
 }

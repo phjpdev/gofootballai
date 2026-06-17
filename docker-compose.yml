@@ -12,5 +12,15 @@ services:
     volumes:
       - gofootball_pg_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: gofootball-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - gofootball_redis_data:/data
+
 volumes:
   gofootball_pg_data:
+  gofootball_redis_data:

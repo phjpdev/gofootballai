@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { MatchAnalysisView } from "@/components/analysis/MatchAnalysisView";
+import { MatchAnalysisClient } from "@/components/analysis/MatchAnalysisClient";
 import {
   fetchHkjcMatchById,
   hkjcMatchToLegacy,
@@ -15,7 +15,7 @@ export default async function MatchAnalysisPage({ params }: Props) {
 
   const hkjcMatch = await fetchHkjcMatchById(id);
   if (hkjcMatch) {
-    return <MatchAnalysisView match={hkjcMatchToLegacy(hkjcMatch)} />;
+    return <MatchAnalysisClient match={hkjcMatchToLegacy(hkjcMatch)} />;
   }
 
   const fallback = getMatchById(id);
@@ -23,5 +23,5 @@ export default async function MatchAnalysisPage({ params }: Props) {
     notFound();
   }
 
-  return <MatchAnalysisView match={fallback} />;
+  return <MatchAnalysisClient match={fallback} />;
 }

@@ -1,19 +1,56 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { figmaAsset } from "@/lib/figma-assets";
 
 const CHEVRON = figmaAsset("a86a39395c1147b5e058f0c0f73491f1aac0eecb");
 
-export function SandowScoreCard({ score = 61 }: { score?: number }) {
+type SandowScoreCardProps = {
+  score?: number;
+  animate?: boolean;
+};
+
+export function SandowScoreCard({ score = 61, animate = true }: SandowScoreCardProps) {
+  const [displayScore, setDisplayScore] = useState(animate ? 0 : score);
+
+  useEffect(() => {
+    if (!animate) {
+      setDisplayScore(score);
+      return;
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDisplayScore(score);
+      return;
+    }
+
+    const duration = 800;
+    const start = performance.now();
+    let frame = 0;
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      setDisplayScore(Math.round(score * progress));
+      if (progress < 1) {
+        frame = requestAnimationFrame(tick);
+      }
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [score, animate]);
+
   return (
     <div className="flex w-full items-center gap-3">
       <div className="flex size-16 shrink-0 flex-col items-center justify-center overflow-hidden rounded-[20px] border border-[#fb923c] bg-[#f97316] p-2">
         <p className="w-full text-center text-[30px] font-bold leading-[38px] tracking-[-0.39px] text-white">
-          {score}
+          {displayScore}
         </p>
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <p className="w-full text-base font-bold leading-[22px] tracking-[-0.112px] text-white">
-          AI 戰力評分
+          AI 量化評分
         </p>
         <div className="flex w-full items-center gap-2">
           <div className="flex items-center gap-1">
@@ -46,7 +83,7 @@ export function SandowScoreCard({ score = 61 }: { score?: number }) {
               </div>
             </div>
             <p className="text-sm font-normal leading-[1.6] text-white whitespace-nowrap">
-              進階分析
+              十四代演算法
             </p>
           </div>
         </div>
