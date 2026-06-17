@@ -1,4 +1,5 @@
 import { figmaAsset } from "@/lib/figma-assets";
+import type { AnalysisDimensions } from "@/types/analysis";
 
 function PolygonLayer({
   className,
@@ -25,7 +26,41 @@ function PolygonLayer({
   );
 }
 
-export function RadarChart() {
+const AXES: Array<{ key: keyof AnalysisDimensions; label: string; angle: number }> = [
+  { key: "attack", label: "進攻", angle: -90 },
+  { key: "possession", label: "控球", angle: -30 },
+  { key: "defense", label: "防守", angle: 30 },
+  { key: "tactics", label: "戰術", angle: 90 },
+  { key: "morale", label: "士氣", angle: 150 },
+  { key: "fitness", label: "體能", angle: 210 },
+];
+
+const CENTER = 91;
+const MAX_RADIUS = 68;
+
+function polarToCartesian(angleDeg: number, radius: number) {
+  const angleRad = (angleDeg * Math.PI) / 180;
+  return {
+    x: CENTER + radius * Math.cos(angleRad),
+    y: CENTER + radius * Math.sin(angleRad),
+  };
+}
+
+function buildPolygonPoints(dimensions: AnalysisDimensions): string {
+  return AXES.map(({ key, angle }) => {
+    const value = dimensions[key] / 100;
+    const { x, y } = polarToCartesian(angle, MAX_RADIUS * value);
+    return `${x},${y}`;
+  }).join(" ");
+}
+
+type RadarChartProps = {
+  dimensions: AnalysisDimensions;
+};
+
+export function RadarChart({ dimensions }: RadarChartProps) {
+  const dataPoints = buildPolygonPoints(dimensions);
+
   return (
     <div className="relative h-[346px] w-[343px] shrink-0">
       <div className="absolute left-1/2 top-[calc(50%-0.5px)] h-[315px] w-[409.382px] -translate-x-1/2 -translate-y-1/2">
@@ -92,26 +127,20 @@ export function RadarChart() {
         士氣
       </p>
 
-      <PolygonLayer
-        className="left-[calc(50%-13.5px)] top-[calc(50%-22.75px)] h-[241.5px] w-[182px]"
-        inset="inset-[3.95%_1.87%_3.88%_1.18%]"
-        src="a4b589eabc9d5864138c4c9dd26db7c209076bd8"
-      />
-      <PolygonLayer
-        className="left-[calc(50%-13.5px)] top-[calc(50%-22.75px)] h-[241.5px] w-[182px]"
-        inset="inset-[2.3%_-2.53%_-1.09%_-3.22%]"
-        src="7ae2491599e832dfab93531cbe25d3fa01e563b6"
-      />
-      <PolygonLayer
-        className="left-[calc(50%-7.25px)] top-[calc(50%+6.5px)] h-[217px] w-[228.5px]"
-        inset="inset-[2.25%_4.97%_0.89%_0]"
-        src="ed826fcbfb60674d8c17d8fa479a1d8f7c48e59b"
-      />
-      <PolygonLayer
-        className="left-[calc(50%-7.25px)] top-[calc(50%+6.5px)] h-[217px] w-[228.5px]"
-        inset="inset-[0.4%_1.47%_-4.64%_-3.5%]"
-        src="82effc5ff846835a5d554968f6a7c575e140245f"
-      />
+      <div className="absolute left-[calc(50%-7.25px)] top-[calc(50%+6.5px)] h-[217px] w-[228.5px] -translate-x-1/2 -translate-y-1/2">
+        <svg
+          viewBox="0 0 182 182"
+          className="size-full origin-center animate-[radar-in_0.6s_ease-out]"
+          aria-hidden
+        >
+          <polygon
+            points={dataPoints}
+            fill="rgba(249, 115, 22, 0.42)"
+            stroke="#f97316"
+            strokeWidth="2"
+          />
+        </svg>
+      </div>
     </div>
   );
 }

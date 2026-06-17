@@ -29,7 +29,16 @@ function ChartGridLine({
   );
 }
 
-export function StepsStatsChart() {
+type StepsStatsChartProps = {
+  scoreTrend?: number[];
+};
+
+export function StepsStatsChart({
+  scoreTrend = [400, 450, 520, 580, 540, 610, 650],
+}: StepsStatsChartProps) {
+  const total = scoreTrend.reduce((sum, value) => sum + value, 0);
+  const latest = scoreTrend[scoreTrend.length - 1] ?? 0;
+
   return (
     <section className="flex w-full flex-col gap-2">
       <div className="flex h-6 w-full items-center justify-between">
@@ -147,7 +156,7 @@ export function StepsStatsChart() {
             <div className="absolute left-[168px] top-[21px] flex flex-col items-center">
               <div className="rounded-[11px] bg-[#f97316] px-3 py-2">
                 <p className="text-center text-xs font-bold leading-none tracking-[-0.018px] text-white">
-                  825
+                  {latest}
                 </p>
               </div>
               <div className="relative h-[7px] w-[14px]">
@@ -164,7 +173,7 @@ export function StepsStatsChart() {
           <div className="flex w-full items-center justify-between">
             <div className="flex items-end">
               <p className="text-[36px] font-bold leading-[44px] tracking-[-0.432px] text-white">
-                1,187
+                {total.toLocaleString()}
               </p>
               <p className="h-[27px] w-11 text-lg font-medium leading-none tracking-[-0.072px] text-[#9ea0a5]">
                 總計

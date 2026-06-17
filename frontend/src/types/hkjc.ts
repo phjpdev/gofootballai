@@ -4,6 +4,19 @@ export type HkjcHadOdds = {
   away: string;
 };
 
+export type HkjcHdcOdds = {
+  homeLine: string;
+  homeOdds: string;
+  awayLine: string;
+  awayOdds: string;
+};
+
+export type HkjcHilOdds = {
+  line: string;
+  overOdds: string;
+  underOdds: string;
+};
+
 export type HkjcMatch = {
   id: string;
   frontEndId: string;
@@ -25,6 +38,8 @@ export type HkjcMatch = {
   awayLogo: string;
   tournamentLogo: string;
   hadOdds: HkjcHadOdds | null;
+  hdcOdds: HkjcHdcOdds | null;
+  hilOdds: HkjcHilOdds | null;
   poolCount: number;
   inplay: boolean;
 };

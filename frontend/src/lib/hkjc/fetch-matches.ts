@@ -6,6 +6,38 @@ import {
 } from "@/lib/hkjc/transform";
 import type { HkjcMatch, HkjcMatchesResponse } from "@/types/hkjc";
 
+type RawPool = { oddsType: string };
+type RawMatch = Parameters<typeof isActiveHkjcMatch>[0] & {
+  foPools?: RawPool[];
+};
+
+function mergeRawMatches(batches: RawMatch[][]): RawMatch[] {
+  const map = new Map<string, RawMatch>();
+
+  for (const batch of batches) {
+    for (const match of batch) {
+      const existing = map.get(match.id);
+      if (!existing) {
+        map.set(match.id, match);
+        continue;
+      }
+
+      const poolByType = new Map<string, RawPool>();
+      for (const pool of [...(existing.foPools ?? []), ...(match.foPools ?? [])]) {
+        poolByType.set(pool.oddsType, pool);
+      }
+
+      map.set(match.id, {
+        ...existing,
+        ...match,
+        foPools: [...poolByType.values()],
+      });
+    }
+  }
+
+  return [...map.values()];
+}
+
 let cache: { data: HkjcMatchesResponse; expiresAt: number } | null = null;
 const CACHE_TTL_MS = 60_000;
 
@@ -15,11 +47,18 @@ export async function fetchHkjcMatches(): Promise<HkjcMatchesResponse> {
   }
 
   const api = new FootballAPI();
-  const rawMatches = await api.getAllFootballMatches({
-    oddsTypes: ["HAD"],
-    showAllMatch: true,
-  });
+  const [batchA, batchB] = await Promise.all([
+    api.getAllFootballMatches({
+      oddsTypes: ["HAD", "HDC"],
+      showAllMatch: true,
+    }),
+    api.getAllFootballMatches({
+      oddsTypes: ["HIL"],
+      showAllMatch: true,
+    }),
+  ]);
 
+  const rawMatches = mergeRawMatches([batchA as RawMatch[], batchB as RawMatch[]]);
   const matches = rawMatches
     .filter(isActiveHkjcMatch)
     .map(transformHkjcMatch)

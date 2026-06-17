@@ -13,6 +13,8 @@ import { SubNav } from "@/components/layout/SubNav";
 import { AnimateIn } from "@/components/motion/AnimateIn";
 import { HkjcMatchCard } from "@/components/cards/HkjcMatchCard";
 import { filterMatchesByDate } from "@/lib/hkjc/transform";
+import { prewarmAnalyses } from "@/lib/analyses-api";
+import { useAuth } from "@/context/AuthContext";
 import type { HkjcDateItem, HkjcMatch, HkjcMatchesResponse } from "@/types/hkjc";
 
 type HkjcContextValue = {
@@ -109,6 +111,10 @@ export function HkjcDatePicker() {
 
 export function HkjcMatchesSection() {
   const { data, loading, error, selectedIndex, reload } = useHkjc();
+  const { token, isAuthenticated, isMember, isAdmin } = useAuth();
+  const [analysisScores, setAnalysisScores] = useState<Record<string, number>>(
+    {},
+  );
   const listKey = `${selectedIndex}-${data?.updatedAt ?? "loading"}`;
 
   const matches = useMemo(() => {
@@ -118,6 +124,27 @@ export function HkjcMatchesSection() {
     if (!selectedDateKey) return [] as HkjcMatch[];
     return filterMatchesByDate(data.matches, selectedDateKey);
   }, [data, selectedIndex]);
+
+  const canPrewarm = isAuthenticated && (isMember || isAdmin) && Boolean(token);
+
+  useEffect(() => {
+    if (!canPrewarm || !token || matches.length === 0) return;
+
+    const matchIds = matches.slice(0, 6).map((match) => match.id);
+    void prewarmAnalyses(token, matchIds)
+      .then((results) => {
+        const scores: Record<string, number> = {};
+        for (const result of results) {
+          if (result.confidenceScore !== undefined) {
+            scores[result.matchId] = result.confidenceScore;
+          }
+        }
+        setAnalysisScores((prev) => ({ ...prev, ...scores }));
+      })
+      .catch(() => {
+        // prewarm is best-effort
+      });
+  }, [canPrewarm, token, matches]);
 
   if (loading) {
     return (
@@ -173,6 +200,7 @@ export function HkjcMatchesSection() {
               <HkjcMatchCard
                 match={match}
                 href={`/analysis/${match.id}`}
+                analysisScore={analysisScores[match.id]}
               />
             </AnimateIn>
           ))}

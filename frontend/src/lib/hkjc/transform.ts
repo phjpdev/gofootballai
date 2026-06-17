@@ -1,5 +1,16 @@
 import { ACTIVE_MATCH_STATUSES, HKJC_TOURNAMENT_FLAG } from "@/lib/hkjc/constants";
-import type { HkjcDateItem, HkjcHadOdds, HkjcMatch } from "@/types/hkjc";
+import {
+  bracketHandicapLine,
+  flipHandicapLine,
+  formatHandicapLine,
+} from "@/lib/hkjc/handicap";
+import type {
+  HkjcDateItem,
+  HkjcHadOdds,
+  HkjcHdcOdds,
+  HkjcHilOdds,
+  HkjcMatch,
+} from "@/types/hkjc";
 
 type RawTeam = { id: string; name_en: string; name_ch: string };
 type RawTournament = {
@@ -17,6 +28,7 @@ type RawPool = {
   inplay?: boolean;
   lines?: Array<{
     main?: boolean;
+    condition?: string;
     combinations?: RawCombination[];
   }>;
 };
@@ -33,9 +45,13 @@ type RawMatch = {
   foPools?: RawPool[];
 };
 
+function getMainLine(pool?: RawPool) {
+  return pool?.lines?.find((line) => line.main) ?? pool?.lines?.[0];
+}
+
 function parseHadOdds(foPools?: RawPool[]): HkjcHadOdds | null {
   const had = foPools?.find((pool) => pool.oddsType === "HAD");
-  const mainLine = had?.lines?.find((line) => line.main) ?? had?.lines?.[0];
+  const mainLine = getMainLine(had);
   if (!mainLine?.combinations?.length) return null;
 
   const odds: Partial<HkjcHadOdds> = {};
@@ -47,6 +63,39 @@ function parseHadOdds(foPools?: RawPool[]): HkjcHadOdds | null {
 
   if (!odds.home || !odds.draw || !odds.away) return null;
   return odds as HkjcHadOdds;
+}
+
+function parseHdcOdds(foPools?: RawPool[]): HkjcHdcOdds | null {
+  const hdc = foPools?.find((pool) => pool.oddsType === "HDC");
+  const mainLine = getMainLine(hdc);
+  if (!mainLine?.condition || !mainLine.combinations?.length) return null;
+
+  const home = mainLine.combinations.find((c) => c.str === "H");
+  const away = mainLine.combinations.find((c) => c.str === "A");
+  if (!home?.currentOdds || !away?.currentOdds) return null;
+
+  return {
+    homeLine: bracketHandicapLine(mainLine.condition),
+    homeOdds: home.currentOdds,
+    awayLine: bracketHandicapLine(flipHandicapLine(mainLine.condition)),
+    awayOdds: away.currentOdds,
+  };
+}
+
+function parseHilOdds(foPools?: RawPool[]): HkjcHilOdds | null {
+  const hil = foPools?.find((pool) => pool.oddsType === "HIL");
+  const mainLine = getMainLine(hil);
+  if (!mainLine?.condition || !mainLine.combinations?.length) return null;
+
+  const over = mainLine.combinations.find((c) => c.str === "H");
+  const under = mainLine.combinations.find((c) => c.str === "L");
+  if (!over?.currentOdds || !under?.currentOdds) return null;
+
+  return {
+    line: `[${formatHandicapLine(mainLine.condition)}]`,
+    overOdds: over.currentOdds,
+    underOdds: under.currentOdds,
+  };
 }
 
 function parseMatchDate(matchDate: string): string {
@@ -104,6 +153,8 @@ export function transformHkjcMatch(raw: RawMatch): HkjcMatch {
     awayLogo: "",
     tournamentLogo: HKJC_TOURNAMENT_FLAG(raw.tournament.code),
     hadOdds: parseHadOdds(raw.foPools),
+    hdcOdds: parseHdcOdds(raw.foPools),
+    hilOdds: parseHilOdds(raw.foPools),
     poolCount: raw.poolInfo?.sellingPools?.length ?? 0,
     inplay: Boolean(hadPool?.inplay),
   };

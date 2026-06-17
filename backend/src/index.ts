@@ -5,6 +5,7 @@ import path from "node:path";
 import { initDb } from "./lib/db.js";
 import { ensureDatabase } from "./lib/ensure-database.js";
 import authRoutes from "./routes/auth.js";
+import analysesRoutes from "./routes/analyses.js";
 import recordsRoutes from "./routes/records.js";
 import usersRoutes from "./routes/users.js";
 
@@ -26,6 +27,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/analyses", analysesRoutes);
 app.use("/api/records", recordsRoutes);
 app.use("/api/users", usersRoutes);
 

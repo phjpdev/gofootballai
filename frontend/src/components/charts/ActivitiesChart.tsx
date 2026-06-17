@@ -52,7 +52,16 @@ function ChartTooltip({ value }: { value: string }) {
   );
 }
 
-export function ActivitiesChart() {
+type ActivitiesChartProps = {
+  momentum?: number[];
+};
+
+export function ActivitiesChart({ momentum = [48, 52, 55, 61, 58, 63, 67] }: ActivitiesChartProps) {
+  const peak = Math.max(...momentum);
+  const latest = momentum[momentum.length - 1] ?? 0;
+  const total = momentum.reduce((sum, value) => sum + value, 0);
+  const delta = momentum.length > 1 ? latest - momentum[0] : 0;
+
   return (
     <section className="flex w-full flex-col gap-2">
       <div className="flex h-6 w-full items-center justify-between">
@@ -89,14 +98,14 @@ export function ActivitiesChart() {
           </div>
 
           <div className="absolute left-[199px] top-[35px]">
-            <ChartTooltip value="880" />
+            <ChartTooltip value={String(peak)} />
           </div>
         </div>
 
         <div className="flex w-full items-center justify-between">
           <div className="flex flex-col gap-1">
             <p className="text-[30px] font-bold leading-[38px] tracking-[-0.3px] text-white">
-              1,548 kcal
+              {total.toLocaleString()}
             </p>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
@@ -113,7 +122,7 @@ export function ActivitiesChart() {
                   </div>
                 </div>
                 <p className="text-sm font-medium leading-none tracking-[-0.028px] text-[#d7d8d9]">
-                  +285
+                  {delta >= 0 ? `+${delta}` : delta}
                 </p>
               </div>
               <div className="relative size-1">
@@ -142,7 +151,7 @@ export function ActivitiesChart() {
                   </div>
                 </div>
                 <p className="text-sm font-medium leading-none tracking-[-0.028px] text-[#d7d8d9]">
-                  8 項建議
+                  {momentum.length} 節點
                 </p>
               </div>
             </div>

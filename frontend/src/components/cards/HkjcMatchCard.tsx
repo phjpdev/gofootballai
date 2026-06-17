@@ -68,9 +68,10 @@ function MatchLogoBox({
 type HkjcMatchCardProps = {
   match: HkjcMatch;
   href?: string;
+  analysisScore?: number;
 };
 
-export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
+export function HkjcMatchCard({ match, href, analysisScore }: HkjcMatchCardProps) {
   const homeOdds = match.hadOdds ? Number.parseFloat(match.hadOdds.home) : 2;
   const implied = Math.min(95, Math.round((1 / homeOdds) * 100));
 
@@ -96,6 +97,11 @@ export function HkjcMatchCard({ match, href }: HkjcMatchCardProps) {
               <span className="flex h-5 shrink-0 items-center justify-center rounded-md bg-white/15 px-1.5 text-[10px] font-semibold text-white sm:h-6 sm:rounded-lg sm:px-2 sm:text-xs">
                 {match.tournamentCode}
               </span>
+              {analysisScore !== undefined && (
+                <span className="flex h-5 shrink-0 items-center justify-center rounded-md border border-orange-50/40 bg-orange-50/15 px-1.5 text-[10px] font-bold text-orange-50 sm:h-6 sm:rounded-lg sm:px-2 sm:text-xs">
+                  AI {analysisScore}
+                </span>
+              )}
             </div>
 
             <div className="relative h-1 w-full sm:h-1.5">

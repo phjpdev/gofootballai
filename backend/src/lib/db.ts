@@ -31,6 +31,32 @@ export async function initDb(): Promise<void> {
 
     CREATE INDEX IF NOT EXISTS records_created_at_idx
       ON records (created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS match_analyses (
+      id UUID PRIMARY KEY,
+      hkjc_match_id VARCHAR(64) NOT NULL,
+      front_end_id VARCHAR(32),
+      status VARCHAR(16) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'completed', 'failed')),
+      model VARCHAR(64),
+      prompt_version VARCHAR(16) NOT NULL DEFAULT 'v1',
+      input_snapshot JSONB,
+      analysis JSONB,
+      raw_response JSONB,
+      error_message TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      expires_at TIMESTAMPTZ
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS match_analyses_match_prompt_idx
+      ON match_analyses (hkjc_match_id, prompt_version);
+
+    CREATE INDEX IF NOT EXISTS match_analyses_status_idx
+      ON match_analyses (status);
+
+    CREATE INDEX IF NOT EXISTS match_analyses_expires_at_idx
+      ON match_analyses (expires_at);
   `);
 
   await pool.query(`
