@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { MatchAnalysisData } from "./analysis-schema.js";
+import { resolveConfidenceScore } from "./normalize-analysis.js";
 import { query } from "./db.js";
 import type { HkjcInputSnapshot } from "./hkjc/types.js";
 import { MATCH_ANALYSIS_PROMPT_VERSION } from "./prompts/match-analysis-v1.js";
@@ -164,6 +165,22 @@ export async function markAnalysisFailed(input: {
   return result.rows[0] ?? null;
 }
 
+export function patchAnalysisConfidence(
+  analysis: MatchAnalysisData,
+): MatchAnalysisData {
+  const confidenceScore = resolveConfidenceScore({
+    confidenceScore: analysis.confidenceScore,
+    dimensions: analysis.dimensions,
+    recommendationLevel: analysis.recommendationLevel,
+  });
+
+  if (confidenceScore === analysis.confidenceScore) {
+    return analysis;
+  }
+
+  return { ...analysis, confidenceScore };
+}
+
 export function toPublicAnalysis(row: MatchAnalysisRow | null) {
   if (!row) {
     return {
@@ -173,10 +190,12 @@ export function toPublicAnalysis(row: MatchAnalysisRow | null) {
     };
   }
 
+  const analysis = row.analysis ? patchAnalysisConfidence(row.analysis) : null;
+
   return {
     matchId: row.hkjc_match_id,
     status: row.status,
-    analysis: row.analysis,
+    analysis,
     error: row.error_message ?? undefined,
     expiresAt: row.expires_at?.toISOString(),
   };

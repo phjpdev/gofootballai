@@ -28,12 +28,31 @@ function formatEv(value: unknown): string {
   return `${n}%`;
 }
 
-function averageDimensionScore(dimensions: Record<string, unknown>): number | null {
-  const values = Object.values(dimensions)
-    .map(toNumber)
-    .filter((value): value is number => value !== null);
+function averageDimensionScore(
+  dimensions: Record<string, number>,
+): number | null {
+  const values = Object.values(dimensions).filter(
+    (value) => typeof value === "number" && !Number.isNaN(value),
+  );
   if (values.length === 0) return null;
-  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+  const avg = Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+  return avg > 0 ? avg : null;
+}
+
+export function resolveConfidenceScore(input: {
+  confidenceScore?: unknown;
+  dimensions: Record<string, number>;
+  recommendationLevel: number;
+}): number {
+  const raw = toNumber(input.confidenceScore);
+  if (raw !== null && raw > 0) {
+    return Math.min(100, Math.max(0, Math.round(raw)));
+  }
+
+  const fromDimensions = averageDimensionScore(input.dimensions);
+  if (fromDimensions !== null) return fromDimensions;
+
+  return Math.min(100, Math.max(1, input.recommendationLevel * 20));
 }
 
 function normalizeGoalProbabilities(raw: Record<string, unknown>) {
@@ -124,10 +143,16 @@ export function normalizeGrokAnalysis(raw: unknown): unknown {
     morale: toNumber(dimensions.morale) ?? 50,
   };
 
-  const confidenceScore =
-    toNumber(input.confidenceScore ?? input.confidence_score) ??
-    averageDimensionScore(normalizedDimensions) ??
-    (toNumber(input.recommendationLevel) ?? 3) * 20;
+  const recommendationLevel = Math.min(
+    5,
+    Math.max(1, Math.round(toNumber(input.recommendationLevel) ?? 3)),
+  );
+
+  const confidenceScore = resolveConfidenceScore({
+    confidenceScore: input.confidenceScore ?? input.confidence_score,
+    dimensions: normalizedDimensions,
+    recommendationLevel,
+  });
 
   const roiRaw = toNumber(input.roi);
   const roi =
@@ -138,12 +163,9 @@ export function normalizeGrokAnalysis(raw: unknown): unknown {
         : roiRaw;
 
   return {
-    confidenceScore: Math.min(100, Math.max(0, confidenceScore)),
+    confidenceScore,
     dimensions: normalizedDimensions,
-    recommendationLevel: Math.min(
-      5,
-      Math.max(1, Math.round(toNumber(input.recommendationLevel) ?? 3)),
-    ),
+    recommendationLevel,
     recommendationLabel: String(
       input.recommendationLabel ?? input.recommendation_label ?? "戰術觀望",
     ),
