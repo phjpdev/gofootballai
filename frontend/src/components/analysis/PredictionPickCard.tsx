@@ -18,7 +18,7 @@ export function PredictionPickCard({ pick }: PredictionPickCardProps) {
   const { label, value } = splitPickSelection(pick.selection);
 
   return (
-    <div className="relative aspect-square h-[173px] min-w-0 flex-1 overflow-hidden rounded-2xl border border-[#ef4444] shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+    <div className="relative aspect-square h-[173px] min-w-0 flex-1 overflow-hidden rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
       <Image
         src="/images/prediction-hero.png"
         alt=""
