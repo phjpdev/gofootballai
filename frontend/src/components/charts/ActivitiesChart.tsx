@@ -77,7 +77,7 @@ export function ActivitiesChart({ momentum = [48, 52, 55, 61, 58, 63, 67] }: Act
       </div>
 
       <div className="flex w-full flex-col gap-4 overflow-hidden rounded-[32px] bg-[#24262b] p-4">
-        <TabGroup variant="dark" />
+        <TabGroup variant="dark" preset="matchMinutes" />
 
         <div className="relative h-[140px] w-full max-w-[311px]">
           <div className="absolute inset-0 flex flex-col justify-between">
