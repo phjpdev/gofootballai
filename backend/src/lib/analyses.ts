@@ -47,6 +47,7 @@ export function isAnalysisStale(row: MatchAnalysisRow): boolean {
 export function needsAnalysis(row: MatchAnalysisRow | null): boolean {
   if (!row) return true;
   if (row.status === "completed" && !isAnalysisStale(row)) return false;
+  if (row.status === "pending" && !isPendingStale(row)) return false;
   return true;
 }
 

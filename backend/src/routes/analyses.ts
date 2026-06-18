@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   getAnalysisByMatchId,
-  isAnalysisStale,
+  isPendingStale,
   needsAnalysis,
   patchAnalysisConfidence,
   toPublicAnalysis,
@@ -58,7 +58,10 @@ router.get(
     let row = await getAnalysisByMatchId(matchId, promptVersion);
 
     if (needsAnalysis(row)) {
-      enqueueAnalysis(matchId, row?.status === "failed");
+      const force =
+        row?.status === "failed" ||
+        (row?.status === "pending" && isPendingStale(row));
+      enqueueAnalysis(matchId, force);
       row = await getAnalysisByMatchId(matchId, promptVersion);
     }
 
@@ -87,9 +90,13 @@ router.get(
       return;
     }
 
+    if (row.status === "pending" && isPendingStale(row)) {
+      enqueueAnalysis(matchId, true);
+    }
+
     res.json({
       matchId,
-      status: isAnalysisStale(row) ? "pending" : row.status,
+      status: row.status,
       confidenceScore: row.analysis
         ? patchAnalysisConfidence(row.analysis).confidenceScore
         : undefined,

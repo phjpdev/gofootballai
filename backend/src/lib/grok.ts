@@ -9,7 +9,7 @@ import {
 } from "./prompts/match-analysis-v1.js";
 
 const XAI_API_URL = "https://api.x.ai/v1/chat/completions";
-const GROK_TIMEOUT_MS = Number(process.env.XAI_TIMEOUT_MS ?? 12_000);
+const GROK_TIMEOUT_MS = Number(process.env.XAI_TIMEOUT_MS ?? 30_000);
 
 type GrokResponse = {
   choices?: Array<{
