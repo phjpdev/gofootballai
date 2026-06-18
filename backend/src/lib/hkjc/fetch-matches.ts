@@ -9,7 +9,10 @@ import { createFootballAPI } from "./graphql-client.js";
 import type { HkjcMatch, HkjcMatchesResponse } from "./types.js";
 
 let cache: { matches: HkjcMatch[]; expiresAt: number } | null = null;
-const CACHE_TTL_MS = 60_000;
+const CACHE_TTL_MS = 120_000;
+
+const matchByIdCache = new Map<string, { match: HkjcMatch; expiresAt: number }>();
+const MATCH_BY_ID_TTL_MS = 120_000;
 
 async function fetchRawMatches(): Promise<RawMatch[]> {
   const api = createFootballAPI();
@@ -79,10 +82,42 @@ export async function fetchHkjcMatchesResponse(options?: {
 export async function fetchHkjcMatchById(
   matchId: string,
 ): Promise<HkjcMatch | null> {
-  const matches = await fetchHkjcMatches();
-  return matches.find((match) => match.id === matchId) ?? null;
+  const cached = matchByIdCache.get(matchId);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.match;
+  }
+
+  const fromList = (await fetchHkjcMatches()).find((match) => match.id === matchId);
+  if (fromList) {
+    matchByIdCache.set(matchId, {
+      match: fromList,
+      expiresAt: Date.now() + MATCH_BY_ID_TTL_MS,
+    });
+    return fromList;
+  }
+
+  try {
+    const api = createFootballAPI();
+    const raw = (await api.getFootballMatchDetails(matchId, [
+      "HAD",
+      "HDC",
+      "HIL",
+    ])) as RawMatch | null;
+    if (!raw) return null;
+
+    const match = transformHkjcMatch(raw);
+    matchByIdCache.set(matchId, {
+      match,
+      expiresAt: Date.now() + MATCH_BY_ID_TTL_MS,
+    });
+    return match;
+  } catch (error) {
+    console.error(`Direct HKJC fetch failed for ${matchId}:`, error);
+    return null;
+  }
 }
 
 export function invalidateHkjcCache(): void {
   cache = null;
+  matchByIdCache.clear();
 }

@@ -54,7 +54,6 @@ async function processMatch(matchId: string, force = false): Promise<void> {
     return;
   }
 
-  invalidateHkjcCache();
   const match = await fetchHkjcMatchById(matchId);
   if (!match) {
     await markAnalysisFailed({
@@ -214,13 +213,9 @@ export async function prewarmAnalyses(
     }
 
     enqueueAnalysis(matchId, force);
-    const refreshed = await getAnalysisByMatchId(matchId, promptVersion);
     results.push({
       matchId,
-      status: refreshed?.status ?? "pending",
-      confidenceScore: refreshed?.analysis
-        ? patchAnalysisConfidence(refreshed.analysis).confidenceScore
-        : undefined,
+      status: "pending",
     });
   }
 

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { MatchAnalysisView } from "@/components/analysis/MatchAnalysisView";
+import { AuthForm } from "@/components/member/AuthForm";
 import { useAuth } from "@/context/AuthContext";
 import {
   fetchAnalysisStatus,
@@ -11,16 +13,16 @@ import {
 } from "@/lib/analyses-api";
 import type { AnalysisResponse } from "@/types/analysis";
 import type { Match } from "@/types";
-import { Lock, Loader2 } from "lucide-react";
 
 type MatchAnalysisClientProps = {
   match: Match;
 };
 
-const POLL_INTERVAL_MS = 1000;
+const POLL_INTERVAL_MS = 2_500;
 
 export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
-  const { token, isAuthenticated, isMember, isAdmin, isLoading } = useAuth();
+  const pathname = usePathname();
+  const { token, isAuthenticated, isMember, isAdmin, isLoading, user } = useAuth();
   const [analysisState, setAnalysisState] = useState<AnalysisResponse | null>(
     null,
   );
@@ -90,49 +92,19 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4">
-        <div className="h-24 animate-pulse rounded-[24px] bg-gray-90" />
-        <div className="h-40 animate-pulse rounded-[24px] bg-gray-90" />
-      </div>
-    );
-  }
-
-  if (!canAccess) {
-    return (
-      <section className="flex flex-col items-center gap-4 rounded-[24px] bg-gray-90 p-8 text-center">
-        <div className="flex size-14 items-center justify-center rounded-full bg-gray-80">
-          <Lock className="size-6 text-gray-40" />
-        </div>
-        <h2 className="text-base font-bold text-white">會員專屬分析</h2>
-        <p className="text-sm leading-[1.6] text-gray-40">
-          請先登入或註冊會員帳戶，以查看 AI 賽事量化分析。
-        </p>
-        <Link
-          href="/member"
-          className="rounded-[19px] bg-orange-50 px-6 py-3 text-sm font-semibold text-white"
-        >
-          前往會員頁面
-        </Link>
-      </section>
-    );
-  }
-
-  if (loading && !analysisState) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-12">
-        <Loader2 className="size-8 animate-spin text-orange-50" />
-        <p className="text-sm text-gray-40">正在載入 AI 分析…</p>
-      </div>
-    );
-  }
-
   return (
     <MatchAnalysisView
       match={match}
       analysis={analysisState?.analysis ?? null}
-      loading={analysisState?.status === "pending"}
+      loading={isLoading || (canAccess && loading && !analysisState)}
+      pending={analysisState?.status === "pending"}
+      locked={!isLoading && !canAccess}
+      lockedHint={
+        isAuthenticated && user && !canAccess
+          ? "此帳戶無法查看會員分析，請使用會員帳戶登入。"
+          : "請登入或註冊會員帳戶，以查看 AI 賽事量化分析。"
+      }
+      loginRedirectTo={pathname}
       error={
         analysisState?.status === "failed"
           ? (error ?? "分析生成失敗，請點擊重新分析")

@@ -12,11 +12,13 @@ type AuthMode = "login" | "signup";
 type AuthFormProps = {
   portalRole: UserRole;
   termsHref?: string;
+  redirectTo?: string;
 };
 
 export function AuthForm({
   portalRole,
   termsHref = "/member#terms",
+  redirectTo = "/analysis",
 }: AuthFormProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading, login, signup } = useAuth();
@@ -47,7 +49,7 @@ export function AuthForm({
       setUsername("");
       setPassword("");
       setAcceptedTerms(false);
-      router.push("/analysis");
+      router.push(redirectTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : "發生錯誤，請稍後再試");
     } finally {
