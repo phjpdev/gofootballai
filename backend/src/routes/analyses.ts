@@ -3,6 +3,7 @@ import {
   getAnalysisByMatchId,
   isAnalysisStale,
   needsAnalysis,
+  patchAnalysisConfidence,
   toPublicAnalysis,
 } from "../lib/analyses.js";
 import {
@@ -12,6 +13,7 @@ import {
   prewarmAnalyses,
 } from "../lib/analysis-queue.js";
 import { MATCH_ANALYSIS_PROMPT_VERSION } from "../lib/prompts/match-analysis-v1.js";
+import type { MatchAnalysisData } from "../lib/analysis-schema.js";
 import {
   getCachedAnalysis,
   setCachedAnalysis,
@@ -49,7 +51,8 @@ router.get(
       promptVersion,
     );
     if (cached?.status === "completed" && cached.analysis) {
-      res.json(cached);
+      const analysis = patchAnalysisConfidence(cached.analysis as MatchAnalysisData);
+      res.json({ ...cached, analysis });
       return;
     }
 
@@ -90,7 +93,9 @@ router.get(
     res.json({
       matchId,
       status: isAnalysisStale(row) ? "pending" : row.status,
-      confidenceScore: row.analysis?.confidenceScore,
+      confidenceScore: row.analysis
+        ? patchAnalysisConfidence(row.analysis).confidenceScore
+        : undefined,
       error: row.error_message ?? undefined,
     });
   },

@@ -134,7 +134,7 @@ export function HkjcMatchesSection() {
       .then((results) => {
         const scores: Record<string, number> = {};
         for (const result of results) {
-          if (result.confidenceScore !== undefined) {
+          if (result.confidenceScore !== undefined && result.confidenceScore > 0) {
             scores[result.matchId] = result.confidenceScore;
           }
         }

@@ -3,6 +3,7 @@ import {
   isAnalysisStale,
   markAnalysisCompleted,
   markAnalysisFailed,
+  patchAnalysisConfidence,
   upsertPendingAnalysis,
 } from "./analyses.js";
 import { formatMatchOddsPrompt } from "./hkjc/format-odds-prompt.js";
@@ -205,7 +206,9 @@ export async function prewarmAnalyses(
       results.push({
         matchId,
         status: existing.status,
-        confidenceScore: existing.analysis?.confidenceScore,
+        confidenceScore: existing.analysis
+          ? patchAnalysisConfidence(existing.analysis).confidenceScore
+          : undefined,
       });
       continue;
     }
@@ -215,7 +218,9 @@ export async function prewarmAnalyses(
     results.push({
       matchId,
       status: refreshed?.status ?? "pending",
-      confidenceScore: refreshed?.analysis?.confidenceScore,
+      confidenceScore: refreshed?.analysis
+        ? patchAnalysisConfidence(refreshed.analysis).confidenceScore
+        : undefined,
     });
   }
 

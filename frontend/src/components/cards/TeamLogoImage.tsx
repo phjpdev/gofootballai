@@ -18,24 +18,25 @@ export function TeamLogoImage({
   lookupName,
   fit = "default",
 }: TeamLogoImageProps) {
-  const [logoUrl, setLogoUrl] = useState(src ?? "");
+  const [logoUrl, setLogoUrl] = useState("");
   const [failed, setFailed] = useState(false);
+  const [usedLookupFallback, setUsedLookupFallback] = useState(false);
   const queryName = lookupName?.trim() || name;
 
   useEffect(() => {
-    if (src) {
-      setLogoUrl(src);
-      setFailed(false);
-      return;
-    }
-
     let cancelled = false;
+    setFailed(false);
+    setUsedLookupFallback(false);
 
     async function loadLogo() {
+      if (src) {
+        setLogoUrl(src);
+        return;
+      }
+
       const url = await fetchTeamLogo(queryName);
       if (!cancelled && url) {
         setLogoUrl(url);
-        setFailed(false);
       }
     }
 
@@ -45,6 +46,22 @@ export function TeamLogoImage({
       cancelled = true;
     };
   }, [src, queryName]);
+
+  const handleError = () => {
+    if (!usedLookupFallback && queryName) {
+      setUsedLookupFallback(true);
+      void fetchTeamLogo(queryName).then((url) => {
+        if (url) {
+          setLogoUrl(url);
+          setFailed(false);
+        } else {
+          setFailed(true);
+        }
+      });
+      return;
+    }
+    setFailed(true);
+  };
 
   if (!logoUrl || failed) {
     return <TeamInitialBadge name={name} compact={fit === "triangle"} />;
@@ -61,7 +78,7 @@ export function TeamLogoImage({
             ? "absolute inset-0 m-auto max-h-full max-w-full object-contain"
             : "absolute inset-0 m-auto max-h-[85%] max-w-[85%] object-contain"
         }
-        onError={() => setFailed(true)}
+        onError={handleError}
       />
     </div>
   );

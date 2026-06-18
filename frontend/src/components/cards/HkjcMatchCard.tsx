@@ -97,7 +97,7 @@ export function HkjcMatchCard({ match, href, analysisScore }: HkjcMatchCardProps
               <span className="flex h-5 shrink-0 items-center justify-center rounded-md bg-white/15 px-1.5 text-[10px] font-semibold text-white sm:h-6 sm:rounded-lg sm:px-2 sm:text-xs">
                 {match.tournamentCode}
               </span>
-              {analysisScore !== undefined && (
+              {analysisScore !== undefined && analysisScore > 0 && (
                 <span className="flex h-5 shrink-0 items-center justify-center rounded-md border border-orange-50/40 bg-orange-50/15 px-1.5 text-[10px] font-bold text-orange-50 sm:h-6 sm:rounded-lg sm:px-2 sm:text-xs">
                   AI {analysisScore}
                 </span>
