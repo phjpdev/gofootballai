@@ -5,7 +5,6 @@ import type {
   AnalysisPick,
 } from "@/types/analysis";
 
-const DAYS = ["一", "二", "三", "四", "五", "六", "日"] as const;
 const MATCH_MINUTES = ["15'", "30'", "45'", "60'", "75'", "90'"] as const;
 const CHEVRON = figmaAsset("44fa759040c464414aab1abfac01547773dd8246");
 
@@ -141,8 +140,8 @@ function WeightChart({ values }: { values: number[] }) {
 }
 
 function BloodPressureChart({ values }: { values: number[] }) {
-  const bars = values.slice(0, 7);
-  while (bars.length < 7) bars.push(bars[bars.length - 1] ?? 50);
+  const bars = values.slice(0, 6);
+  while (bars.length < 6) bars.push(bars[bars.length - 1] ?? 50);
 
   return (
     <div className="flex min-w-0 flex-1 items-center justify-between">
@@ -151,7 +150,7 @@ function BloodPressureChart({ values }: { values: number[] }) {
         const bottomHeight = Math.max(8, 24 - topHeight);
         const purpleTop = i % 2 === 0;
         return (
-          <div key={i} className="flex w-3 flex-col items-center gap-1">
+          <div key={i} className="flex min-w-[22px] flex-col items-center gap-1">
             <div className="flex h-10 w-full flex-col items-center gap-0.5">
               <div
                 className="w-1 shrink-0 rounded-lg"
@@ -168,8 +167,8 @@ function BloodPressureChart({ values }: { values: number[] }) {
                 }}
               />
             </div>
-            <p className="w-full text-center text-[10px] font-normal leading-[14px] tracking-[-0.04px] text-[#d4d4d8]">
-              {DAYS[i]}
+            <p className="text-center text-[9px] font-normal leading-[14px] tracking-[-0.04px] text-[#d4d4d8] whitespace-nowrap">
+              {MATCH_MINUTES[i]}
             </p>
           </div>
         );
@@ -209,10 +208,10 @@ function HeartRateChart() {
           </div>
         </div>
       </div>
-      <div className="flex w-full items-start justify-between px-0.5 text-center text-[10px] font-normal leading-[14px] tracking-[-0.04px] text-[#d4d4d8]">
-        {DAYS.map((day, i) => (
-          <span key={i} className="w-[9px]">
-            {day}
+      <div className="flex w-full items-start justify-between text-center text-[9px] font-normal leading-[14px] tracking-[-0.04px] text-[#d4d4d8]">
+        {MATCH_MINUTES.map((minute) => (
+          <span key={minute} className="min-w-[22px] whitespace-nowrap">
+            {minute}
           </span>
         ))}
       </div>
@@ -293,7 +292,6 @@ export function FitnessMetrics({
                   goalProbabilities.over2,
                   goalProbabilities.exactly2,
                   goalProbabilities.under2,
-                  goalProbabilities.over2,
                 ]}
               />
             </div>
