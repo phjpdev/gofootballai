@@ -23,6 +23,13 @@ export type Match = {
   venue: string;
   homeScore?: number;
   awayScore?: number;
+  homeTeam?: string;
+  awayTeam?: string;
+  homeTeamEn?: string;
+  awayTeamEn?: string;
+  homeLogo?: string;
+  awayLogo?: string;
+  frontEndId?: string;
 };
 
 export type QAItem = {

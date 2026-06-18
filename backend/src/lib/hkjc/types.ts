@@ -34,11 +34,28 @@ export type HkjcMatch = {
   kickOffTime: string;
   kickOffLabel: string;
   status: string;
+  homeLogo: string;
+  awayLogo: string;
+  tournamentLogo: string;
   hadOdds: HkjcHadOdds | null;
   hdcOdds: HkjcHdcOdds | null;
   hilOdds: HkjcHilOdds | null;
   poolCount: number;
   inplay: boolean;
+};
+
+export type HkjcDateItem = {
+  key: string;
+  day: string;
+  date: number;
+  hasEvent: boolean;
+};
+
+export type HkjcMatchesResponse = {
+  matches: HkjcMatch[];
+  dates: HkjcDateItem[];
+  total: number;
+  updatedAt: string;
 };
 
 export type HkjcInputSnapshot = {

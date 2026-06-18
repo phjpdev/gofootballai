@@ -1,3 +1,4 @@
+import dns from "node:dns";
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
@@ -8,6 +9,9 @@ import authRoutes from "./routes/auth.js";
 import analysesRoutes from "./routes/analyses.js";
 import recordsRoutes from "./routes/records.js";
 import usersRoutes from "./routes/users.js";
+import hkjcRoutes from "./routes/hkjc.js";
+
+dns.setDefaultResultOrder("ipv4first");
 
 const app = express();
 const port = Number(process.env.PORT ?? 4000);
@@ -30,6 +34,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/analyses", analysesRoutes);
 app.use("/api/records", recordsRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/hkjc", hkjcRoutes);
 
 async function start() {
   if (!process.env.DATABASE_URL) {

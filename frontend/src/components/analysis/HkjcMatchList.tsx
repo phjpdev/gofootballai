@@ -14,6 +14,7 @@ import { AnimateIn } from "@/components/motion/AnimateIn";
 import { HkjcMatchCard } from "@/components/cards/HkjcMatchCard";
 import { filterMatchesByDate } from "@/lib/hkjc/transform";
 import { prewarmAnalyses } from "@/lib/analyses-api";
+import { fetchHkjcMatchesFromApi } from "@/lib/hkjc/matches-api";
 import { useAuth } from "@/context/AuthContext";
 import type { HkjcDateItem, HkjcMatch, HkjcMatchesResponse } from "@/types/hkjc";
 
@@ -43,9 +44,7 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/hkjc/matches");
-      if (!response.ok) throw new Error("載入賽事失敗");
-      const json = (await response.json()) as HkjcMatchesResponse;
+      const json = await fetchHkjcMatchesFromApi();
       setData(json);
       setSelectedIndex(findDefaultDateIndex());
     } catch {

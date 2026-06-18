@@ -1,10 +1,11 @@
-import { ACTIVE_MATCH_STATUSES } from "./constants.js";
+import { ACTIVE_MATCH_STATUSES, HKJC_TOURNAMENT_FLAG } from "./constants.js";
 import {
   bracketHandicapLine,
   flipHandicapLine,
   formatHandicapLine,
 } from "./handicap.js";
 import type {
+  HkjcDateItem,
   HkjcHadOdds,
   HkjcHdcOdds,
   HkjcHilOdds,
@@ -115,6 +116,27 @@ function formatKickOff(kickOffTime: string): string {
   });
 }
 
+function formatDay(dateKey: string): string {
+  const date = new Date(`${dateKey}T12:00:00+08:00`);
+  return date.toLocaleDateString("zh-HK", {
+    weekday: "short",
+    timeZone: "Asia/Hong_Kong",
+  });
+}
+
+export function buildDateItems(matches: HkjcMatch[]): HkjcDateItem[] {
+  const dateKeys = [...new Set(matches.map((match) => match.matchDate))].sort();
+  return dateKeys.map((key) => {
+    const [, , day] = key.split("-").map(Number);
+    return {
+      key,
+      day: formatDay(key),
+      date: day,
+      hasEvent: true,
+    };
+  });
+}
+
 export function isActiveHkjcMatch(match: RawMatch): boolean {
   if (!ACTIVE_MATCH_STATUSES.has(match.status)) return false;
   const kickOff = new Date(match.kickOffTime).getTime();
@@ -143,6 +165,9 @@ export function transformHkjcMatch(raw: RawMatch): HkjcMatch {
     kickOffTime: raw.kickOffTime,
     kickOffLabel: formatKickOff(raw.kickOffTime),
     status: raw.status,
+    homeLogo: "",
+    awayLogo: "",
+    tournamentLogo: HKJC_TOURNAMENT_FLAG(raw.tournament.code),
     hadOdds: parseHadOdds(raw.foPools),
     hdcOdds: parseHdcOdds(raw.foPools),
     hilOdds: parseHilOdds(raw.foPools),
