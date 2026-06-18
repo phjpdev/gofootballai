@@ -83,18 +83,20 @@ export function MatchAnalysisView({
   const showLoading = loading && !analysis && !locked;
 
   return (
-    <div className="flex flex-col gap-6">
-      <Link
-        href="/analysis"
-        className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white"
-      >
-        <ChevronLeft className="size-4" />
-        返回賽事分析
-      </Link>
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <Link
+          href="/analysis"
+          className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white"
+        >
+          <ChevronLeft className="size-4" />
+          返回賽事分析
+        </Link>
 
-      <AnimateIn variant="slide-right" delay={0}>
-        <MatchHeaderCard match={match} />
-      </AnimateIn>
+        <AnimateIn variant="slide-right" delay={0}>
+          <MatchHeaderCard match={match} />
+        </AnimateIn>
+      </div>
 
       {locked && (
         <MemberGate hint={lockedHint} redirectTo={loginRedirectTo} />
@@ -127,7 +129,10 @@ export function MatchAnalysisView({
           </AnimateIn>
 
           <AnimateIn variant="slide-right" delay={220}>
-            <ScoreBreakdown dimensions={analysis.dimensions} />
+            <ScoreBreakdown
+              dimensions={analysis.dimensions}
+              pick={analysis.pick}
+            />
           </AnimateIn>
 
           <AnimateIn variant="slide-right" delay={290}>
@@ -135,6 +140,12 @@ export function MatchAnalysisView({
               level={analysis.recommendationLevel}
               label={analysis.recommendationLabel}
               description="球隊具備應對高強度對抗的戰術能力"
+              middleContent={
+                <AnalysisNarrative
+                  narrative={analysis.narrative}
+                  riskFlags={analysis.riskFlags}
+                />
+              }
             />
           </AnimateIn>
 
@@ -154,13 +165,6 @@ export function MatchAnalysisView({
 
           <AnimateIn variant="slide-right" delay={500}>
             <StepsStatsChart scoreTrend={analysis.scoreTrend} />
-          </AnimateIn>
-
-          <AnimateIn variant="slide-right" delay={570}>
-            <AnalysisNarrative
-              narrative={analysis.narrative}
-              riskFlags={analysis.riskFlags}
-            />
           </AnimateIn>
         </>
       )}

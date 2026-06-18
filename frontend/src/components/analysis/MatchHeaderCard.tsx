@@ -185,16 +185,6 @@ export function MatchHeaderCard({ match }: MatchHeaderCardProps) {
               {formatMatchDate(match.date)}
             </span>
           )}
-          {match.tag && (
-            <span className="inline-flex items-center rounded-full border border-orange-50/25 bg-orange-50/10 px-2.5 py-1 text-[10px] font-bold tracking-wide text-orange-50">
-              {match.tag}
-            </span>
-          )}
-          {match.frontEndId && (
-            <span className="inline-flex items-center rounded-full bg-gray-80 px-2.5 py-1 text-[10px] font-semibold text-gray-30">
-              {match.frontEndId}
-            </span>
-          )}
         </div>
       </div>
     </div>
