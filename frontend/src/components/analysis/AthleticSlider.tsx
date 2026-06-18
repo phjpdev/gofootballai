@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { figmaAsset } from "@/lib/figma-assets";
+import { cn } from "@/lib/utils";
 
 type AthleticSliderProps = {
   level?: number;
@@ -24,7 +25,12 @@ export function AthleticSlider({
   const fillWidth = thumbLeft + 40;
 
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div
+      className={cn(
+        "flex flex-col items-center",
+        middleContent ? "gap-4" : "gap-8",
+      )}
+    >
       <p className="w-full text-center text-sm font-extrabold uppercase leading-5 tracking-[1.4px] text-orange-50">
         等級 {clampedLevel}
       </p>
@@ -69,7 +75,7 @@ export function AthleticSlider({
         </div>
       </div>
 
-      {middleContent}
+      {middleContent ? <div className="w-full">{middleContent}</div> : null}
 
       <div className="flex w-full flex-col items-center gap-4">
         <p className="w-full text-center text-[36px] font-bold leading-[44px] tracking-[-0.504px] text-white">
