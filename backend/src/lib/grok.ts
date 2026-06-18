@@ -9,7 +9,8 @@ import {
 } from "./prompts/match-analysis-v1.js";
 
 const XAI_API_URL = "https://api.x.ai/v1/chat/completions";
-const GROK_TIMEOUT_MS = Number(process.env.XAI_TIMEOUT_MS ?? 30_000);
+const GROK_TIMEOUT_MS = Number(process.env.XAI_TIMEOUT_MS ?? 45_000);
+const GROK_MAX_RETRIES = Number(process.env.XAI_MAX_RETRIES ?? 2);
 
 type GrokResponse = {
   choices?: Array<{
@@ -115,5 +116,24 @@ async function callGrok(matchOddsBlock: string): Promise<GrokAnalysisResult> {
 export async function generateMatchAnalysis(
   matchOddsBlock: string,
 ): Promise<GrokAnalysisResult> {
-  return callGrok(matchOddsBlock);
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < GROK_MAX_RETRIES; attempt++) {
+    try {
+      return await callGrok(matchOddsBlock);
+    } catch (error) {
+      lastError = error;
+      const retryable =
+        error instanceof Error &&
+        (error.name === "AbortError" ||
+          error.message.includes("逾時") ||
+          error.message.includes("fetch failed"));
+      if (!retryable || attempt >= GROK_MAX_RETRIES - 1) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+    }
+  }
+
+  throw lastError;
 }
