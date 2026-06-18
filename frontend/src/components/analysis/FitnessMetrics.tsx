@@ -6,6 +6,7 @@ import type {
 } from "@/types/analysis";
 
 const DAYS = ["一", "二", "三", "四", "五", "六", "日"] as const;
+const MATCH_MINUTES = ["15'", "30'", "45'", "60'", "75'", "90'"] as const;
 const CHEVRON = figmaAsset("44fa759040c464414aab1abfac01547773dd8246");
 
 function SectionHeader() {
@@ -122,16 +123,16 @@ function WeightBar({ fillPercent }: { fillPercent: number }) {
 
 function WeightChart({ values }: { values: number[] }) {
   const max = Math.max(...values, 1);
-  const bars = values.slice(0, 7);
-  while (bars.length < 7) bars.push(bars[bars.length - 1] ?? 50);
+  const bars = values.slice(0, 6);
+  while (bars.length < 6) bars.push(bars[bars.length - 1] ?? 50);
 
   return (
     <div className="flex min-w-0 flex-1 items-center justify-between">
       {bars.map((value, i) => (
-        <div key={i} className="flex w-3 flex-col items-center gap-1">
+        <div key={i} className="flex min-w-[22px] flex-col items-center gap-1">
           <WeightBar fillPercent={(value / max) * 100} />
-          <p className="text-center text-[10px] font-normal leading-[14px] tracking-[-0.04px] text-[#d4d4d8]">
-            {DAYS[i]}
+          <p className="text-center text-[9px] font-normal leading-[14px] tracking-[-0.04px] text-[#d4d4d8] whitespace-nowrap">
+            {MATCH_MINUTES[i]}
           </p>
         </div>
       ))}
