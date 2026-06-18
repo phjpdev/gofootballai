@@ -1,17 +1,25 @@
-import { NextResponse } from "next/server";
-import { getHkjcApiUrl } from "@/lib/hkjc/matches-api";
+import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+const SERVER_API_URL =
+  process.env.API_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  "http://127.0.0.1:4000";
+
+export async function GET(request: NextRequest) {
   try {
-    const response = await fetch(getHkjcApiUrl("/matches"), { cache: "no-store" });
+    const refresh = request.nextUrl.searchParams.get("refresh");
+    const query = refresh === "1" ? "?refresh=1" : "";
+    const response = await fetch(`${SERVER_API_URL}/api/hkjc/matches${query}`, {
+      cache: "no-store",
+    });
     const body = await response.text();
     return new NextResponse(body, {
       status: response.status,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+        "Cache-Control": "no-store",
       },
     });
   } catch (error) {

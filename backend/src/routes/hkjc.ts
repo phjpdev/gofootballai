@@ -6,9 +6,10 @@ import {
 
 const router = Router();
 
-router.get("/matches", async (_req, res) => {
+router.get("/matches", async (req, res) => {
   try {
-    const data = await fetchHkjcMatchesResponse();
+    const refresh = req.query.refresh === "1";
+    const data = await fetchHkjcMatchesResponse({ refresh });
     res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
     res.json(data);
   } catch (error) {

@@ -1,13 +1,26 @@
 import type { HkjcMatch, HkjcMatchesResponse } from "@/types/hkjc";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-
-export function getHkjcApiUrl(path: string): string {
-  return `${API_URL}/api/hkjc${path}`;
+function getServerApiUrl(): string {
+  return (
+    process.env.API_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    "http://127.0.0.1:4000"
+  );
 }
 
-export async function fetchHkjcMatchesFromApi(): Promise<HkjcMatchesResponse> {
-  const response = await fetch(getHkjcApiUrl("/matches"), {
+/** Browser uses same-origin Next proxy; server calls backend directly. */
+export function getHkjcApiUrl(path: string): string {
+  if (typeof window !== "undefined") {
+    return `/api/hkjc${path}`;
+  }
+  return `${getServerApiUrl()}/api/hkjc${path}`;
+}
+
+export async function fetchHkjcMatchesFromApi(options?: {
+  refresh?: boolean;
+}): Promise<HkjcMatchesResponse> {
+  const query = options?.refresh ? "?refresh=1" : "";
+  const response = await fetch(getHkjcApiUrl(`/matches${query}`), {
     cache: "no-store",
   });
   if (!response.ok) {

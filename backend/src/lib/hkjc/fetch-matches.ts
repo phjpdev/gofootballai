@@ -24,7 +24,11 @@ async function fetchRawMatches(): Promise<RawMatch[]> {
     }),
   ]);
 
-  return mergeRawMatches([batchA as RawMatch[], batchB as RawMatch[]]);
+  const merged = mergeRawMatches([batchA as RawMatch[], batchB as RawMatch[]]);
+  if (merged.length === 0) {
+    console.warn("HKJC returned no raw matches");
+  }
+  return merged;
 }
 
 async function loadMatches(): Promise<HkjcMatch[]> {
@@ -38,18 +42,32 @@ async function loadMatches(): Promise<HkjcMatch[]> {
     );
 }
 
-export async function fetchHkjcMatches(): Promise<HkjcMatch[]> {
-  if (cache && cache.expiresAt > Date.now()) {
+export async function fetchHkjcMatches(options?: {
+  refresh?: boolean;
+}): Promise<HkjcMatch[]> {
+  if (!options?.refresh && cache && cache.expiresAt > Date.now()) {
     return cache.matches;
   }
 
   const matches = await loadMatches();
-  cache = { matches, expiresAt: Date.now() + CACHE_TTL_MS };
+
+  if (matches.length > 0) {
+    cache = { matches, expiresAt: Date.now() + CACHE_TTL_MS };
+    return matches;
+  }
+
+  if (cache && cache.matches.length > 0) {
+    console.warn("HKJC fetch returned empty; serving stale cache");
+    return cache.matches;
+  }
+
   return matches;
 }
 
-export async function fetchHkjcMatchesResponse(): Promise<HkjcMatchesResponse> {
-  const matches = await fetchHkjcMatches();
+export async function fetchHkjcMatchesResponse(options?: {
+  refresh?: boolean;
+}): Promise<HkjcMatchesResponse> {
+  const matches = await fetchHkjcMatches(options);
   return {
     matches,
     dates: buildDateItems(matches),

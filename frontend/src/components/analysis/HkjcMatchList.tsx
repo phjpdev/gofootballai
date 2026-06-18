@@ -24,7 +24,7 @@ type HkjcContextValue = {
   error: string | null;
   selectedIndex: number;
   setSelectedIndex: (index: number) => void;
-  reload: () => Promise<void>;
+  reload: (refresh?: boolean) => Promise<void>;
 };
 
 const HkjcContext = createContext<HkjcContextValue | null>(null);
@@ -40,13 +40,17 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const reload = useCallback(async () => {
+  const reload = useCallback(async (refresh = false) => {
     setLoading(true);
     setError(null);
     try {
-      const json = await fetchHkjcMatchesFromApi();
+      const json = await fetchHkjcMatchesFromApi({ refresh });
       setData(json);
       setSelectedIndex(findDefaultDateIndex());
+      if (json.total === 0 && !refresh) {
+        const retry = await fetchHkjcMatchesFromApi({ refresh: true });
+        setData(retry);
+      }
     } catch {
       setError("無法載入馬會賽事資料，請稍後再試。");
     } finally {
@@ -164,7 +168,7 @@ export function HkjcMatchesSection() {
         <p className="text-sm text-gray-40">{error}</p>
         <button
           type="button"
-          onClick={() => void reload()}
+          onClick={() => void reload(true)}
           className="mt-3 text-sm font-medium text-orange-50"
         >
           重試
@@ -187,6 +191,13 @@ export function HkjcMatchesSection() {
       {matches.length === 0 ? (
         <div className="rounded-[24px] bg-gray-90 p-6 text-center">
           <p className="text-sm text-gray-40">此日期暫無馬會賽事。</p>
+          <button
+            type="button"
+            onClick={() => void reload(true)}
+            className="mt-3 text-sm font-medium text-orange-50"
+          >
+            重新載入
+          </button>
         </div>
       ) : (
         <div key={listKey} className="flex flex-col gap-2.5">
