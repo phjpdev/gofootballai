@@ -7,7 +7,7 @@ const GRID_LINE_TOP = figmaAsset("69924f3849c5c8526ac00831c57ba0941f64a0c9");
 const GRID_LINE = figmaAsset("ebe324ca7d3b816a4e52b79cbfcc80a40a655666");
 
 const Y_LABELS = ["1,000", "900", "800", "700", "600", "500"] as const;
-const X_LABELS = ["11:00", "12:00", "13:00", "14:00", "15:00"] as const;
+const X_LABELS = [""] as const;
 
 function ChartGridLine({
   label,
@@ -55,7 +55,7 @@ export function StepsStatsChart({
 
       <div className="w-full rounded-[32px] bg-[#24262b] p-4">
         <div className="flex flex-col gap-4">
-          <TabGroup variant="darker" />
+          <TabGroup variant="darker" preset="matchMinutes" />
 
           <div className="relative h-[218px] w-full max-w-[311px]">
             <div className="absolute inset-0 flex flex-col items-end justify-center gap-2">
@@ -68,9 +68,11 @@ export function StepsStatsChart({
                   />
                 ))}
               </div>
-              <div className="flex w-[292px] items-start justify-between text-[10px] font-medium leading-none tracking-[-0.01px] text-[#676c75]">
+              <div className="flex w-[292px] items-start justify-between text-[9px] font-medium leading-none tracking-[-0.01px] text-[#676c75]">
                 {X_LABELS.map((label) => (
-                  <span key={label}>{label}</span>
+                  <span key={label} className="whitespace-nowrap">
+                    {label}
+                  </span>
                 ))}
               </div>
             </div>
