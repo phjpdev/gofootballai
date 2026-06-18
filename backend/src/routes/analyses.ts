@@ -8,7 +8,6 @@ import {
 } from "../lib/analyses.js";
 import {
   checkRateLimit,
-  ensureAnalysis,
   enqueueAnalysis,
   prewarmAnalyses,
 } from "../lib/analysis-queue.js";
@@ -59,9 +58,7 @@ router.get(
     let row = await getAnalysisByMatchId(matchId, promptVersion);
 
     if (needsAnalysis(row)) {
-      await ensureAnalysis(matchId, {
-        force: row?.status === "failed",
-      });
+      enqueueAnalysis(matchId, row?.status === "failed");
       row = await getAnalysisByMatchId(matchId, promptVersion);
     }
 

@@ -8,14 +8,19 @@ import { AnalysisNarrative } from "@/components/analysis/AnalysisNarrative";
 import { ActivitiesChart } from "@/components/charts/ActivitiesChart";
 import { StepsStatsChart } from "@/components/charts/StepsStatsChart";
 import { AnimateIn } from "@/components/motion/AnimateIn";
+import { AuthForm } from "@/components/member/AuthForm";
 import type { MatchAnalysisResult } from "@/types/analysis";
 import type { Match } from "@/types";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2, Lock } from "lucide-react";
 
 type MatchAnalysisViewProps = {
   match: Match;
   analysis: MatchAnalysisResult | null;
   loading?: boolean;
+  pending?: boolean;
+  locked?: boolean;
+  lockedHint?: string;
+  loginRedirectTo?: string;
   error?: string;
   onRetry?: () => void;
   retrying?: boolean;
@@ -24,7 +29,6 @@ type MatchAnalysisViewProps = {
 function AnalysisSkeleton() {
   return (
     <div className="flex flex-col gap-4">
-      <div className="h-16 animate-pulse rounded-[20px] bg-gray-90" />
       <div className="h-[346px] animate-pulse rounded-[24px] bg-gray-90" />
       <div className="h-32 animate-pulse rounded-[24px] bg-gray-90" />
       <div className="h-48 animate-pulse rounded-[24px] bg-gray-90" />
@@ -42,14 +46,42 @@ function PendingState() {
   );
 }
 
+function MemberGate({
+  hint,
+  redirectTo,
+}: {
+  hint: string;
+  redirectTo: string;
+}) {
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-col items-center gap-3 rounded-[24px] bg-gray-90 p-6 text-center">
+        <div className="flex size-14 items-center justify-center rounded-full bg-gray-80">
+          <Lock className="size-6 text-gray-40" />
+        </div>
+        <h2 className="text-base font-bold text-white">會員專屬分析</h2>
+        <p className="text-sm leading-[1.6] text-gray-40">{hint}</p>
+      </div>
+      <AuthForm portalRole="member" redirectTo={redirectTo} />
+    </section>
+  );
+}
+
 export function MatchAnalysisView({
   match,
   analysis,
   loading = false,
+  pending = false,
+  locked = false,
+  lockedHint = "請登入或註冊會員帳戶，以查看 AI 賽事量化分析。",
+  loginRedirectTo = "/analysis",
   error,
   onRetry,
   retrying = false,
 }: MatchAnalysisViewProps) {
+  const showPending = pending && !analysis;
+  const showLoading = loading && !analysis && !locked;
+
   return (
     <div className="flex flex-col gap-6">
       <Link
@@ -64,9 +96,15 @@ export function MatchAnalysisView({
         <MatchHeaderCard match={match} />
       </AnimateIn>
 
-      {loading && !analysis && <PendingState />}
+      {locked && (
+        <MemberGate hint={lockedHint} redirectTo={loginRedirectTo} />
+      )}
 
-      {error && !analysis && !loading && (
+      {!locked && showLoading && <AnalysisSkeleton />}
+
+      {!locked && showPending && <PendingState />}
+
+      {!locked && error && !analysis && !showPending && !showLoading && (
         <div className="rounded-[24px] bg-gray-90 p-6 text-center">
           <p className="text-sm text-red-300">{error}</p>
           {onRetry && (
@@ -82,9 +120,7 @@ export function MatchAnalysisView({
         </div>
       )}
 
-      {!analysis && loading && <AnalysisSkeleton />}
-
-      {analysis && (
+      {!locked && analysis && (
         <>
           <AnimateIn variant="slide-right" delay={150}>
             <SandowScoreCard score={analysis.confidenceScore} />
