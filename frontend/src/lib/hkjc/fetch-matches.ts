@@ -87,6 +87,13 @@ export function hkjcMatchToLegacy(match: HkjcMatch) {
   const homeOdds = match.hadOdds ? Number.parseFloat(match.hadOdds.home) : 2;
   const implied = Math.min(95, Math.round((1 / homeOdds) * 100));
 
+  const homeLogo =
+    match.homeLogo ||
+    `/api/hkjc/logo?type=team&id=${encodeURIComponent(match.homeTeamId)}`;
+  const awayLogo =
+    match.awayLogo ||
+    `/api/hkjc/logo?type=team&id=${encodeURIComponent(match.awayTeamId)}`;
+
   return {
     id: match.id,
     title: match.title,
@@ -95,8 +102,8 @@ export function hkjcMatchToLegacy(match: HkjcMatch) {
     movements: match.poolCount,
     completion: implied,
     imageSrc: match.tournamentLogo,
-    homeLogo: match.homeLogo,
-    awayLogo: match.awayLogo,
+    homeLogo,
+    awayLogo,
     date: match.matchDate,
     time: match.kickOffLabel,
     venue: match.tournamentName,
@@ -104,5 +111,7 @@ export function hkjcMatchToLegacy(match: HkjcMatch) {
     hadOdds: match.hadOdds,
     homeTeam: match.homeTeam,
     awayTeam: match.awayTeam,
+    homeTeamEn: match.homeTeamEn,
+    awayTeamEn: match.awayTeamEn,
   };
 }

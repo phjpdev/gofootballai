@@ -1,9 +1,7 @@
 import { notFound } from "next/navigation";
 import { MatchAnalysisClient } from "@/components/analysis/MatchAnalysisClient";
-import {
-  fetchHkjcMatchById,
-  hkjcMatchToLegacy,
-} from "@/lib/hkjc/fetch-matches";
+import { hkjcMatchToLegacy } from "@/lib/hkjc/fetch-matches";
+import { fetchHkjcMatchByIdFromApi } from "@/lib/hkjc/matches-api";
 import { getMatchById } from "@/lib/data/matches";
 
 type Props = {
@@ -13,7 +11,7 @@ type Props = {
 export default async function MatchAnalysisPage({ params }: Props) {
   const { id } = await params;
 
-  const hkjcMatch = await fetchHkjcMatchById(id);
+  const hkjcMatch = await fetchHkjcMatchByIdFromApi(id);
   if (hkjcMatch) {
     return <MatchAnalysisClient match={hkjcMatchToLegacy(hkjcMatch)} />;
   }
