@@ -43,8 +43,8 @@ export function SandowScoreCard({ score = 61, animate = true }: SandowScoreCardP
   return (
     <div className="flex w-full items-center gap-3">
       <div className="flex size-16 shrink-0 flex-col items-center justify-center overflow-hidden rounded-[20px] border border-[#fb923c] bg-[#f97316] p-2">
-        <p className="w-full text-center text-[30px] font-bold leading-[38px] tracking-[-0.39px] text-white">
-          {displayScore}
+        <p className="w-full text-center text-[26px] font-bold leading-[32px] tracking-[-0.39px] text-white">
+          {displayScore}%
         </p>
       </div>
 
