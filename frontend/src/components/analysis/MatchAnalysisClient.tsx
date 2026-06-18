@@ -19,6 +19,7 @@ type MatchAnalysisClientProps = {
 };
 
 const POLL_INTERVAL_MS = 2_500;
+const MAX_PENDING_MS = 90_000;
 
 export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
   const pathname = usePathname();
@@ -29,6 +30,7 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
+  const [pendingSince, setPendingSince] = useState<number | null>(null);
 
   const canAccess = isAuthenticated && (isMember || isAdmin);
 
@@ -60,6 +62,14 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
   }, [isLoading, canAccess, loadAnalysis]);
 
   useEffect(() => {
+    if (analysisState?.status === "pending") {
+      setPendingSince((prev) => prev ?? Date.now());
+      return;
+    }
+    setPendingSince(null);
+  }, [analysisState?.status]);
+
+  useEffect(() => {
     if (!token || !canAccess) return;
     if (analysisState?.status !== "pending") return;
 
@@ -68,6 +78,13 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
         const status = await fetchAnalysisStatus(token, match.id);
         if (status.status === "completed" || status.status === "failed") {
           await loadAnalysis();
+          return;
+        }
+        if (
+          pendingSince &&
+          Date.now() - pendingSince > MAX_PENDING_MS
+        ) {
+          await loadAnalysis();
         }
       } catch {
         // keep polling
@@ -75,7 +92,19 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
     }, POLL_INTERVAL_MS);
 
     return () => window.clearInterval(interval);
-  }, [token, canAccess, analysisState?.status, match.id, loadAnalysis]);
+  }, [
+    token,
+    canAccess,
+    analysisState?.status,
+    match.id,
+    loadAnalysis,
+    pendingSince,
+  ]);
+
+  const timedOut =
+    analysisState?.status === "pending" &&
+    pendingSince !== null &&
+    Date.now() - pendingSince > MAX_PENDING_MS;
 
   const handleRetry = async () => {
     if (!token) return;
@@ -97,7 +126,7 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
       match={match}
       analysis={analysisState?.analysis ?? null}
       loading={isLoading || (canAccess && loading && !analysisState)}
-      pending={analysisState?.status === "pending"}
+      pending={analysisState?.status === "pending" && !timedOut}
       locked={!isLoading && !canAccess}
       lockedHint={
         isAuthenticated && user && !canAccess
@@ -106,9 +135,11 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
       }
       loginRedirectTo={pathname}
       error={
-        analysisState?.status === "failed"
-          ? (error ?? "分析生成失敗，請點擊重新分析")
-          : error ?? undefined
+        timedOut
+          ? "分析逾時，請點擊重新分析"
+          : analysisState?.status === "failed"
+            ? (error ?? "分析生成失敗，請點擊重新分析")
+            : error ?? undefined
       }
       onRetry={handleRetry}
       retrying={retrying}
