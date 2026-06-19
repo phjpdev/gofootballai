@@ -45,7 +45,7 @@ export function PredictionPickCard({ pick, matchId }: PredictionPickCardProps) {
 
   return (
     <LedBorder
-      className="aspect-square h-[173px] min-w-0 flex-1 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+      className="aspect-square h-[173px] min-w-0 flex-1 shadow-[0_8px_24px_rgba(0,0,0,0.35)] lg:aspect-auto lg:h-full lg:min-h-[346px] lg:w-full"
       borderWidth={3}
       borderRadius={16}
     >
@@ -70,11 +70,11 @@ export function PredictionPickCard({ pick, matchId }: PredictionPickCardProps) {
           </p>
           <div className="flex flex-1 items-center justify-center px-2">
             <div className="flex items-center gap-1.5 rounded-xl bg-black/50 px-4 py-2">
-              <span className="text-[40px] font-bold leading-none tracking-tight">
+              <span className="text-[40px] font-bold leading-none tracking-tight lg:text-5xl">
                 {label}
               </span>
               {value && (
-                <span className="text-[40px] font-bold leading-none tracking-tight">
+                <span className="text-[40px] font-bold leading-none tracking-tight lg:text-5xl">
                   {value}
                 </span>
               )}

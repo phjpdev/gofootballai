@@ -249,10 +249,10 @@ export function FitnessMetrics({
   const shots = Math.max(6, Math.round(dimensions.attack / 5));
 
   return (
-    <section className="flex w-full flex-col items-center gap-3">
+    <section className="flex w-full flex-col items-center gap-3 lg:items-stretch lg:gap-5">
       <SectionHeader />
 
-      <div className="flex w-full flex-col gap-2">
+      <div className="grid w-full grid-cols-1 gap-2 lg:grid-cols-3 lg:gap-4">
         <MetricCard>
           <div className="flex flex-col gap-6">
             <CardHeader
