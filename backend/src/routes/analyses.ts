@@ -9,6 +9,7 @@ import {
 import {
   checkRateLimit,
   enqueueAnalysis,
+  isAnalysisInFlight,
   prewarmAnalyses,
 } from "../lib/analysis-queue.js";
 import { MATCH_ANALYSIS_PROMPT_VERSION } from "../lib/prompts/match-analysis-v1.js";
@@ -58,9 +59,7 @@ router.get(
     let row = await getAnalysisByMatchId(matchId, promptVersion);
 
     if (needsAnalysis(row)) {
-      const force =
-        row?.status === "failed" ||
-        (row?.status === "pending" && isPendingStale(row));
+      const force = row?.status === "failed";
       enqueueAnalysis(matchId, force);
       row = await getAnalysisByMatchId(matchId, promptVersion);
     }
@@ -90,8 +89,8 @@ router.get(
       return;
     }
 
-    if (row.status === "pending" && isPendingStale(row)) {
-      enqueueAnalysis(matchId, true);
+    if (row.status === "pending" && isPendingStale(row) && !isAnalysisInFlight(matchId)) {
+      enqueueAnalysis(matchId, false);
     }
 
     res.json({
