@@ -34,27 +34,20 @@ export function PredictionPickCard({ pick }: PredictionPickCardProps) {
           priority
         />
         <div className="absolute inset-0 flex flex-col items-center text-white">
-          <p
-            className="pt-3 text-sm font-bold leading-none"
-            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.75)" }}
-          >
+          <p className="mt-3 rounded-xl bg-black/50 px-3 py-1 text-sm font-bold leading-none">
             預測:
           </p>
-          <div className="flex flex-1 items-center justify-center gap-1.5 px-2">
-            <span
-              className="text-[40px] font-bold leading-none tracking-tight"
-              style={{ textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}
-            >
-              {label}
-            </span>
-            {value && (
-              <span
-                className="text-[40px] font-bold leading-none tracking-tight"
-                style={{ textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}
-              >
-                {value}
+          <div className="flex flex-1 items-center justify-center px-2">
+            <div className="flex items-center gap-1.5 rounded-xl bg-black/50 px-4 py-2">
+              <span className="text-[40px] font-bold leading-none tracking-tight">
+                {label}
               </span>
-            )}
+              {value && (
+                <span className="text-[40px] font-bold leading-none tracking-tight">
+                  {value}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
