@@ -5,9 +5,10 @@ import type { AnalysisDimensions, AnalysisPick } from "@/types/analysis";
 type ScoreBreakdownProps = {
   dimensions: AnalysisDimensions;
   pick: AnalysisPick;
+  matchId: string;
 };
 
-export function ScoreBreakdown({ dimensions, pick }: ScoreBreakdownProps) {
+export function ScoreBreakdown({ dimensions, pick, matchId }: ScoreBreakdownProps) {
   return (
     <section className="relative w-full">
       <div className="flex w-full items-center justify-center gap-2">
@@ -16,7 +17,7 @@ export function ScoreBreakdown({ dimensions, pick }: ScoreBreakdownProps) {
             <RadarChart dimensions={dimensions} />
           </div>
         </div>
-        <PredictionPickCard pick={pick} />
+        <PredictionPickCard pick={pick} matchId={matchId} />
       </div>
     </section>
   );

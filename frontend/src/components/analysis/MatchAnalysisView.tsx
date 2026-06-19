@@ -121,6 +121,7 @@ export function MatchAnalysisView({
             <ScoreBreakdown
               dimensions={analysis.dimensions}
               pick={analysis.pick}
+              matchId={match.id}
             />
           </AnimateIn>
 
