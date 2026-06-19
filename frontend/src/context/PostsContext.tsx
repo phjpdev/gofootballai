@@ -25,6 +25,8 @@ type PostsContextValue = {
     type: PostType;
     title: string;
     content?: string;
+    displayDate: string;
+    starRating: number;
     file?: File;
   }) => Promise<void>;
   editPost: (
@@ -33,6 +35,8 @@ type PostsContextValue = {
       type: PostType;
       title: string;
       content?: string;
+      displayDate: string;
+      starRating: number;
       file?: File;
     },
   ) => Promise<void>;
@@ -72,6 +76,8 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
       type: PostType;
       title: string;
       content?: string;
+      displayDate: string;
+      starRating: number;
       file?: File;
     }) => {
       if (!token) {
@@ -90,6 +96,8 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
         type: PostType;
         title: string;
         content?: string;
+        displayDate: string;
+        starRating: number;
         file?: File;
       },
     ) => {

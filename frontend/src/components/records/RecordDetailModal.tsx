@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { Pencil, Trash2, X } from "lucide-react";
+import { Pencil, Star, Trash2, X } from "lucide-react";
 import type { Post } from "@/types";
 import { cn } from "@/lib/utils";
 
-function formatRecordDate(iso: string): string {
-  const date = new Date(iso);
+function formatDisplayDate(post: Post): string {
+  const source = post.displayDate ?? post.createdAt;
+  const date = post.displayDate
+    ? new Date(`${post.displayDate}T12:00:00`)
+    : new Date(source);
   const weekday = new Intl.DateTimeFormat("zh-HK", { weekday: "short" }).format(
     date,
   );
@@ -53,7 +56,7 @@ export function RecordDetailModal({
     <div className="fixed inset-x-0 top-[var(--header-total)] bottom-[var(--mobile-nav-total)] z-40 flex flex-col bg-gray-100 lg:bottom-0">
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-90 px-4 py-3">
         <time className="text-sm text-gray-40">
-          {formatRecordDate(post.createdAt)}
+          {formatDisplayDate(post)}
         </time>
         <div className="flex items-center gap-2">
           {showAdminActions && onEdit && (
@@ -132,6 +135,14 @@ export function RecordDetailModal({
             >
               {post.content}
             </p>
+          )}
+          {post.starRating !== undefined && (
+            <div className="flex items-center gap-1.5">
+              <Star className="size-5 fill-amber-400 text-amber-400" />
+              <span className="text-lg font-bold text-white">
+                {post.starRating.toFixed(1)}
+              </span>
+            </div>
           )}
         </div>
       </div>

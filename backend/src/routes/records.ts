@@ -27,6 +27,22 @@ function parseRecordType(value: unknown): RecordType | null {
   return null;
 }
 
+function parseDisplayDate(value: unknown): string | null {
+  const raw = String(value ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
+  const date = new Date(`${raw}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== raw) {
+    return null;
+  }
+  return raw;
+}
+
+function parseStarRating(value: unknown): number | null {
+  const rating = Number(value);
+  if (!Number.isFinite(rating) || rating < 0 || rating > 5) return null;
+  return Math.round(rating * 10) / 10;
+}
+
 function handleUpload(req: Request, res: Response, next: NextFunction) {
   upload.single("file")(req, res, (err) => {
     if (err) {
@@ -56,6 +72,8 @@ router.post(
     const type = parseRecordType(req.body.type);
     const title = String(req.body.title ?? "").trim();
     const content = String(req.body.content ?? "").trim();
+    const displayDate = parseDisplayDate(req.body.displayDate);
+    const starRating = parseStarRating(req.body.starRating);
 
     if (!type) {
       res.status(400).json({ error: "紀錄類型無效" });
@@ -64,6 +82,16 @@ router.post(
 
     if (!title) {
       res.status(400).json({ error: "請填寫標題" });
+      return;
+    }
+
+    if (!displayDate) {
+      res.status(400).json({ error: "請選擇有效日期" });
+      return;
+    }
+
+    if (starRating === null) {
+      res.status(400).json({ error: "請填寫 0 至 5 的星級評分" });
       return;
     }
 
@@ -96,6 +124,8 @@ router.post(
         title,
         content: content || undefined,
         mediaUrl,
+        displayDate,
+        starRating,
       });
 
       res.status(201).json({ record });
@@ -123,9 +153,23 @@ router.patch(
     const type = parseRecordType(req.body.type) ?? existing.type;
     const title = String(req.body.title ?? "").trim();
     const content = String(req.body.content ?? "").trim();
+    const displayDate =
+      parseDisplayDate(req.body.displayDate) ?? existing.displayDate;
+    const starRating =
+      parseStarRating(req.body.starRating) ?? existing.starRating;
 
     if (!title) {
       res.status(400).json({ error: "請填寫標題" });
+      return;
+    }
+
+    if (!displayDate) {
+      res.status(400).json({ error: "請選擇有效日期" });
+      return;
+    }
+
+    if (starRating === null) {
+      res.status(400).json({ error: "請填寫 0 至 5 的星級評分" });
       return;
     }
 
@@ -169,6 +213,8 @@ router.patch(
         title,
         content: content || null,
         mediaUrl,
+        displayDate,
+        starRating,
       });
 
       if (!record) {

@@ -6,6 +6,8 @@ export type Post = {
   title: string;
   content?: string;
   mediaUrl?: string;
+  displayDate?: string;
+  starRating?: number;
   createdAt: string;
   authorName?: string;
 };
