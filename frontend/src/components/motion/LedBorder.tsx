@@ -44,6 +44,13 @@ export function LedBorder({
   const rectWidth = Math.max(0, size.w - borderWidth);
   const rectHeight = Math.max(0, size.h - borderWidth);
   const hasSize = size.w > 0 && size.h > 0;
+  const perimeter =
+    2 * (rectWidth + rectHeight - 2 * rectRadius) + 2 * Math.PI * rectRadius;
+  const heatCoreDash = Math.max(32, Math.min(44, perimeter * 0.045));
+  const heatGlowDash = heatCoreDash * 1.15;
+  const heatTrailDash = heatCoreDash * 1.3;
+  const heatGap = (dash: number) => Math.max(perimeter - dash, dash);
+
   const heatGradientId = `led-heat-${uid}`;
   const heatBlurHeavyId = `led-heat-blur-heavy-${uid}`;
   const heatBlurMidId = `led-heat-blur-mid-${uid}`;
@@ -55,7 +62,6 @@ export function LedBorder({
     height: rectHeight,
     rx: rectRadius,
     ry: rectRadius,
-    pathLength: 1,
   };
 
   return (
@@ -71,6 +77,7 @@ export function LedBorder({
         <svg
           className="pointer-events-none absolute inset-0 z-0 size-full overflow-visible"
           viewBox={`0 0 ${size.w} ${size.h}`}
+          style={{ ["--led-dash-total" as string]: `${perimeter}px` }}
           aria-hidden
         >
           <defs>
@@ -96,7 +103,7 @@ export function LedBorder({
               width="260%"
               height="260%"
             >
-              <feGaussianBlur stdDeviation="7" result="blur" />
+              <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -109,7 +116,7 @@ export function LedBorder({
               width="220%"
               height="220%"
             >
-              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feGaussianBlur stdDeviation="1" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -124,17 +131,20 @@ export function LedBorder({
             className="led-border__track led-border__track--heat-trail"
             stroke={`url(#${heatGradientId})`}
             filter={`url(#${heatBlurHeavyId})`}
+            strokeDasharray={`${heatTrailDash} ${heatGap(heatTrailDash)}`}
             {...trackProps}
           />
           <rect
             className="led-border__track led-border__track--heat-glow"
             stroke={`url(#${heatGradientId})`}
             filter={`url(#${heatBlurMidId})`}
+            strokeDasharray={`${heatGlowDash} ${heatGap(heatGlowDash)}`}
             {...trackProps}
           />
           <rect
             className="led-border__track led-border__track--heat-core"
             stroke={`url(#${heatGradientId})`}
+            strokeDasharray={`${heatCoreDash} ${heatGap(heatCoreDash)}`}
             {...trackProps}
           />
         </svg>
