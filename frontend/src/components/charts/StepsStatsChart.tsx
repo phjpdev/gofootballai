@@ -57,7 +57,7 @@ export function StepsStatsChart({
         <div className="flex flex-col gap-4">
           <TabGroup variant="darker" preset="matchMinutes" />
 
-          <div className="relative h-[218px] w-full max-w-[311px]">
+          <div className="relative h-[218px] w-full max-w-[311px] lg:max-w-none">
             <div className="absolute inset-0 flex flex-col items-end justify-center gap-2">
               <div className="flex h-[196px] w-full flex-col justify-between">
                 {Y_LABELS.map((label, i) => (

@@ -76,11 +76,11 @@ export function MatchAnalysisView({
   const vipLocked = !canViewVipContent;
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-5 lg:gap-6">
+      <div className="flex flex-col gap-2 lg:gap-3">
         <Link
           href="/analysis"
-          className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white"
+          className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white lg:text-base"
         >
           <ChevronLeft className="size-4" />
           返回賽事分析
@@ -117,35 +117,38 @@ export function MatchAnalysisView({
 
       {!locked && analysis && (
         <>
-          <AnimateIn variant="slide-right" delay={150}>
-            <SandowScoreCard score={analysis.confidenceScore} />
-          </AnimateIn>
+          <div className="flex flex-col gap-5 lg:gap-8 lg:rounded-[32px] lg:border lg:border-gray-80 lg:bg-gray-90 lg:p-8">
+            <AnimateIn variant="slide-right" delay={150}>
+              <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,320px)_1fr] lg:items-start lg:gap-8">
+                <SandowScoreCard score={analysis.confidenceScore} />
+                <ScoreBreakdown
+                  dimensions={analysis.dimensions}
+                  pick={analysis.pick}
+                  matchId={match.id}
+                  vipLocked={vipLocked}
+                />
+              </div>
+            </AnimateIn>
 
-          <AnimateIn variant="slide-right" delay={220}>
-            <ScoreBreakdown
-              dimensions={analysis.dimensions}
-              pick={analysis.pick}
-              matchId={match.id}
-              vipLocked={vipLocked}
-            />
-          </AnimateIn>
-
-          <AnimateIn variant="slide-right" delay={290}>
-            <AthleticSlider
-              score={analysis.confidenceScore}
-              level={analysis.recommendationLevel}
-              label={analysis.recommendationLabel}
-              description="球隊具備應對高強度對抗的戰術能力"
-              middleContent={
-                <VipContentLock locked={vipLocked} className="rounded-[24px]">
-                  <AnalysisNarrative
-                    narrative={analysis.narrative}
-                    riskFlags={analysis.riskFlags}
-                  />
-                </VipContentLock>
-              }
-            />
-          </AnimateIn>
+            <AnimateIn variant="slide-right" delay={220}>
+              <div className="lg:border-t lg:border-gray-80 lg:pt-8">
+                <AthleticSlider
+                  score={analysis.confidenceScore}
+                  level={analysis.recommendationLevel}
+                  label={analysis.recommendationLabel}
+                  description="球隊具備應對高強度對抗的戰術能力"
+                  middleContent={
+                    <VipContentLock locked={vipLocked} className="rounded-[24px]">
+                      <AnalysisNarrative
+                        narrative={analysis.narrative}
+                        riskFlags={analysis.riskFlags}
+                      />
+                    </VipContentLock>
+                  }
+                />
+              </div>
+            </AnimateIn>
+          </div>
 
           <AnimateIn variant="slide-right" delay={360}>
             <FitnessMetrics
@@ -157,13 +160,15 @@ export function MatchAnalysisView({
             />
           </AnimateIn>
 
-          <AnimateIn variant="slide-right" delay={430}>
-            <ActivitiesChart momentum={analysis.momentum} />
-          </AnimateIn>
+          <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
+            <AnimateIn variant="slide-right" delay={430}>
+              <ActivitiesChart momentum={analysis.momentum} />
+            </AnimateIn>
 
-          <AnimateIn variant="slide-right" delay={500}>
-            <StepsStatsChart scoreTrend={analysis.scoreTrend} />
-          </AnimateIn>
+            <AnimateIn variant="slide-right" delay={500}>
+              <StepsStatsChart scoreTrend={analysis.scoreTrend} />
+            </AnimateIn>
+          </div>
         </>
       )}
     </div>

@@ -41,18 +41,18 @@ export function SandowScoreCard({ score = 61, animate = true }: SandowScoreCardP
   }, [score, animate]);
 
   return (
-    <div className="flex w-full items-center gap-3">
-      <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] border border-[#fb923c] bg-[#f97316]">
-        <p className="text-center text-[26px] font-bold leading-none tabular-nums text-white">
+    <div className="flex w-full items-center gap-3 lg:items-start lg:gap-5 lg:rounded-[24px] lg:border lg:border-gray-80 lg:bg-gray-80/40 lg:p-6">
+      <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] border border-[#fb923c] bg-[#f97316] lg:size-24 lg:rounded-[28px]">
+        <p className="text-center text-[26px] font-bold leading-none tabular-nums text-white lg:text-[40px]">
           {displayScore}%
         </p>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <p className="w-full text-base font-bold leading-[22px] tracking-[-0.112px] text-white">
+      <div className="flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
+        <p className="w-full text-base font-bold leading-[22px] tracking-[-0.112px] text-white lg:text-xl lg:leading-7">
           AI 量化評分
         </p>
-        <div className="flex w-full items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 lg:gap-3">
           <div className="flex items-center gap-1">
             <div className="relative size-5 shrink-0">
               <div className="absolute inset-[13.09%_4.47%_9.1%_4.48%]">
@@ -64,7 +64,7 @@ export function SandowScoreCard({ score = 61, animate = true }: SandowScoreCardP
                 />
               </div>
             </div>
-            <p className="text-sm font-normal leading-[1.6] text-white whitespace-nowrap">
+            <p className="text-sm font-normal leading-[1.6] text-white whitespace-nowrap lg:text-base">
               綜合實力
             </p>
           </div>
@@ -82,7 +82,7 @@ export function SandowScoreCard({ score = 61, animate = true }: SandowScoreCardP
                 />
               </div>
             </div>
-            <p className="text-sm font-normal leading-[1.6] text-white whitespace-nowrap">
+            <p className="text-sm font-normal leading-[1.6] text-white whitespace-nowrap lg:text-base">
               十四代演算法
             </p>
           </div>

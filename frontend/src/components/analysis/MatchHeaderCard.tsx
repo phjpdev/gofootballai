@@ -52,7 +52,7 @@ function TeamColumn({
     >
       <div
         className={cn(
-          "relative flex size-[72px] items-center justify-center rounded-[20px] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.35)] sm:size-20",
+          "relative flex size-[72px] items-center justify-center rounded-[20px] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.35)] sm:size-20 lg:size-24 lg:rounded-[24px]",
           side === "home"
             ? "ring-2 ring-blue-40/30"
             : "ring-2 ring-orange-50/30",
@@ -116,7 +116,7 @@ export function MatchHeaderCard({ match }: MatchHeaderCardProps) {
     match.homeScore !== undefined && match.awayScore !== undefined;
 
   return (
-    <div className="match-header-card relative overflow-hidden rounded-[24px] p-4 sm:p-5">
+    <div className="match-header-card relative overflow-hidden rounded-[24px] p-4 sm:p-5 lg:rounded-[32px] lg:p-8">
       <div className="match-header-card__glow pointer-events-none absolute inset-0" aria-hidden />
       <div
         className="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-blue-40/10 blur-3xl"

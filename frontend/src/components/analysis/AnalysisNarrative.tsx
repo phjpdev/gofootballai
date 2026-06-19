@@ -26,8 +26,8 @@ export function AnalysisNarrative({
   const paragraphs = narrative.split(/\n\n+/);
 
   return (
-    <section className="flex w-full flex-col gap-3 rounded-[24px] bg-gray-90 p-4">
-      <h2 className="text-base font-bold text-white">AI 量化覆盤</h2>
+    <section className="flex w-full flex-col gap-3 rounded-[24px] bg-gray-90 p-4 lg:gap-4 lg:border lg:border-gray-80/80 lg:bg-gray-80/30 lg:p-6">
+      <h2 className="text-base font-bold text-white lg:text-lg">AI 量化覆盤</h2>
 
       {riskFlags.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -42,7 +42,7 @@ export function AnalysisNarrative({
         </div>
       )}
 
-      <div className="flex flex-col gap-3 text-sm leading-[1.7] text-gray-40">
+      <div className="flex flex-col gap-3 text-sm leading-[1.7] text-gray-40 lg:text-base lg:leading-[1.75]">
         {paragraphs.map((paragraph, index) => (
           <p key={index}>{renderInlineMarkdown(paragraph)}</p>
         ))}
