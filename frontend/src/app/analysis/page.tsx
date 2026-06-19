@@ -4,18 +4,13 @@ import { SubNav } from "@/components/layout/SubNav";
 import { AnimateIn } from "@/components/motion/AnimateIn";
 import { FeaturedMatchCard } from "@/components/cards/FeaturedMatchCard";
 import {
-  AnalysisLockScreen,
-  AnalysisLockSkeleton,
-} from "@/components/analysis/AnalysisLockScreen";
-import {
   HkjcDatePicker,
   HkjcMatchesSection,
   HkjcProvider,
 } from "@/components/analysis/HkjcMatchList";
-import { useAuth } from "@/context/AuthContext";
 import { FEATURED_COUNT, FEATURED_ITEMS } from "@/lib/data/featured";
 
-function AnalysisContent() {
+export default function AnalysisPage() {
   return (
     <HkjcProvider>
       <div className="flex flex-col gap-8">
@@ -43,18 +38,4 @@ function AnalysisContent() {
       </div>
     </HkjcProvider>
   );
-}
-
-export default function AnalysisPage() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <AnalysisLockSkeleton />;
-  }
-
-  if (!isAuthenticated) {
-    return <AnalysisLockScreen redirectTo="/analysis" />;
-  }
-
-  return <AnalysisContent />;
 }

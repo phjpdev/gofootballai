@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { MatchAnalysisView } from "@/components/analysis/MatchAnalysisView";
-import { AuthForm } from "@/components/member/AuthForm";
 import { useAuth } from "@/context/AuthContext";
 import {
   fetchAnalysisStatus,

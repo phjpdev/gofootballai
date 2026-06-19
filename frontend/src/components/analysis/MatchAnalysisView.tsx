@@ -8,10 +8,10 @@ import { AnalysisNarrative } from "@/components/analysis/AnalysisNarrative";
 import { ActivitiesChart } from "@/components/charts/ActivitiesChart";
 import { StepsStatsChart } from "@/components/charts/StepsStatsChart";
 import { AnimateIn } from "@/components/motion/AnimateIn";
-import { AuthForm } from "@/components/member/AuthForm";
+import { AnalysisMemberGate } from "@/components/analysis/AnalysisLockScreen";
 import type { MatchAnalysisResult } from "@/types/analysis";
 import type { Match } from "@/types";
-import { ChevronLeft, Loader2, Lock } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 
 type MatchAnalysisViewProps = {
   match: Match;
@@ -53,18 +53,7 @@ function MemberGate({
   hint: string;
   redirectTo: string;
 }) {
-  return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-col items-center gap-3 rounded-[24px] bg-gray-90 p-6 text-center">
-        <div className="flex size-14 items-center justify-center rounded-full bg-gray-80">
-          <Lock className="size-6 text-gray-40" />
-        </div>
-        <h2 className="text-base font-bold text-white">會員專屬分析</h2>
-        <p className="text-sm leading-[1.6] text-gray-40">{hint}</p>
-      </div>
-      <AuthForm portalRole="member" redirectTo={redirectTo} />
-    </section>
-  );
+  return <AnalysisMemberGate hint={hint} redirectTo={redirectTo} />;
 }
 
 export function MatchAnalysisView({

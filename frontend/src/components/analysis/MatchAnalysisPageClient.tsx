@@ -3,24 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MatchAnalysisClient } from "@/components/analysis/MatchAnalysisClient";
-import {
-  AnalysisLockScreen,
-  AnalysisLockSkeleton,
-} from "@/components/analysis/AnalysisLockScreen";
 import { getMatchById } from "@/lib/data/matches";
 import { hkjcMatchToLegacy } from "@/lib/hkjc/fetch-matches";
 import { fetchHkjcMatchByIdFromApi } from "@/lib/hkjc/matches-api";
 import type { Match } from "@/types";
 import { ChevronLeft } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
 
 type MatchAnalysisPageClientProps = {
   matchId: string;
 };
 
 export function MatchAnalysisPageClient({ matchId }: MatchAnalysisPageClientProps) {
-  const pathname = `/analysis/${matchId}`;
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -68,14 +61,6 @@ export function MatchAnalysisPageClient({ matchId }: MatchAnalysisPageClientProp
       cancelled = true;
     };
   }, [matchId]);
-
-  if (authLoading) {
-    return <AnalysisLockSkeleton />;
-  }
-
-  if (!isAuthenticated) {
-    return <AnalysisLockScreen redirectTo={pathname} />;
-  }
 
   if (loading) {
     return (
