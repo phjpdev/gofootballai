@@ -157,8 +157,8 @@ function UserFormModal({
         className="absolute inset-0 bg-black/70"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-t-[24px] bg-gray-90 sm:rounded-[24px]">
-        <div className="flex items-center justify-between border-b border-gray-80 px-5 py-4">
+      <div className="relative z-10 flex max-h-[min(90svh,100%)] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-gray-90 sm:max-h-[min(90vh,100%)] sm:rounded-[24px]">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-80 px-5 py-4">
           <h3 className="text-base font-bold text-white">{title}</h3>
           <button
             type="button"
@@ -169,7 +169,10 @@ function UserFormModal({
           </button>
         </div>
 
-        <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4 p-5">
+        <form
+          onSubmit={(e) => void handleSubmit(e)}
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain p-5"
+        >
           <input
             type="text"
             placeholder="帳戶名稱"
@@ -340,7 +343,7 @@ export function UserManagement() {
           placeholder="搜尋帳戶名稱或角色..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-[14px] bg-gray-90 py-2.5 pl-11 pr-4 text-sm text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40"
+          className="w-full rounded-[14px] bg-gray-90 py-2.5 pl-11 pr-4 text-base text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40 lg:text-sm"
         />
       </div>
 

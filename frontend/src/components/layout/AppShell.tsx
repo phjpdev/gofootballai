@@ -15,7 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const showMobileHeader = isMemberRoute(pathname);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden lg:h-auto lg:min-h-dvh lg:overflow-visible">
+    <div className="flex h-svh flex-col overflow-hidden lg:h-auto lg:min-h-dvh lg:overflow-visible">
       <SiteHeader />
       <main
         className={cn(

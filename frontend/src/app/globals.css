@@ -53,6 +53,15 @@ body {
   font-family: var(--font-work-sans), system-ui, sans-serif;
 }
 
+@media (max-width: 1023px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
