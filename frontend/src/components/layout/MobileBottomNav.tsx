@@ -76,7 +76,7 @@ export function MobileBottomNav() {
                     height={80}
                     aria-hidden
                     className={cn(
-                      "size-20 shrink-0 rounded-full object-cover",
+                      "size-20 shrink-0 rounded-t-full rounded-br-none rounded-bl-none object-cover",
                       isActive ? "opacity-100" : "opacity-70",
                     )}
                   />
