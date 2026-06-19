@@ -8,24 +8,27 @@ import {
 import { createFootballAPI } from "./graphql-client.js";
 import type { HkjcMatch, HkjcMatchesResponse } from "./types.js";
 
-let cache: { matches: HkjcMatch[]; expiresAt: number } | null = null;
+let cache: {
+  matches: HkjcMatch[];
+  expiresAt: number;
+  savedAt: number;
+} | null = null;
 const CACHE_TTL_MS = 120_000;
+const STALE_MAX_MS = 24 * 60 * 60 * 1000;
 
 const matchByIdCache = new Map<string, { match: HkjcMatch; expiresAt: number }>();
 const MATCH_BY_ID_TTL_MS = 120_000;
 
 async function fetchRawMatches(): Promise<RawMatch[]> {
   const api = createFootballAPI();
-  const [batchA, batchB] = await Promise.all([
-    api.getAllFootballMatches({
-      oddsTypes: ["HAD", "HDC"],
-      showAllMatch: true,
-    }),
-    api.getAllFootballMatches({
-      oddsTypes: ["HIL"],
-      showAllMatch: true,
-    }),
-  ]);
+  const batchA = await api.getAllFootballMatches({
+    oddsTypes: ["HAD", "HDC"],
+    showAllMatch: true,
+  });
+  const batchB = await api.getAllFootballMatches({
+    oddsTypes: ["HIL"],
+    showAllMatch: true,
+  });
 
   const merged = mergeRawMatches([batchA as RawMatch[], batchB as RawMatch[]]);
   if (merged.length === 0) {
@@ -52,19 +55,30 @@ export async function fetchHkjcMatches(options?: {
     return cache.matches;
   }
 
-  const matches = await loadMatches();
+  try {
+    const matches = await loadMatches();
 
-  if (matches.length > 0) {
-    cache = { matches, expiresAt: Date.now() + CACHE_TTL_MS };
-    return matches;
+    if (matches.length > 0) {
+      cache = {
+        matches,
+        expiresAt: Date.now() + CACHE_TTL_MS,
+        savedAt: Date.now(),
+      };
+      return matches;
+    }
+  } catch (error) {
+    console.error("HKJC loadMatches failed:", error);
   }
 
   if (cache && cache.matches.length > 0) {
-    console.warn("HKJC fetch returned empty; serving stale cache");
-    return cache.matches;
+    const age = Date.now() - cache.savedAt;
+    if (age < STALE_MAX_MS) {
+      console.warn("HKJC fetch failed or empty; serving stale cache");
+      return cache.matches;
+    }
   }
 
-  return matches;
+  return cache?.matches ?? [];
 }
 
 export async function fetchHkjcMatchesResponse(options?: {

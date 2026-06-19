@@ -52,7 +52,11 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
         setData(retry);
       }
     } catch {
-      setError("無法載入馬會賽事資料，請稍後再試。");
+      if (data?.total) {
+        setError("無法更新賽事資料，顯示上次快取結果。");
+      } else {
+        setError("無法載入馬會賽事資料，請稍後再試。");
+      }
     } finally {
       setLoading(false);
     }
