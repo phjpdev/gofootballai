@@ -50,6 +50,7 @@ export function AuthForm({
       setPassword("");
       setAcceptedTerms(false);
       router.push(redirectTo);
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "發生錯誤，請稍後再試");
     } finally {

@@ -2,10 +2,24 @@ import { AuthForm } from "@/components/member/AuthForm";
 import { QAAccordion } from "@/components/member/QAAccordion";
 import { QA_ITEMS, POLICY_SECTIONS } from "@/lib/data/member";
 
-export default function MemberPage() {
+type MemberPageProps = {
+  searchParams: Promise<{ redirect?: string }>;
+};
+
+export default async function MemberPage({ searchParams }: MemberPageProps) {
+  const { redirect } = await searchParams;
+  const redirectTo =
+    redirect && redirect.startsWith("/") && !redirect.startsWith("//")
+      ? redirect
+      : "/analysis";
+
   return (
     <div className="flex flex-col gap-8">
-      <AuthForm portalRole="member" termsHref="/member#terms" />
+      <AuthForm
+        portalRole="member"
+        termsHref="/member#terms"
+        redirectTo={redirectTo}
+      />
 
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-bold tracking-[-0.048px] text-white">
