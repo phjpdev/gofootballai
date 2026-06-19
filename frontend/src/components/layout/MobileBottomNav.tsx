@@ -48,7 +48,7 @@ export function MobileBottomNav() {
     >
       <div
         className={cn(
-          "mx-auto flex h-[var(--mobile-nav-bar)] w-full max-w-[375px] items-center justify-around px-1",
+          "mx-auto flex h-[var(--mobile-nav-bar)] w-full max-w-[375px] items-end justify-around px-1",
           compact ? "pt-1.5 pb-1" : "pt-2 pb-1.5",
         )}
       >
@@ -62,29 +62,31 @@ export function MobileBottomNav() {
               href={href}
               aria-label={label}
               className={cn(
-                "flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center",
+                "flex min-h-0 min-w-0 flex-1 flex-col items-center justify-end",
                 compact ? "gap-0.5 px-0.5 py-0.5" : "gap-1 px-1 py-0.5",
                 isActive ? "text-orange-50" : "text-gray-40",
               )}
             >
-              {isLogoItem ? (
-                <Image
-                  src="/images/go-football-logo.png"
-                  alt=""
-                  width={48}
-                  height={48}
-                  aria-hidden
-                  className={cn(
-                    "size-12 shrink-0 object-contain",
-                    isActive ? "opacity-100" : "opacity-70",
-                  )}
-                />
-              ) : (
-                <item.icon
-                  className={compact ? "size-[18px]" : "size-5"}
-                  strokeWidth={isActive ? 2.5 : 2}
-                />
-              )}
+              <span className="flex h-20 w-full items-end justify-center">
+                {isLogoItem ? (
+                  <Image
+                    src="/images/go-football-logo.png"
+                    alt=""
+                    width={80}
+                    height={80}
+                    aria-hidden
+                    className={cn(
+                      "size-20 shrink-0 rounded-full object-cover",
+                      isActive ? "opacity-100" : "opacity-70",
+                    )}
+                  />
+                ) : (
+                  <item.icon
+                    className={compact ? "size-[18px]" : "size-5"}
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                )}
+              </span>
               {!(isLogoItem && item.hideLabel) && (
                 <span
                   className={cn(
