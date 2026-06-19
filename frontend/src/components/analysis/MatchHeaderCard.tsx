@@ -65,6 +65,16 @@ function TeamColumn({
           fit="default"
         />
       </div>
+      <span
+        className={cn(
+          "rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide",
+          side === "home"
+            ? "bg-blue-40/15 text-blue-40"
+            : "bg-orange-50/15 text-orange-50",
+        )}
+      >
+        {side === "home" ? "主場" : "客場"}
+      </span>
       <p className="max-w-[108px] truncate text-center text-sm font-bold tracking-[-0.04px] text-white sm:max-w-[120px] sm:text-base">
         {name}
       </p>
