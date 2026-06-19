@@ -7,22 +7,42 @@ import { cn } from "@/lib/utils";
 
 type AthleticSliderProps = {
   level?: number;
+  score?: number;
   label?: string;
   description?: string;
   middleContent?: ReactNode;
 };
 
+const TRACK_WIDTH = 343;
+const THUMB_MIN = 27.5;
+const THUMB_MAX = 302.5;
 const LEVEL_POSITIONS = [27.5, 96.5, 165.5, 234.5, 302.5];
+
+function scoreToThumbLeft(score: number): number {
+  const clamped = Math.min(100, Math.max(0, score));
+  return THUMB_MIN + (clamped / 100) * (THUMB_MAX - THUMB_MIN);
+}
+
+function scoreToLevel(score: number): number {
+  return Math.min(5, Math.max(1, Math.round((score / 100) * 5)));
+}
 
 export function AthleticSlider({
   level = 4,
+  score,
   label = "戰術強度",
   description = "球隊具備應對高強度對抗的戰術能力",
   middleContent,
 }: AthleticSliderProps) {
-  const clampedLevel = Math.min(5, Math.max(1, Math.round(level)));
-  const thumbLeft = LEVEL_POSITIONS[clampedLevel - 1] ?? LEVEL_POSITIONS[2];
-  const fillWidth = thumbLeft + 40;
+  const clampedLevel =
+    score !== undefined
+      ? scoreToLevel(score)
+      : Math.min(5, Math.max(1, Math.round(level)));
+  const thumbLeft =
+    score !== undefined
+      ? scoreToThumbLeft(score)
+      : (LEVEL_POSITIONS[clampedLevel - 1] ?? LEVEL_POSITIONS[2]);
+  const fillWidth = Math.min(TRACK_WIDTH, thumbLeft + 20);
 
   return (
     <div

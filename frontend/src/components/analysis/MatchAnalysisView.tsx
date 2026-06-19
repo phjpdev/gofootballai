@@ -126,6 +126,7 @@ export function MatchAnalysisView({
 
           <AnimateIn variant="slide-right" delay={290}>
             <AthleticSlider
+              score={analysis.confidenceScore}
               level={analysis.recommendationLevel}
               label={analysis.recommendationLabel}
               description="球隊具備應對高強度對抗的戰術能力"
