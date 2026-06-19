@@ -143,8 +143,12 @@ function pumpQueue(): void {
   }
 }
 
+export function isAnalysisInFlight(matchId: string): boolean {
+  return inFlight.has(matchId);
+}
+
 export function enqueueAnalysis(matchId: string, force = false): void {
-  if (inFlight.has(matchId) && !force) return;
+  if (inFlight.has(matchId)) return;
 
   if (force) {
     void runJob(matchId, true);
