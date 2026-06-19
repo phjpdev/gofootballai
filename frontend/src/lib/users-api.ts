@@ -6,6 +6,8 @@ export type ManagedUser = {
   id: string;
   username: string;
   role: UserRole;
+  vipExpiresAt: string | null;
+  isVip: boolean;
   createdAt: string;
 };
 
@@ -37,7 +39,12 @@ export async function fetchUsers(token: string): Promise<ManagedUser[]> {
 
 export async function createUser(
   token: string,
-  input: { username: string; password: string; role: UserRole },
+  input: {
+    username: string;
+    password: string;
+    role: UserRole;
+    vipExpiresAt?: string | null;
+  },
 ): Promise<ManagedUser> {
   const response = await fetch(`${API_URL}/api/users`, {
     method: "POST",
@@ -59,7 +66,12 @@ export async function createUser(
 export async function updateUser(
   token: string,
   id: string,
-  input: { username?: string; password?: string; role?: UserRole },
+  input: {
+    username?: string;
+    password?: string;
+    role?: UserRole;
+    vipExpiresAt?: string | null;
+  },
 ): Promise<ManagedUser> {
   const response = await fetch(`${API_URL}/api/users/${id}`, {
     method: "PATCH",

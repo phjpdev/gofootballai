@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { query } from "./db.js";
+import { isActiveVip } from "./vip.js";
 import type { UserRecord, UserRole } from "../types.js";
 
 type UserRow = {
@@ -8,6 +9,7 @@ type UserRow = {
   username: string;
   password_hash: string;
   role: UserRole;
+  vip_expires_at: Date | null;
   created_at: Date;
 };
 
@@ -17,6 +19,7 @@ function mapUser(row: UserRow): UserRecord {
     username: row.username,
     passwordHash: row.password_hash,
     role: row.role,
+    vipExpiresAt: row.vip_expires_at?.toISOString() ?? null,
     createdAt: row.created_at.toISOString(),
   };
 }
@@ -25,7 +28,7 @@ export async function findUserByUsername(
   username: string,
 ): Promise<UserRecord | null> {
   const result = await query<UserRow>(
-    `SELECT id, username, password_hash, role, created_at
+    `SELECT id, username, password_hash, role, vip_expires_at, created_at
      FROM users
      WHERE LOWER(username) = LOWER($1)
      LIMIT 1`,
@@ -38,7 +41,7 @@ export async function findUserByUsername(
 
 export async function findUserById(id: string): Promise<UserRecord | null> {
   const result = await query<UserRow>(
-    `SELECT id, username, password_hash, role, created_at
+    `SELECT id, username, password_hash, role, vip_expires_at, created_at
      FROM users
      WHERE id = $1
      LIMIT 1`,
@@ -53,6 +56,7 @@ export async function createUser(
   username: string,
   password: string,
   role: UserRole,
+  vipExpiresAt: string | null = null,
 ): Promise<UserRecord> {
   const trimmed = username.trim();
   const id = randomUUID();
@@ -60,10 +64,10 @@ export async function createUser(
 
   try {
     const result = await query<UserRow>(
-      `INSERT INTO users (id, username, password_hash, role)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, username, password_hash, role, created_at`,
-      [id, trimmed, passwordHash, role],
+      `INSERT INTO users (id, username, password_hash, role, vip_expires_at)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, username, password_hash, role, vip_expires_at, created_at`,
+      [id, trimmed, passwordHash, role, vipExpiresAt],
     );
 
     const row = result.rows[0];
@@ -95,21 +99,30 @@ export type PublicUser = {
   id: string;
   username: string;
   role: UserRole;
+  vipExpiresAt: string | null;
+  isVip: boolean;
   createdAt: string;
 };
 
-function mapPublicUser(row: Omit<UserRow, "password_hash"> & { created_at: Date }): PublicUser {
+function mapPublicUser(
+  row: Pick<UserRow, "id" | "username" | "role" | "vip_expires_at" | "created_at">,
+): PublicUser {
+  const vipExpiresAt = row.vip_expires_at?.toISOString() ?? null;
   return {
     id: row.id,
     username: row.username,
     role: row.role,
+    vipExpiresAt,
+    isVip: row.role === "admin" || isActiveVip(vipExpiresAt),
     createdAt: row.created_at.toISOString(),
   };
 }
 
 export async function listUsers(): Promise<PublicUser[]> {
-  const result = await query<Pick<UserRow, "id" | "username" | "role" | "created_at">>(
-    `SELECT id, username, role, created_at
+  const result = await query<
+    Pick<UserRow, "id" | "username" | "role" | "vip_expires_at" | "created_at">
+  >(
+    `SELECT id, username, role, vip_expires_at, created_at
      FROM users
      ORDER BY created_at DESC`,
   );
@@ -123,6 +136,7 @@ export async function updateUser(
     username?: string;
     password?: string;
     role?: UserRole;
+    vipExpiresAt?: string | null;
   },
 ): Promise<PublicUser | null> {
   const existing = await findUserById(id);
@@ -150,21 +164,32 @@ export async function updateUser(
     index += 1;
   }
 
+  if (input.vipExpiresAt !== undefined) {
+    fields.push(`vip_expires_at = $${index}`);
+    params.push(input.vipExpiresAt);
+    index += 1;
+  }
+
   if (fields.length === 0) {
-    return {
+    return mapPublicUser({
       id: existing.id,
       username: existing.username,
       role: existing.role,
-      createdAt: existing.createdAt,
-    };
+      vip_expires_at: existing.vipExpiresAt
+        ? new Date(existing.vipExpiresAt)
+        : null,
+      created_at: new Date(existing.createdAt),
+    });
   }
 
   try {
-    const result = await query<Pick<UserRow, "id" | "username" | "role" | "created_at">>(
+    const result = await query<
+      Pick<UserRow, "id" | "username" | "role" | "vip_expires_at" | "created_at">
+    >(
       `UPDATE users
        SET ${fields.join(", ")}
        WHERE id = $1
-       RETURNING id, username, role, created_at`,
+       RETURNING id, username, role, vip_expires_at, created_at`,
       params,
     );
 
@@ -186,3 +211,5 @@ export async function deleteUser(id: string): Promise<boolean> {
   const result = await query("DELETE FROM users WHERE id = $1", [id]);
   return (result.rowCount ?? 0) > 0;
 }
+
+export { mapPublicUser };

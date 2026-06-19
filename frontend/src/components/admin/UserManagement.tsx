@@ -12,18 +12,27 @@ import {
 } from "@/lib/users-api";
 import type { UserRole } from "@/lib/auth-api";
 import { formatRole } from "@/lib/i18n/zh-hk";
+import {
+  formatVipExpiryDate,
+  isActiveVip,
+  toVipDateInputValue,
+} from "@/lib/vip";
 import { cn } from "@/lib/utils";
 
 type UserFormState = {
   username: string;
   password: string;
   role: UserRole;
+  isVip: boolean;
+  vipExpiresAt: string;
 };
 
 const EMPTY_FORM: UserFormState = {
   username: "",
   password: "",
   role: "member",
+  isVip: false,
+  vipExpiresAt: "",
 };
 
 function formatDate(iso: string): string {
@@ -32,6 +41,50 @@ function formatDate(iso: string): string {
     month: "long",
     day: "numeric",
   });
+}
+
+function buildVipPayload(form: UserFormState): string | null | undefined {
+  if (form.role === "admin") return null;
+  if (!form.isVip) return null;
+  return form.vipExpiresAt;
+}
+
+function userToForm(user: ManagedUser): UserFormState {
+  const hasVipDate = Boolean(user.vipExpiresAt);
+  return {
+    username: user.username,
+    password: "",
+    role: user.role,
+    isVip: hasVipDate,
+    vipExpiresAt: toVipDateInputValue(user.vipExpiresAt),
+  };
+}
+
+function UserRoleBadges({ user }: { user: ManagedUser }) {
+  const vipActive = isActiveVip(user.vipExpiresAt);
+
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+      <span className="text-xs text-gray-40">{formatRole(user.role)}</span>
+      {user.vipExpiresAt && (
+        <span
+          className={cn(
+            "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
+            vipActive
+              ? "bg-orange-50/20 text-orange-50"
+              : "bg-gray-80 text-gray-40",
+          )}
+        >
+          {vipActive ? "VIP" : "VIP 已過期"}
+        </span>
+      )}
+      {user.vipExpiresAt && (
+        <span className="text-[10px] text-gray-40">
+          到期 {formatVipExpiryDate(user.vipExpiresAt)}
+        </span>
+      )}
+    </div>
+  );
 }
 
 function UserFormModal({
@@ -75,6 +128,10 @@ function UserFormModal({
     if (!form.username.trim()) return;
     if (requirePassword && !form.password.trim()) {
       setError("請輸入密碼");
+      return;
+    }
+    if (form.role === "member" && form.isVip && !form.vipExpiresAt) {
+      setError("請選擇 VIP 到期日");
       return;
     }
 
@@ -136,7 +193,13 @@ function UserFormModal({
               <button
                 key={role}
                 type="button"
-                onClick={() => setForm((prev) => ({ ...prev, role }))}
+                onClick={() =>
+                  setForm((prev) => ({
+                    ...prev,
+                    role,
+                    isVip: role === "admin" ? false : prev.isVip,
+                  }))
+                }
                 className={cn(
                   "flex-1 rounded-[14px] px-3 py-2 text-xs font-bold",
                   form.role === role
@@ -148,6 +211,54 @@ function UserFormModal({
               </button>
             ))}
           </div>
+
+          {form.role === "member" && (
+            <div className="flex flex-col gap-3 rounded-[14px] bg-gray-80 p-4">
+              <label className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium text-white">VIP 會員</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={form.isVip}
+                  onClick={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      isVip: !prev.isVip,
+                    }))
+                  }
+                  className={cn(
+                    "relative h-7 w-12 rounded-full transition-colors",
+                    form.isVip ? "bg-orange-50" : "bg-gray-70",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-0.5 size-6 rounded-full bg-white transition-transform",
+                      form.isVip ? "left-[22px]" : "left-0.5",
+                    )}
+                  />
+                </button>
+              </label>
+
+              {form.isVip && (
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium text-gray-30">VIP 到期日</span>
+                  <input
+                    type="date"
+                    value={form.vipExpiresAt}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        vipExpiresAt: e.target.value,
+                      }))
+                    }
+                    required={form.isVip}
+                    className="rounded-[12px] bg-gray-90 px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-orange-50/40"
+                  />
+                </label>
+              )}
+            </div>
+          )}
 
           {error && <p className="text-xs text-orange-50">{error}</p>}
 
@@ -264,20 +375,34 @@ export function UserManagement() {
                       <p className="truncate text-sm font-bold text-white">
                         {item.username}
                       </p>
+                      {isActiveVip(item.vipExpiresAt) && (
+                        <span className="shrink-0 rounded-md bg-orange-50/20 px-1.5 py-0.5 text-[10px] font-bold text-orange-50">
+                          VIP
+                        </span>
+                      )}
                       {currentUser?.id === item.id && (
                         <span className="shrink-0 text-[10px] font-medium text-orange-50">
                           你
                         </span>
                       )}
                     </div>
-                    <p className="mt-0.5 text-xs text-gray-40 lg:hidden">
-                      {formatRole(item.role)} · {formatDate(item.createdAt)}
-                    </p>
+                    <div className="lg:hidden">
+                      <UserRoleBadges user={item} />
+                      <p className="mt-0.5 text-xs text-gray-40">
+                        加入 {formatDate(item.createdAt)}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <p className="hidden text-sm text-gray-20 lg:block">
-                  {formatRole(item.role)}
-                </p>
+                <div className="hidden min-w-0 lg:block">
+                  <p className="text-sm text-gray-20">{formatRole(item.role)}</p>
+                  {item.vipExpiresAt && (
+                    <p className="mt-0.5 text-xs text-gray-40">
+                      {isActiveVip(item.vipExpiresAt) ? "VIP" : "VIP 已過期"} · 到期{" "}
+                      {formatVipExpiryDate(item.vipExpiresAt)}
+                    </p>
+                  )}
+                </div>
                 <p className="hidden text-sm text-gray-40 lg:block">
                   {formatDate(item.createdAt)}
                 </p>
@@ -315,7 +440,12 @@ export function UserManagement() {
         onClose={() => setCreateOpen(false)}
         onSubmit={async (input) => {
           if (!token) return;
-          const created = await createUser(token, input);
+          const created = await createUser(token, {
+            username: input.username.trim(),
+            password: input.password.trim(),
+            role: input.role,
+            vipExpiresAt: buildVipPayload(input),
+          });
           setUsers((prev) => [created, ...prev]);
         }}
       />
@@ -324,15 +454,7 @@ export function UserManagement() {
         open={!!editingUser}
         title="編輯用戶"
         submitLabel="儲存變更"
-        initial={
-          editingUser
-            ? {
-                username: editingUser.username,
-                password: "",
-                role: editingUser.role,
-              }
-            : EMPTY_FORM
-        }
+        initial={editingUser ? userToForm(editingUser) : EMPTY_FORM}
         requirePassword={false}
         onClose={() => setEditingUser(null)}
         onSubmit={async (input) => {
@@ -341,9 +463,11 @@ export function UserManagement() {
             username?: string;
             password?: string;
             role?: UserRole;
+            vipExpiresAt?: string | null;
           } = {
             username: input.username.trim(),
             role: input.role,
+            vipExpiresAt: buildVipPayload(input),
           };
           if (input.password.trim()) {
             payload.password = input.password.trim();

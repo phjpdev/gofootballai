@@ -77,6 +77,7 @@ export async function initDb(): Promise<void> {
   await pool.query(`
     ALTER TABLE records ADD COLUMN IF NOT EXISTS display_date DATE;
     ALTER TABLE records ADD COLUMN IF NOT EXISTS star_rating REAL;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS vip_expires_at TIMESTAMPTZ;
   `);
 }
 

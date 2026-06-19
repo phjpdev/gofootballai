@@ -6,6 +6,8 @@ export type AuthUser = {
   id: string;
   username: string;
   role: UserRole;
+  vipExpiresAt: string | null;
+  isVip: boolean;
 };
 
 type AuthResponse = {

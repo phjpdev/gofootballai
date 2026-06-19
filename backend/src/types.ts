@@ -7,6 +7,7 @@ export type UserRecord = {
   username: string;
   passwordHash: string;
   role: UserRole;
+  vipExpiresAt: string | null;
   createdAt: string;
 };
 
