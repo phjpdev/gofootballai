@@ -44,12 +44,12 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed inset-x-0 bottom-0 z-50 flex flex-col border-t border-gray-90 bg-gray-100 shadow-[0_-8px_32px_rgba(0,0,0,0.35)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-90 bg-gray-100 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_32px_rgba(0,0,0,0.35)] lg:hidden"
     >
       <div
         className={cn(
           "mx-auto flex h-[var(--mobile-nav-bar)] w-full max-w-[375px] items-end justify-around px-1",
-          compact ? "pt-1.5 pb-1" : "pt-2 pb-1.5",
+          compact ? "pt-1.5" : "pt-2",
         )}
       >
         {navItems.map((item) => {
@@ -63,7 +63,7 @@ export function MobileBottomNav() {
               aria-label={label}
               className={cn(
                 "flex min-h-0 min-w-0 flex-1 flex-col items-center justify-end",
-                compact ? "gap-0.5 px-0.5 py-0.5" : "gap-1 px-1 py-0.5",
+                compact ? "gap-0.5 px-0.5" : "gap-1 px-1",
                 isActive ? "text-orange-50" : "text-gray-40",
               )}
             >
@@ -101,10 +101,6 @@ export function MobileBottomNav() {
           );
         })}
       </div>
-      <div
-        className="h-[var(--mobile-nav-inset)] shrink-0"
-        aria-hidden
-      />
     </nav>
   );
 }
