@@ -255,19 +255,19 @@ body {
 }
 
 .led-border__track--dim {
-  stroke: rgba(34, 211, 238, 0.35);
+  stroke: rgba(249, 115, 22, 0.35);
   stroke-width: 2px;
 }
 
 .led-border__track--beam {
-  stroke: #67e8f9;
+  stroke: #fb923c;
   stroke-width: 2.5px;
   stroke-dasharray: 0.12 0.88;
   animation: led-border-travel 2.8s linear infinite;
 }
 
 .led-border__track--glow {
-  stroke: #22d3ee;
+  stroke: #f97316;
   stroke-width: 6px;
   stroke-dasharray: 0.12 0.88;
   opacity: 0.7;
