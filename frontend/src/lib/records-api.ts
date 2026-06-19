@@ -43,7 +43,7 @@ async function parseError(response: Response): Promise<string> {
 
 export async function fetchPublicRecords(): Promise<Post[]> {
   const response = await fetch(`${API_URL}/api/records/public`, {
-    next: { revalidate: 30 },
+    cache: "no-store",
   });
 
   if (!response.ok) {
