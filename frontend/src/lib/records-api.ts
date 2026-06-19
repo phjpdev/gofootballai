@@ -10,6 +10,8 @@ type ApiRecord = {
   title: string;
   content: string | null;
   mediaUrl: string | null;
+  displayDate: string | null;
+  starRating: number | null;
   createdAt: string;
 };
 
@@ -27,6 +29,8 @@ function mapRecord(record: ApiRecord): Post {
     title: record.title,
     content: record.content ?? undefined,
     mediaUrl: resolveMediaUrl(record.mediaUrl),
+    displayDate: record.displayDate ?? undefined,
+    starRating: record.starRating ?? undefined,
     createdAt: record.createdAt,
     authorName: record.authorName,
   };
@@ -67,18 +71,24 @@ export async function fetchRecords(token: string): Promise<Post[]> {
   return data.records.map(mapRecord);
 }
 
+type RecordInput = {
+  type: PostType;
+  title: string;
+  content?: string;
+  displayDate: string;
+  starRating: number;
+  file?: File;
+};
+
 export async function createRecord(
   token: string,
-  input: {
-    type: PostType;
-    title: string;
-    content?: string;
-    file?: File;
-  },
+  input: RecordInput,
 ): Promise<Post> {
   const formData = new FormData();
   formData.append("type", input.type);
   formData.append("title", input.title);
+  formData.append("displayDate", input.displayDate);
+  formData.append("starRating", String(input.starRating));
   if (input.content) formData.append("content", input.content);
   if (input.file) formData.append("file", input.file);
 
@@ -99,16 +109,13 @@ export async function createRecord(
 export async function updateRecord(
   token: string,
   id: string,
-  input: {
-    type: PostType;
-    title: string;
-    content?: string;
-    file?: File;
-  },
+  input: RecordInput,
 ): Promise<Post> {
   const formData = new FormData();
   formData.append("type", input.type);
   formData.append("title", input.title);
+  formData.append("displayDate", input.displayDate);
+  formData.append("starRating", String(input.starRating));
   if (input.content) formData.append("content", input.content);
   if (input.file) formData.append("file", input.file);
 

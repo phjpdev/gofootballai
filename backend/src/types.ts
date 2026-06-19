@@ -18,6 +18,8 @@ export type RecordItem = {
   title: string;
   content: string | null;
   mediaUrl: string | null;
+  displayDate: string | null;
+  starRating: number | null;
   createdAt: string;
 };
 

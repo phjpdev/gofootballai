@@ -73,6 +73,11 @@ export async function initDb(): Promise<void> {
       WHEN others THEN NULL;
     END $$;
   `);
+
+  await pool.query(`
+    ALTER TABLE records ADD COLUMN IF NOT EXISTS display_date DATE;
+    ALTER TABLE records ADD COLUMN IF NOT EXISTS star_rating REAL;
+  `);
 }
 
 export async function query<T extends pg.QueryResultRow>(

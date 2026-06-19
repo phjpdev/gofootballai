@@ -1,21 +1,32 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ImageIcon, Upload, Video, X } from "lucide-react";
+import { ImageIcon, Star, Upload, Video, X } from "lucide-react";
 import { usePosts } from "@/context/PostsContext";
-import type { Post, PostType } from "@/types";
+import type { Post } from "@/types";
 
-const POST_TYPES: { value: PostType; label: string }[] = [
-  { value: "text", label: "文字" },
+const MEDIA_TYPES: { value: "photo" | "video"; label: string }[] = [
   { value: "photo", label: "相片" },
   { value: "video", label: "影片" },
 ];
 
-const TYPE_LABEL: Record<PostType, string> = {
-  text: "文字",
+const fieldClass =
+  "shrink-0 rounded-[14px] bg-gray-80 px-4 py-3 text-sm leading-normal text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40";
+
+const TYPE_LABEL: Record<"photo" | "video", string> = {
   photo: "相片",
   video: "影片",
 };
+
+function todayDateInputValue(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function resolveDisplayDate(record?: Post | null): string {
+  if (record?.displayDate) return record.displayDate;
+  if (record?.createdAt) return record.createdAt.slice(0, 10);
+  return todayDateInputValue();
+}
 
 export function CreateRecordModal({
   open,
@@ -29,9 +40,11 @@ export function CreateRecordModal({
   const { addPost, editPost } = usePosts();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditing = !!record;
-  const [type, setType] = useState<PostType>("photo");
+  const [type, setType] = useState<"photo" | "video">("photo");
   const [title, setTitle] = useState("");
+  const [displayDate, setDisplayDate] = useState(todayDateInputValue());
   const [content, setContent] = useState("");
+  const [starRating, setStarRating] = useState("4.0");
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -40,9 +53,13 @@ export function CreateRecordModal({
   useEffect(() => {
     if (!open) return;
     if (record) {
-      setType(record.type);
+      setType(record.type === "video" ? "video" : "photo");
       setTitle(record.title);
+      setDisplayDate(resolveDisplayDate(record));
       setContent(record.content ?? "");
+      setStarRating(
+        record.starRating !== undefined ? String(record.starRating) : "0",
+      );
       setFile(null);
       setPreviewUrl(record.mediaUrl ?? null);
       setError("");
@@ -51,7 +68,9 @@ export function CreateRecordModal({
     }
     setType("photo");
     setTitle("");
+    setDisplayDate(todayDateInputValue());
     setContent("");
+    setStarRating("4.0");
     setFile(null);
     setPreviewUrl(null);
     setError("");
@@ -78,14 +97,12 @@ export function CreateRecordModal({
     onClose();
   }
 
-  function handleTypeChange(nextType: PostType) {
+  function handleTypeChange(nextType: "photo" | "video") {
     setType(nextType);
     setFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (!file && record?.mediaUrl && nextType === record.type) {
       setPreviewUrl(record.mediaUrl);
-    } else if (nextType === "text") {
-      setPreviewUrl(null);
     } else if (!file) {
       setPreviewUrl(null);
     }
@@ -101,10 +118,14 @@ export function CreateRecordModal({
     e.preventDefault();
     if (!title.trim()) return;
 
+    const rating = Number(starRating);
+    if (!Number.isFinite(rating) || rating < 0 || rating > 5) {
+      setError("請填寫 0 至 5 的星級評分");
+      return;
+    }
+
     const needsNewFile =
-      (type === "photo" || type === "video") &&
-      !file &&
-      (!isEditing || !record?.mediaUrl || type !== record.type);
+      !file && (!isEditing || !record?.mediaUrl || type !== record.type);
 
     if (needsNewFile) {
       setError(`請選擇要上傳的${TYPE_LABEL[type]}檔案`);
@@ -119,6 +140,8 @@ export function CreateRecordModal({
         type,
         title: title.trim(),
         content: content.trim() || undefined,
+        displayDate,
+        starRating: Math.round(rating * 10) / 10,
         file: file ?? undefined,
       };
 
@@ -137,8 +160,7 @@ export function CreateRecordModal({
 
   if (!open) return null;
 
-  const accept =
-    type === "photo" ? "image/*" : type === "video" ? "video/*" : undefined;
+  const accept = type === "photo" ? "image/*" : "video/*";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
@@ -157,8 +179,8 @@ export function CreateRecordModal({
             </h2>
             <p className="text-xs text-gray-40">
               {isEditing
-                ? "更新標題、描述或媒體內容。"
-                : "上傳相片、影片或文字公告予會員。"}
+                ? "更新標題、日期、描述、星級或媒體內容。"
+                : "上傳相片或影片，並填寫標題、日期、描述與星級。"}
             </p>
           </div>
           <button
@@ -175,41 +197,71 @@ export function CreateRecordModal({
           className="flex min-h-0 flex-1 flex-col"
         >
           <div className="flex flex-col gap-4 overflow-y-auto p-5">
-          <div className="flex gap-2">
-            {POST_TYPES.map(({ value, label }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => handleTypeChange(value)}
-                className={`flex-1 rounded-[14px] px-3 py-2 text-xs font-bold tracking-[-0.018px] ${
-                  type === value
-                    ? "bg-orange-50 text-white"
-                    : "bg-gray-80 text-gray-40"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+            <div className="flex gap-2">
+              {MEDIA_TYPES.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => handleTypeChange(value)}
+                  className={`flex-1 rounded-[14px] px-3 py-2 text-xs font-bold tracking-[-0.018px] ${
+                    type === value
+                      ? "bg-orange-50 text-white"
+                      : "bg-gray-80 text-gray-40"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-          <input
-            type="text"
-            placeholder="標題"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="rounded-[14px] bg-gray-80 px-4 py-3 text-sm text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40"
-          />
+            <input
+              type="text"
+              placeholder="標題"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              className={fieldClass}
+            />
 
-          <textarea
-            placeholder="描述（選填）"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={4}
-            className="resize-none rounded-[14px] bg-gray-80 px-4 py-3 text-sm text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40"
-          />
+            <label className="flex shrink-0 flex-col gap-1.5">
+              <span className="text-xs font-medium text-gray-30">日期</span>
+              <input
+                type="date"
+                value={displayDate}
+                onChange={(e) => setDisplayDate(e.target.value)}
+                required
+                className={`${fieldClass} [color-scheme:dark]`}
+              />
+            </label>
 
-          {(type === "photo" || type === "video") && (
+            <label className="flex shrink-0 flex-col gap-1.5">
+              <span className="text-xs font-medium text-gray-30">描述</span>
+              <textarea
+                placeholder="描述"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={4}
+                className={`${fieldClass} min-h-[6.5rem] resize-none`}
+              />
+            </label>
+
+            <label className="flex shrink-0 flex-col gap-1.5">
+              <span className="text-xs font-medium text-gray-30">星級（0–5）</span>
+              <div className="flex min-h-12 shrink-0 items-center gap-3 rounded-[14px] bg-gray-80 px-4 py-3">
+                <Star className="size-4 shrink-0 fill-amber-400 text-amber-400" />
+                <input
+                  type="number"
+                  min={0}
+                  max={5}
+                  step={0.1}
+                  value={starRating}
+                  onChange={(e) => setStarRating(e.target.value)}
+                  required
+                  className="min-h-6 w-full bg-transparent py-0 text-sm leading-normal text-white outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+              </div>
+            </label>
+
             <div className="flex flex-col gap-3">
               <input
                 ref={fileInputRef}
@@ -258,7 +310,6 @@ export function CreateRecordModal({
                 />
               )}
             </div>
-          )}
 
             {error && <p className="text-xs text-orange-50">{error}</p>}
           </div>
