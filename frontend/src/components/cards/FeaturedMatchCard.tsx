@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { ArrowRight, Clock, Flame } from "lucide-react";
 import { LedBorder } from "@/components/motion/LedBorder";
 import { useAuth } from "@/context/AuthContext";
+import { resolveTopMatchDetailPath } from "@/lib/top-match";
 
 type FeaturedMatchCardProps = {
   title: string;
@@ -12,7 +14,6 @@ type FeaturedMatchCardProps = {
   duration: string;
   stat: string;
   imageSrc: string;
-  href?: string;
 };
 
 export function FeaturedMatchCard({
@@ -21,24 +22,33 @@ export function FeaturedMatchCard({
   duration,
   stat,
   imageSrc,
-  href = "/analysis?picks=top",
 }: FeaturedMatchCardProps) {
   const router = useRouter();
-  const { isAuthenticated, isMember, isAdmin, isLoading } = useAuth();
-  const canAccessPicks = isAuthenticated && (isMember || isAdmin);
+  const { token, isAuthenticated, isMember, isAdmin, isLoading } = useAuth();
+  const [navigating, setNavigating] = useState(false);
+  const canAccess = isAuthenticated && (isMember || isAdmin);
 
-  function handleClick() {
-    if (isLoading) return;
-    router.push(canAccessPicks ? href : "/analysis?picks=top");
+  async function handleClick() {
+    if (isLoading || navigating) return;
+
+    setNavigating(true);
+    try {
+      const path = await resolveTopMatchDetailPath(token, canAccess);
+      router.push(path);
+    } catch {
+      router.push("/analysis");
+    } finally {
+      setNavigating(false);
+    }
   }
 
   return (
     <LedBorder className="h-[225px] w-[261px] shrink-0" borderWidth={3}>
       <button
         type="button"
-        onClick={handleClick}
-        disabled={isLoading}
-        aria-label={`查看 ${title}`}
+        onClick={() => void handleClick()}
+        disabled={isLoading || navigating}
+        aria-label={`查看 ${title} AI 分析`}
         className="relative h-full w-full bg-gray-90 p-4 text-left disabled:opacity-70"
       >
         <div className="pointer-events-none absolute inset-0">

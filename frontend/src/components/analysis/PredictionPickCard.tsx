@@ -1,9 +1,16 @@
+"use client";
+
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { LedBorder } from "@/components/motion/LedBorder";
+import { useAuth } from "@/context/AuthContext";
+import { resolveTopMatchDetailPath } from "@/lib/top-match";
 import type { AnalysisPick } from "@/types/analysis";
 
 type PredictionPickCardProps = {
   pick: AnalysisPick;
+  matchId: string;
 };
 
 function splitPickSelection(selection: string): { label: string; value: string } {
@@ -15,8 +22,26 @@ function splitPickSelection(selection: string): { label: string; value: string }
   return { label: normalized, value: "" };
 }
 
-export function PredictionPickCard({ pick }: PredictionPickCardProps) {
+export function PredictionPickCard({ pick, matchId }: PredictionPickCardProps) {
+  const router = useRouter();
+  const { token, isAuthenticated, isMember, isAdmin } = useAuth();
+  const [navigating, setNavigating] = useState(false);
   const { label, value } = splitPickSelection(pick.selection);
+  const canAccess = isAuthenticated && (isMember || isAdmin);
+
+  async function handleClick() {
+    if (navigating) return;
+
+    setNavigating(true);
+    try {
+      const path = await resolveTopMatchDetailPath(token, canAccess, matchId);
+      router.push(path);
+    } catch {
+      router.push(`/analysis/${matchId}`);
+    } finally {
+      setNavigating(false);
+    }
+  }
 
   return (
     <LedBorder
@@ -24,7 +49,13 @@ export function PredictionPickCard({ pick }: PredictionPickCardProps) {
       borderWidth={3}
       borderRadius={16}
     >
-      <div className="relative h-full w-full bg-gray-90">
+      <button
+        type="button"
+        onClick={() => void handleClick()}
+        disabled={navigating}
+        aria-label="查看最高 AI 評分賽事分析"
+        className="relative block h-full w-full bg-gray-90 text-left transition-opacity hover:opacity-95 active:opacity-90 disabled:opacity-70"
+      >
         <Image
           src="/images/prediction-hero.png"
           alt=""
@@ -50,7 +81,7 @@ export function PredictionPickCard({ pick }: PredictionPickCardProps) {
             </div>
           </div>
         </div>
-      </div>
+      </button>
     </LedBorder>
   );
 }
