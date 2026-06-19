@@ -116,13 +116,20 @@ export function HkjcDatePicker() {
   );
 }
 
-export function HkjcMatchesSection() {
+export function HkjcMatchesSection({
+  mode = "default",
+}: {
+  mode?: "default" | "top-picks";
+}) {
   const { data, loading, error, selectedIndex, reload } = useHkjc();
-  const { token, isAuthenticated, isMember, isAdmin } = useAuth();
+  const { token, isAuthenticated, isMember, isAdmin, isLoading: authLoading } =
+    useAuth();
   const [analysisScores, setAnalysisScores] = useState<Record<string, number>>(
     {},
   );
-  const listKey = `${selectedIndex}-${data?.updatedAt ?? "loading"}`;
+  const [scoresLoading, setScoresLoading] = useState(false);
+  const isTopPicks = mode === "top-picks";
+  const listKey = `${mode}-${selectedIndex}-${data?.updatedAt ?? "loading"}`;
 
   const matches = useMemo(() => {
     if (!data) return [] as HkjcMatch[];
@@ -132,12 +139,16 @@ export function HkjcMatchesSection() {
     return filterMatchesByDate(data.matches, selectedDateKey);
   }, [data, selectedIndex]);
 
-  const canPrewarm = isAuthenticated && (isMember || isAdmin) && Boolean(token);
+  const canAccessPicks = isAuthenticated && (isMember || isAdmin);
+  const canPrewarm = canAccessPicks && Boolean(token);
 
   useEffect(() => {
     if (!canPrewarm || !token || matches.length === 0) return;
 
-    const matchIds = matches.slice(0, 6).map((match) => match.id);
+    const limit = isTopPicks ? 24 : 6;
+    const matchIds = matches.slice(0, limit).map((match) => match.id);
+    setScoresLoading(isTopPicks);
+
     void prewarmAnalyses(token, matchIds)
       .then((results) => {
         const scores: Record<string, number> = {};
@@ -150,10 +161,23 @@ export function HkjcMatchesSection() {
       })
       .catch(() => {
         // prewarm is best-effort
+      })
+      .finally(() => {
+        setScoresLoading(false);
       });
-  }, [canPrewarm, token, matches]);
+  }, [canPrewarm, token, matches, isTopPicks]);
 
-  if (loading) {
+  const displayMatches = useMemo(() => {
+    if (!isTopPicks) return matches;
+
+    return [...matches].sort((a, b) => {
+      const scoreA = analysisScores[a.id] ?? 0;
+      const scoreB = analysisScores[b.id] ?? 0;
+      return scoreB - scoreA;
+    });
+  }, [matches, isTopPicks, analysisScores]);
+
+  if (loading || (isTopPicks && authLoading)) {
     return (
       <div className="flex flex-col gap-3">
         {Array.from({ length: 4 }).map((_, index) => (
@@ -181,18 +205,35 @@ export function HkjcMatchesSection() {
     );
   }
 
+  if (isTopPicks && !canAccessPicks) {
+    return null;
+  }
+
+  const scoredCount = displayMatches.filter(
+    (match) => (analysisScores[match.id] ?? 0) > 0,
+  ).length;
+
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-end justify-between gap-3">
-        <SubNav title="賽事列表" count={matches.length} />
+        <SubNav
+          title={isTopPicks ? "AI 精選預測" : "賽事列表"}
+          count={isTopPicks ? scoredCount || displayMatches.length : matches.length}
+        />
         {data?.updatedAt && (
           <p className="pb-0.5 text-[10px] font-medium text-gray-60">
-            馬會 · {data.total} 場進行中
+            {isTopPicks
+              ? `按 AI 評分排序 · ${scoredCount} 場`
+              : `馬會 · ${data.total} 場進行中`}
           </p>
         )}
       </div>
 
-      {matches.length === 0 ? (
+      {isTopPicks && scoresLoading && (
+        <p className="text-xs text-gray-40">正在載入 AI 評分…</p>
+      )}
+
+      {displayMatches.length === 0 ? (
         <div className="rounded-[24px] bg-gray-90 p-6 text-center">
           <p className="text-sm text-gray-40">此日期暫無馬會賽事。</p>
           <button
@@ -205,7 +246,7 @@ export function HkjcMatchesSection() {
         </div>
       ) : (
         <div key={listKey} className="flex flex-col gap-2.5">
-          {matches.map((match, index) => (
+          {displayMatches.map((match, index) => (
             <AnimateIn
               key={match.id}
               variant="slide-right"

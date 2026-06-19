@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Clock, Flame } from "lucide-react";
 import { LedBorder } from "@/components/motion/LedBorder";
+import { useAuth } from "@/context/AuthContext";
 
 type FeaturedMatchCardProps = {
   title: string;
@@ -18,58 +21,69 @@ export function FeaturedMatchCard({
   duration,
   stat,
   imageSrc,
-  href = "#",
+  href = "/analysis?picks=top",
 }: FeaturedMatchCardProps) {
+  const router = useRouter();
+  const { isAuthenticated, isMember, isAdmin, isLoading } = useAuth();
+  const canAccessPicks = isAuthenticated && (isMember || isAdmin);
+
+  function handleClick() {
+    if (isLoading) return;
+    router.push(canAccessPicks ? href : "/analysis?picks=top");
+  }
+
   return (
     <LedBorder className="h-[225px] w-[261px] shrink-0" borderWidth={3}>
-      <div className="relative h-full bg-gray-90 p-4">
-      <div className="pointer-events-none absolute inset-0">
-        <Image
-          src={imageSrc}
-          alt=""
-          fill
-          className="object-cover"
-          sizes="261px"
-        />
-      </div>
-      <div className="pointer-events-none absolute bottom-0 left-0 h-[144px] w-full bg-gradient-to-b from-transparent to-gray-90" />
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={isLoading}
+        aria-label={`查看 ${title}`}
+        className="relative h-full w-full bg-gray-90 p-4 text-left disabled:opacity-70"
+      >
+        <div className="pointer-events-none absolute inset-0">
+          <Image
+            src={imageSrc}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="261px"
+          />
+        </div>
+        <div className="pointer-events-none absolute bottom-0 left-0 h-[144px] w-full bg-gradient-to-b from-transparent to-gray-90" />
 
-      <div className="relative z-10 flex h-full flex-col justify-between">
-        <span className="inline-flex h-6 w-fit items-center justify-center rounded-lg bg-white/30 px-2 py-1 text-xs font-semibold tracking-[-0.018px] text-white">
-          {tag}
-        </span>
+        <div className="relative z-10 flex h-full flex-col justify-between">
+          <span className="inline-flex h-6 w-fit items-center justify-center rounded-lg bg-white/30 px-2 py-1 text-xs font-semibold tracking-[-0.018px] text-white">
+            {tag}
+          </span>
 
-        <div className="flex w-[229px] items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-bold tracking-[-0.072px] text-white whitespace-nowrap">
-              {title}
-            </h3>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <Clock className="size-4 text-white" strokeWidth={2} />
-                <span className="text-xs font-medium tracking-[-0.018px] text-white">
-                  {duration}
-                </span>
-              </div>
-              <span className="size-1 rounded-full bg-gray-70" />
-              <div className="flex items-center gap-1">
-                <Flame className="size-4 text-white" strokeWidth={2} />
-                <span className="text-xs font-medium tracking-[-0.018px] text-white">
-                  {stat}
-                </span>
+          <div className="flex w-[229px] items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <h3 className="text-lg font-bold tracking-[-0.072px] text-white whitespace-nowrap">
+                {title}
+              </h3>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Clock className="size-4 text-white" strokeWidth={2} />
+                  <span className="text-xs font-medium tracking-[-0.018px] text-white">
+                    {duration}
+                  </span>
+                </div>
+                <span className="size-1 rounded-full bg-gray-70" />
+                <div className="flex items-center gap-1">
+                  <Flame className="size-4 text-white" strokeWidth={2} />
+                  <span className="text-xs font-medium tracking-[-0.018px] text-white">
+                    {stat}
+                  </span>
+                </div>
               </div>
             </div>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-orange-50 shadow-[0_0_0_4px_rgba(249,115,22,0.25)]">
+              <ArrowRight className="size-6 text-white" strokeWidth={2.5} />
+            </span>
           </div>
-          <Link
-            href={href}
-            aria-label={`查看 ${title}`}
-            className="flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-orange-50 shadow-[0_0_0_4px_rgba(249,115,22,0.25)]"
-          >
-            <ArrowRight className="size-6 text-white" strokeWidth={2.5} />
-          </Link>
         </div>
-      </div>
-      </div>
+      </button>
     </LedBorder>
   );
 }
