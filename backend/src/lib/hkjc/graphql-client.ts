@@ -5,21 +5,45 @@ import { FootballAPI } from "hkjc-api";
 import { GraphQLClient } from "graphql-request";
 
 const DEFAULT_ENDPOINT = "https://info.cld.hkjc.com/graphql/base/";
+const ENDPOINT = process.env.HKJC_GRAPHQL_URL ?? DEFAULT_ENDPOINT;
+const HKJC_HOST = new URL(ENDPOINT).hostname;
+const PINNED_IP = process.env.HKJC_PINNED_IP ?? "23.53.15.137";
 const CONNECT_TIMEOUT_MS = Number(process.env.HKJC_CONNECT_TIMEOUT_MS ?? 30_000);
 const REQUEST_TIMEOUT_MS = Number(process.env.HKJC_TIMEOUT_MS ?? 45_000);
 const MAX_RETRIES = Number(process.env.HKJC_FETCH_RETRIES ?? 3);
 
+const BLOCKED_PREFIXES = ["139.255.", "182.23."] as const;
+
+function isBlockedHkjcIp(ip: string): boolean {
+  return BLOCKED_PREFIXES.some((prefix) => ip.startsWith(prefix));
+}
+
 /** curl reaches 23.53.*; Node often tries 139.255.* / 182.23.* first and times out. */
 function rankHkjcAddress(ip: string): number {
+  if (ip === PINNED_IP) return -1;
   if (ip.startsWith("23.53.")) return 0;
   if (ip.startsWith("23.")) return 1;
   return 2;
 }
 
 function sortHkjcAddresses(addresses: string[]): string[] {
-  return [...addresses].sort(
+  return [...new Set(addresses)].sort(
     (a, b) => rankHkjcAddress(a) - rankHkjcAddress(b),
   );
+}
+
+function resolveHkjcAddresses(addresses: string[]): string[] {
+  const usable = sortHkjcAddresses(
+    addresses.filter((ip) => !isBlockedHkjcIp(ip)),
+  );
+  if (usable.length > 0) {
+    return usable;
+  }
+  return [PINNED_IP];
+}
+
+function isHkjcHost(hostname: string): boolean {
+  return hostname === HKJC_HOST || hostname.endsWith(".hkjc.com");
 }
 
 function hkjcLookup(
@@ -31,27 +55,41 @@ function hkjcLookup(
     family?: number,
   ) => void,
 ): void {
-  void resolve4(hostname)
-    .then((addresses) => {
-      const sorted = sortHkjcAddresses(addresses);
-      if (options.all) {
-        callback(
-          null,
-          sorted.map((address) => ({ address, family: 4 })),
-        );
-        return;
-      }
-      callback(null, sorted[0], 4);
-    })
-    .catch((err: NodeJS.ErrnoException) => {
-      fallbackLookup(hostname, { family: 4, all: options.all }, callback);
-    });
+  if (isHkjcHost(hostname)) {
+    void resolve4(hostname)
+      .then((addresses) => {
+        const resolved = resolveHkjcAddresses(addresses);
+        if (options.all) {
+          callback(
+            null,
+            resolved.map((address) => ({ address, family: 4 })),
+          );
+          return;
+        }
+        callback(null, resolved[0], 4);
+      })
+      .catch(() => {
+        const pinned = [PINNED_IP];
+        if (options.all) {
+          callback(
+            null,
+            pinned.map((address) => ({ address, family: 4 })),
+          );
+          return;
+        }
+        callback(null, pinned[0], 4);
+      });
+    return;
+  }
+
+  fallbackLookup(hostname, { family: 4, all: options.all }, callback);
 }
 
 const dispatcher = new Agent({
   connect: {
     timeout: CONNECT_TIMEOUT_MS,
     lookup: hkjcLookup,
+    servername: HKJC_HOST,
   },
   headersTimeout: REQUEST_TIMEOUT_MS,
   bodyTimeout: REQUEST_TIMEOUT_MS,
@@ -90,8 +128,7 @@ async function fetchWithRetry(
 }
 
 export function createFootballAPI(): FootballAPI {
-  const endpoint = process.env.HKJC_GRAPHQL_URL ?? DEFAULT_ENDPOINT;
-  const graphql = new GraphQLClient(endpoint, {
+  const graphql = new GraphQLClient(ENDPOINT, {
     fetch: fetchWithRetry as typeof fetch,
   });
   const client = {
