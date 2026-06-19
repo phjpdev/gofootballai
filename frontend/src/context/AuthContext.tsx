@@ -15,6 +15,7 @@ import {
   type AuthUser,
   type UserRole,
 } from "@/lib/auth-api";
+import { isActiveVip } from "@/lib/vip";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -23,6 +24,8 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isMember: boolean;
+  isVip: boolean;
+  canViewVipAnalysis: boolean;
   login: (username: string, password: string, role?: UserRole) => Promise<void>;
   signup: (
     username: string,
@@ -118,6 +121,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: Boolean(user && token),
         isAdmin: user?.role === "admin",
         isMember: user?.role === "member",
+        isVip: Boolean(
+          user?.role === "admin" ||
+            user?.isVip ||
+            isActiveVip(user?.vipExpiresAt),
+        ),
+        canViewVipAnalysis: Boolean(
+          user?.role === "admin" ||
+            user?.isVip ||
+            isActiveVip(user?.vipExpiresAt),
+        ),
         login,
         signup,
         logout,

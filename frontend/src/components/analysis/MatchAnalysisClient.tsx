@@ -22,7 +22,8 @@ const MAX_PENDING_MS = 90_000;
 
 export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
   const pathname = usePathname();
-  const { token, isAuthenticated, isMember, isAdmin, isLoading, user } = useAuth();
+  const { token, isAuthenticated, isMember, isAdmin, isLoading, user, canViewVipAnalysis } =
+    useAuth();
   const [analysisState, setAnalysisState] = useState<AnalysisResponse | null>(
     null,
   );
@@ -127,6 +128,7 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
       loading={isLoading || (canAccess && loading && !analysisState)}
       pending={analysisState?.status === "pending" && !timedOut}
       locked={!isLoading && !canAccess}
+      canViewVipContent={canViewVipAnalysis}
       lockedHint={
         isAuthenticated && user && !canAccess
           ? "此帳戶無法查看會員分析，請使用會員帳戶登入。"

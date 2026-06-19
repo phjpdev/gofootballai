@@ -5,8 +5,10 @@ import {
   deleteUser,
   findUserById,
   listUsers,
+  mapPublicUser,
   updateUser,
 } from "../lib/users.js";
+import { parseVipExpiryDate } from "../lib/vip.js";
 import {
   requireAdmin,
   requireAuth,
@@ -31,25 +33,68 @@ const passwordSchema = z
   .min(6, "密碼至少需要 6 個字元")
   .max(128, "密碼最多 128 個字元");
 
-const createUserSchema = z.object({
-  username: usernameSchema,
-  password: passwordSchema,
-  role: z.enum(["member", "admin"]),
-});
+const vipDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "VIP 到期日格式不正確");
+
+function resolveVipExpiresAt(
+  role: UserRole,
+  vipExpiresAt?: string | null,
+): string | null {
+  if (role === "admin") return null;
+  if (vipExpiresAt === null || vipExpiresAt === undefined || vipExpiresAt === "") {
+    return null;
+  }
+  return parseVipExpiryDate(vipExpiresAt);
+}
+
+const createUserSchema = z
+  .object({
+    username: usernameSchema,
+    password: passwordSchema,
+    role: z.enum(["member", "admin"]),
+    vipExpiresAt: vipDateSchema.nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.role === "member" && data.vipExpiresAt) {
+      const expiry = parseVipExpiryDate(data.vipExpiresAt);
+      if (new Date(expiry).getTime() <= Date.now()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "VIP 到期日必須為未來日期",
+          path: ["vipExpiresAt"],
+        });
+      }
+    }
+  });
 
 const updateUserSchema = z
   .object({
     username: usernameSchema.optional(),
     password: passwordSchema.optional(),
     role: z.enum(["member", "admin"]).optional(),
+    vipExpiresAt: vipDateSchema.nullable().optional(),
   })
   .refine(
     (data) =>
       data.username !== undefined ||
       data.password !== undefined ||
-      data.role !== undefined,
+      data.role !== undefined ||
+      data.vipExpiresAt !== undefined,
     { message: "請至少填寫一項欄位" },
-  );
+  )
+  .superRefine((data, ctx) => {
+    if (data.vipExpiresAt) {
+      const expiry = parseVipExpiryDate(data.vipExpiresAt);
+      if (new Date(expiry).getTime() <= Date.now()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "VIP 到期日必須為未來日期",
+          path: ["vipExpiresAt"],
+        });
+      }
+    }
+  });
 
 router.use(requireAuth, requireAdmin);
 
@@ -67,17 +112,23 @@ router.post("/", async (req, res) => {
     return;
   }
 
-  const { username, password, role } = parsed.data;
+  const { username, password, role, vipExpiresAt } = parsed.data;
 
   try {
-    const user = await createUser(username, password, role as UserRole);
+    const user = await createUser(
+      username,
+      password,
+      role as UserRole,
+      resolveVipExpiresAt(role, vipExpiresAt),
+    );
     res.status(201).json({
-      user: {
+      user: mapPublicUser({
         id: user.id,
         username: user.username,
         role: user.role,
-        createdAt: user.createdAt,
-      },
+        vip_expires_at: user.vipExpiresAt ? new Date(user.vipExpiresAt) : null,
+        created_at: new Date(user.createdAt),
+      }),
     });
   } catch (error) {
     if (error instanceof Error && error.message === "USERNAME_TAKEN") {
@@ -109,8 +160,19 @@ router.patch("/:id", async (req: AuthedRequest, res) => {
     return;
   }
 
+  const nextRole = parsed.data.role ?? existing.role;
+  const vipExpiresAt =
+    parsed.data.vipExpiresAt !== undefined
+      ? resolveVipExpiresAt(nextRole, parsed.data.vipExpiresAt)
+      : nextRole === "admin"
+        ? null
+        : undefined;
+
   try {
-    const user = await updateUser(id, parsed.data);
+    const user = await updateUser(id, {
+      ...parsed.data,
+      vipExpiresAt,
+    });
     if (!user) {
       res.status(404).json({ error: "找不到用戶" });
       return;

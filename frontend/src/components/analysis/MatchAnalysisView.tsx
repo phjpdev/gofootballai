@@ -9,6 +9,7 @@ import { ActivitiesChart } from "@/components/charts/ActivitiesChart";
 import { StepsStatsChart } from "@/components/charts/StepsStatsChart";
 import { AnimateIn } from "@/components/motion/AnimateIn";
 import { AnalysisMemberGate } from "@/components/analysis/AnalysisLockScreen";
+import { VipContentLock } from "@/components/analysis/VipContentLock";
 import type { MatchAnalysisResult } from "@/types/analysis";
 import type { Match } from "@/types";
 import { ChevronLeft, Loader2 } from "lucide-react";
@@ -19,6 +20,7 @@ type MatchAnalysisViewProps = {
   loading?: boolean;
   pending?: boolean;
   locked?: boolean;
+  canViewVipContent?: boolean;
   lockedHint?: string;
   loginRedirectTo?: string;
   error?: string;
@@ -62,6 +64,7 @@ export function MatchAnalysisView({
   loading = false,
   pending = false,
   locked = false,
+  canViewVipContent = true,
   lockedHint = "請登入或註冊會員帳戶，以查看 AI 賽事量化分析。",
   loginRedirectTo = "/analysis",
   error,
@@ -70,6 +73,7 @@ export function MatchAnalysisView({
 }: MatchAnalysisViewProps) {
   const showPending = pending && !analysis;
   const showLoading = loading && !analysis && !locked;
+  const vipLocked = !canViewVipContent;
 
   return (
     <div className="flex flex-col gap-5">
@@ -122,6 +126,7 @@ export function MatchAnalysisView({
               dimensions={analysis.dimensions}
               pick={analysis.pick}
               matchId={match.id}
+              vipLocked={vipLocked}
             />
           </AnimateIn>
 
@@ -132,10 +137,12 @@ export function MatchAnalysisView({
               label={analysis.recommendationLabel}
               description="球隊具備應對高強度對抗的戰術能力"
               middleContent={
-                <AnalysisNarrative
-                  narrative={analysis.narrative}
-                  riskFlags={analysis.riskFlags}
-                />
+                <VipContentLock locked={vipLocked} className="rounded-[24px]">
+                  <AnalysisNarrative
+                    narrative={analysis.narrative}
+                    riskFlags={analysis.riskFlags}
+                  />
+                </VipContentLock>
               }
             />
           </AnimateIn>

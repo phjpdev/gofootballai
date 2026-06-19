@@ -4,6 +4,7 @@ import {
   createUser,
   findUserById,
   findUserByUsername,
+  mapPublicUser,
   verifyPassword,
 } from "../lib/users.js";
 import { signToken } from "../lib/jwt.js";
@@ -39,12 +40,20 @@ const loginSchema = credentialsSchema.extend({
   role: z.enum(["member", "admin"]).optional(),
 });
 
-function publicUser(user: { id: string; username: string; role: string }) {
-  return {
+function publicUser(user: {
+  id: string;
+  username: string;
+  role: string;
+  vipExpiresAt: string | null;
+  createdAt: string;
+}) {
+  return mapPublicUser({
     id: user.id,
     username: user.username,
-    role: user.role,
-  };
+    role: user.role as UserRole,
+    vip_expires_at: user.vipExpiresAt ? new Date(user.vipExpiresAt) : null,
+    created_at: new Date(user.createdAt),
+  });
 }
 
 router.post("/signup", async (req, res) => {
