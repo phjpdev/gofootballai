@@ -57,6 +57,28 @@ export async function fetchAnalysisStatus(
   };
 }
 
+export async function fetchAnalysisScores(
+  token: string,
+  matchIds: string[],
+): Promise<PrewarmResult[]> {
+  const response = await fetch(`${API_URL}/api/analyses/scores`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ matchIds }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  const data = (await response.json()) as { results: PrewarmResult[] };
+  return data.results;
+}
+
 export async function prewarmAnalyses(
   token: string,
   matchIds: string[],

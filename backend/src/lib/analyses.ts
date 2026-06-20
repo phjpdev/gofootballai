@@ -72,6 +72,51 @@ export async function getAnalysisByMatchId(
   return result.rows[0] ?? null;
 }
 
+const MAX_SCORE_LOOKUP = Number(process.env.ANALYSIS_SCORE_LOOKUP_MAX ?? 100);
+
+export async function getAnalysisScoresByMatchIds(
+  matchIds: string[],
+  promptVersion = MATCH_ANALYSIS_PROMPT_VERSION,
+): Promise<
+  Array<{
+    matchId: string;
+    status: "pending" | "completed" | "failed" | "missing";
+    confidenceScore?: number;
+  }>
+> {
+  const uniqueIds = [...new Set(matchIds)].slice(0, MAX_SCORE_LOOKUP);
+  if (uniqueIds.length === 0) return [];
+
+  const result = await query<
+    Pick<MatchAnalysisRow, "hkjc_match_id" | "status" | "analysis">
+  >(
+    `SELECT hkjc_match_id, status, analysis
+     FROM match_analyses
+     WHERE prompt_version = $1
+       AND hkjc_match_id = ANY($2::text[])`,
+    [promptVersion, uniqueIds],
+  );
+
+  const rowById = new Map(
+    result.rows.map((row) => [row.hkjc_match_id, row]),
+  );
+
+  return uniqueIds.map((matchId) => {
+    const row = rowById.get(matchId);
+    if (!row) {
+      return { matchId, status: "missing" as const };
+    }
+
+    return {
+      matchId,
+      status: row.status,
+      confidenceScore: row.analysis
+        ? patchAnalysisConfidence(row.analysis).confidenceScore
+        : undefined,
+    };
+  });
+}
+
 export async function upsertPendingAnalysis(input: {
   matchId: string;
   frontEndId: string;

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getAnalysisByMatchId,
+  getAnalysisScoresByMatchIds,
   isPendingStale,
   needsAnalysis,
   patchAnalysisConfidence,
@@ -101,6 +102,25 @@ router.get(
         : undefined,
       error: row.error_message ?? undefined,
     });
+  },
+);
+
+router.post(
+  "/scores",
+  requireAuth,
+  requireMember,
+  async (req, res) => {
+    const matchIds = Array.isArray(req.body?.matchIds)
+      ? (req.body.matchIds as string[])
+      : [];
+
+    if (matchIds.length === 0) {
+      res.status(400).json({ error: "matchIds is required" });
+      return;
+    }
+
+    const results = await getAnalysisScoresByMatchIds(matchIds);
+    res.json({ results });
   },
 );
 
