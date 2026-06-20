@@ -1,6 +1,5 @@
 import {
   getAnalysisByMatchId,
-  isAnalysisStale,
   markAnalysisCompleted,
   markAnalysisFailed,
   patchAnalysisConfidence,
@@ -50,7 +49,7 @@ async function processMatch(matchId: string, force = false): Promise<void> {
   const promptVersion = MATCH_ANALYSIS_PROMPT_VERSION;
   const existing = await getAnalysisByMatchId(matchId, promptVersion);
 
-  if (!force && existing?.status === "completed" && !isAnalysisStale(existing)) {
+  if (!force && existing?.status === "completed") {
     return;
   }
 
@@ -79,6 +78,7 @@ async function processMatch(matchId: string, force = false): Promise<void> {
     frontEndId: match.frontEndId,
     snapshot,
     promptVersion,
+    resetCompleted: force,
   });
 
   try {
@@ -169,7 +169,7 @@ export async function ensureAnalysis(
   const promptVersion = MATCH_ANALYSIS_PROMPT_VERSION;
   const existing = await getAnalysisByMatchId(matchId, promptVersion);
 
-  if (!options.force && existing?.status === "completed" && !isAnalysisStale(existing)) {
+  if (!options.force && existing?.status === "completed") {
     return;
   }
 
@@ -205,7 +205,7 @@ export async function prewarmAnalyses(
   for (const matchId of uniqueIds) {
     const existing = await getAnalysisByMatchId(matchId, promptVersion);
 
-    if (!force && existing?.status === "completed" && !isAnalysisStale(existing)) {
+    if (!force && existing?.status === "completed") {
       results.push({
         matchId,
         status: existing.status,
