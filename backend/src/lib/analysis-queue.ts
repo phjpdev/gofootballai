@@ -1,5 +1,6 @@
 import {
   getAnalysisByMatchId,
+  getAnalysisScoresByMatchIds,
   markAnalysisCompleted,
   markAnalysisFailed,
   patchAnalysisConfidence,
@@ -194,32 +195,44 @@ export async function prewarmAnalyses(
     confidenceScore?: number;
   }>
 > {
-  const uniqueIds = [...new Set(matchIds)].slice(0, PREWARM_MAX);
+  const uniqueIds = [...new Set(matchIds)].slice(0, 100);
   const promptVersion = MATCH_ANALYSIS_PROMPT_VERSION;
+  const existingScores = await getAnalysisScoresByMatchIds(
+    uniqueIds,
+    promptVersion,
+  );
+  const scoreById = new Map(
+    existingScores.map((entry) => [entry.matchId, entry]),
+  );
+
   const results: Array<{
     matchId: string;
     status: "pending" | "completed" | "failed" | "missing";
     confidenceScore?: number;
   }> = [];
 
-  for (const matchId of uniqueIds) {
-    const existing = await getAnalysisByMatchId(matchId, promptVersion);
+  let enqueued = 0;
 
-    if (!force && existing?.status === "completed") {
-      results.push({
-        matchId,
-        status: existing.status,
-        confidenceScore: existing.analysis
-          ? patchAnalysisConfidence(existing.analysis).confidenceScore
-          : undefined,
-      });
+  for (const matchId of uniqueIds) {
+    const current = scoreById.get(matchId) ?? {
+      matchId,
+      status: "missing" as const,
+    };
+
+    if (!force && current.status === "completed") {
+      results.push(current);
       continue;
     }
 
-    enqueueAnalysis(matchId, force);
+    if (enqueued < PREWARM_MAX) {
+      enqueueAnalysis(matchId, force);
+      enqueued += 1;
+    }
+
     results.push({
       matchId,
-      status: "pending",
+      status: current.status === "missing" ? "pending" : current.status,
+      confidenceScore: current.confidenceScore,
     });
   }
 

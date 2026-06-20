@@ -13,7 +13,7 @@ import { SubNav } from "@/components/layout/SubNav";
 import { AnimateIn } from "@/components/motion/AnimateIn";
 import { HkjcMatchCard } from "@/components/cards/HkjcMatchCard";
 import { filterMatchesByDate } from "@/lib/hkjc/transform";
-import { prewarmAnalyses } from "@/lib/analyses-api";
+import { fetchAnalysisScores, prewarmAnalyses } from "@/lib/analyses-api";
 import { fetchHkjcMatchesFromApi } from "@/lib/hkjc/matches-api";
 import { useAuth } from "@/context/AuthContext";
 import type { HkjcDateItem, HkjcMatch, HkjcMatchesResponse } from "@/types/hkjc";
@@ -145,11 +145,11 @@ export function HkjcMatchesSection({
   useEffect(() => {
     if (!canPrewarm || !token || matches.length === 0) return;
 
-    const limit = isTopPicks ? 24 : 6;
+    const limit = isTopPicks ? data?.matches.length ?? 24 : 6;
     const matchIds = matches.slice(0, limit).map((match) => match.id);
     setScoresLoading(isTopPicks);
 
-    void prewarmAnalyses(token, matchIds)
+    void fetchAnalysisScores(token, matchIds)
       .then((results) => {
         const scores: Record<string, number> = {};
         for (const result of results) {
@@ -160,12 +160,26 @@ export function HkjcMatchesSection({
         setAnalysisScores((prev) => ({ ...prev, ...scores }));
       })
       .catch(() => {
-        // prewarm is best-effort
+        // score lookup is best-effort
       })
       .finally(() => {
         setScoresLoading(false);
       });
-  }, [canPrewarm, token, matches, isTopPicks]);
+
+    void prewarmAnalyses(token, matchIds).then((results) => {
+      const scores: Record<string, number> = {};
+      for (const result of results) {
+        if (result.confidenceScore !== undefined && result.confidenceScore > 0) {
+          scores[result.matchId] = result.confidenceScore;
+        }
+      }
+      if (Object.keys(scores).length > 0) {
+        setAnalysisScores((prev) => ({ ...prev, ...scores }));
+      }
+    }).catch(() => {
+      // prewarm is best-effort
+    });
+  }, [canPrewarm, token, matches, isTopPicks, data?.matches.length]);
 
   const displayMatches = useMemo(() => {
     if (!isTopPicks) return matches;
