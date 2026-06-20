@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Work_Sans } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
+import { PreventMobileZoom } from "@/components/layout/PreventMobileZoom";
 import { AppProviders } from "@/components/providers/AppProviders";
 
 const workSans = Work_Sans({
@@ -13,10 +14,11 @@ const workSans = Work_Sans({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  minimumScale: 1,
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  interactiveWidget: "resizes-visual",
+  interactiveWidget: "overlays-content",
 };
 
 export const metadata: Metadata = {
@@ -34,6 +36,7 @@ export default function RootLayout({
     <html lang="zh-HK" className={`${workSans.variable} antialiased`}>
       <body className="min-h-svh bg-gray-100 text-white lg:min-h-dvh">
         <AppProviders>
+          <PreventMobileZoom />
           <AppShell>{children}</AppShell>
         </AppProviders>
       </body>
