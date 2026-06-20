@@ -25,9 +25,14 @@ export type MatchAnalysisRow = {
 
 function computeExpiresAt(kickOffTime: string): Date {
   const kickOff = new Date(kickOffTime);
-  const sixHoursLater = new Date(Date.now() + 6 * 60 * 60 * 1000);
-  if (Number.isNaN(kickOff.getTime())) return sixHoursLater;
-  return kickOff < sixHoursLater ? kickOff : sixHoursLater;
+  const fourHoursAfterKickOff = new Date(
+    (Number.isNaN(kickOff.getTime()) ? Date.now() : kickOff.getTime()) +
+      4 * 60 * 60 * 1000,
+  );
+  const twentyFourHoursFromNow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  return fourHoursAfterKickOff > twentyFourHoursFromNow
+    ? fourHoursAfterKickOff
+    : twentyFourHoursFromNow;
 }
 
 const PENDING_STALE_MS = Number(process.env.ANALYSIS_PENDING_STALE_MS ?? 45_000);
@@ -38,6 +43,7 @@ export function isPendingStale(row: MatchAnalysisRow): boolean {
 }
 
 export function isAnalysisStale(row: MatchAnalysisRow): boolean {
+  if (row.status === "completed") return false;
   if (row.status === "pending") return isPendingStale(row);
   if (row.status === "failed") return true;
   if (!row.expires_at) return true;
@@ -46,7 +52,7 @@ export function isAnalysisStale(row: MatchAnalysisRow): boolean {
 
 export function needsAnalysis(row: MatchAnalysisRow | null): boolean {
   if (!row) return true;
-  if (row.status === "completed" && !isAnalysisStale(row)) return false;
+  if (row.status === "completed") return false;
   if (row.status === "pending" && !isPendingStale(row)) return false;
   return true;
 }
@@ -71,10 +77,12 @@ export async function upsertPendingAnalysis(input: {
   frontEndId: string;
   snapshot: HkjcInputSnapshot;
   promptVersion?: string;
+  resetCompleted?: boolean;
 }): Promise<MatchAnalysisRow> {
   const promptVersion = input.promptVersion ?? MATCH_ANALYSIS_PROMPT_VERSION;
   const expiresAt = computeExpiresAt(input.snapshot.kickOffTime);
   const id = randomUUID();
+  const resetCompleted = input.resetCompleted ?? false;
 
   const result = await query<MatchAnalysisRow>(
     `INSERT INTO match_analyses (
@@ -85,8 +93,7 @@ export async function upsertPendingAnalysis(input: {
      ON CONFLICT (hkjc_match_id, prompt_version)
      DO UPDATE SET
        status = CASE
-         WHEN match_analyses.status = 'completed'
-           AND match_analyses.expires_at > NOW()
+         WHEN match_analyses.status = 'completed' AND NOT $7
          THEN match_analyses.status
          ELSE 'pending'
        END,
@@ -103,6 +110,7 @@ export async function upsertPendingAnalysis(input: {
       promptVersion,
       JSON.stringify(input.snapshot),
       expiresAt.toISOString(),
+      resetCompleted,
     ],
   );
 
