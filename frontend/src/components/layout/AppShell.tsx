@@ -15,15 +15,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const showMobileHeader = isMemberRoute(pathname);
 
   return (
-    <div className="flex h-svh flex-col overflow-hidden lg:h-auto lg:min-h-dvh lg:overflow-visible">
+    <div className="flex h-svh max-w-full flex-col overflow-hidden lg:h-auto lg:min-h-dvh lg:overflow-visible">
       <SiteHeader />
       <main
         className={cn(
-          "min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--mobile-nav-total)] lg:flex-1 lg:overflow-visible lg:pt-0 lg:pb-0",
+          "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain pb-[var(--mobile-nav-total)] [touch-action:pan-y] lg:flex-1 lg:overflow-visible lg:pt-0 lg:pb-0 lg:[touch-action:auto]",
           showMobileHeader ? "pt-[var(--header-total)]" : "pt-0",
         )}
       >
-        <div className="mx-auto w-full max-w-[375px] px-2 pt-6 pb-3 lg:max-w-6xl lg:px-8 lg:py-10">
+        <div className="mx-auto w-full max-w-[375px] overflow-x-hidden px-2 pt-6 pb-3 lg:max-w-6xl lg:px-8 lg:py-10">
           {children}
         </div>
       </main>

@@ -34,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-HK" className={`${workSans.variable} antialiased`}>
-      <body className="min-h-svh bg-gray-100 text-white lg:min-h-dvh">
+      <body className="max-w-full overflow-x-hidden min-h-svh bg-gray-100 text-white lg:min-h-dvh">
         <AppProviders>
           <PreventMobileZoom />
           <AppShell>{children}</AppShell>
