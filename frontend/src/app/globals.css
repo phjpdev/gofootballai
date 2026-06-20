@@ -55,14 +55,20 @@ body {
 
 @media (max-width: 1023px) {
   html {
-    touch-action: manipulation;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    touch-action: pan-x pan-y;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
 
   body {
-    touch-action: manipulation;
-    overscroll-behavior-y: none;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    touch-action: pan-x pan-y;
+    overscroll-behavior: none;
   }
 
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
@@ -70,6 +76,7 @@ body {
   textarea {
     font-size: 1rem;
     line-height: 1.5;
+    touch-action: manipulation;
   }
 }
 

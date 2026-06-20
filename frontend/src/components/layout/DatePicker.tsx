@@ -92,7 +92,7 @@ export function DatePicker({
   }
 
   return (
-    <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
+    <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 [touch-action:pan-x] lg:[touch-action:auto]">
       {showAll &&
         wrap(
           0,
