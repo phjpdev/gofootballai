@@ -15,9 +15,13 @@ type PredictionPickCardProps = {
 
 function splitPickSelection(selection: string): { label: string; value: string } {
   const normalized = selection.trim();
-  const match = normalized.match(/^([\u4e00-\u9fff]+)\s*(.*)$/);
-  if (match?.[2]) {
-    return { label: match[1], value: match[2].trim() };
+  const handicapMatch = normalized.match(/^([\u4e00-\u9fff]+)\s*([-+]?[\d./]+.*)$/);
+  if (handicapMatch?.[2]) {
+    return { label: handicapMatch[1], value: handicapMatch[2].trim() };
+  }
+  const ouMatch = normalized.match(/^([大小])\s*(.+)$/);
+  if (ouMatch?.[2]) {
+    return { label: ouMatch[1], value: ouMatch[2].trim() };
   }
   return { label: normalized, value: "" };
 }
@@ -69,12 +73,12 @@ export function PredictionPickCard({ pick, matchId }: PredictionPickCardProps) {
             預測:
           </p>
           <div className="flex flex-1 items-center justify-center px-2">
-            <div className="flex items-center gap-1.5 rounded-xl bg-black/50 px-4 py-2">
-              <span className="text-[40px] font-bold leading-none tracking-tight lg:text-5xl">
+            <div className="flex flex-col items-center gap-1 rounded-xl bg-black/50 px-3 py-2.5 text-center sm:px-4 sm:py-3">
+              <span className="max-w-full text-[28px] font-bold leading-tight tracking-tight sm:text-[32px] lg:text-5xl">
                 {label}
               </span>
               {value && (
-                <span className="text-[40px] font-bold leading-none tracking-tight lg:text-5xl">
+                <span className="max-w-full text-[22px] font-bold leading-none tracking-tight text-orange-30 sm:text-2xl lg:text-4xl">
                   {value}
                 </span>
               )}
