@@ -48,7 +48,7 @@ export function MobileBottomNav() {
     >
       <div
         className={cn(
-          "mx-auto flex h-[var(--mobile-nav-bar)] w-full max-w-[375px] items-end justify-around px-1",
+          "flex h-[var(--mobile-nav-bar)] w-full items-end justify-around px-3",
           compact ? "pt-1.5" : "pt-2",
         )}
       >

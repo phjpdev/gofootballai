@@ -66,7 +66,7 @@ function AnalysisPageContent() {
               count={FEATURED_COUNT}
               seeAllHref="/analysis?picks=top"
             />
-            <div className="perspective-[1200px] scrollbar-hide -mx-2 flex gap-2 overflow-x-auto px-2 [touch-action:pan-x] lg:mx-0 lg:px-0 lg:[touch-action:auto]">
+            <div className="perspective-[1200px] scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 [touch-action:pan-x] lg:mx-0 lg:px-0 lg:[touch-action:auto]">
               {FEATURED_ITEMS.map((item, index) => (
                 <AnimateIn
                   key={item.id}
