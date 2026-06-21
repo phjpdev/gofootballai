@@ -66,6 +66,7 @@ body {
   body {
     width: 100%;
     max-width: 100%;
+    min-width: 100%;
     overflow-x: hidden;
     touch-action: pan-x pan-y;
     overscroll-behavior: none;
