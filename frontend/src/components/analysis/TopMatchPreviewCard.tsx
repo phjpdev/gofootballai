@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { MatchHeaderCard } from "@/components/analysis/MatchHeaderCard";
-import { SandowScoreCard } from "@/components/analysis/SandowScoreCard";
 import { ScoreBreakdown } from "@/components/analysis/ScoreBreakdown";
 import { AnimateIn } from "@/components/motion/AnimateIn";
 import { useAuth } from "@/context/AuthContext";
@@ -99,8 +98,8 @@ export function TopMatchPreviewCard({
       >
         {loading && (
           <div className="flex flex-col gap-4">
+            <div className="h-[140px] animate-pulse rounded-[20px] bg-gray-80" />
             <div className="h-[180px] animate-pulse rounded-[20px] bg-gray-80" />
-            <div className="h-24 animate-pulse rounded-[20px] bg-gray-80" />
           </div>
         )}
 
@@ -110,16 +109,13 @@ export function TopMatchPreviewCard({
 
         {!loading && match && analysis && (
           <div className="flex flex-col gap-4">
-            <MatchHeaderCard match={match} />
-            <div className="flex flex-col gap-4">
-              <SandowScoreCard score={analysis.confidenceScore} animate={false} />
-              <ScoreBreakdown
-                dimensions={analysis.dimensions}
-                pick={analysis.pick}
-                matchId={match.id}
-                vipLocked={!canViewVipAnalysis}
-              />
-            </div>
+            <MatchHeaderCard match={match} showMeta={false} />
+            <ScoreBreakdown
+              dimensions={analysis.dimensions}
+              pick={analysis.pick}
+              matchId={match.id}
+              vipLocked={!canViewVipAnalysis}
+            />
           </div>
         )}
 

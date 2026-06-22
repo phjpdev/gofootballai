@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 type MatchHeaderCardProps = {
   match: Match;
+  showMeta?: boolean;
 };
 
 function parseTeamsFromTitle(title: string): { home: string; away: string } {
@@ -82,7 +83,7 @@ function TeamColumn({
   );
 }
 
-export function MatchHeaderCard({ match }: MatchHeaderCardProps) {
+export function MatchHeaderCard({ match, showMeta = true }: MatchHeaderCardProps) {
   const [active, setActive] = useState(false);
 
   useEffect(() => {
@@ -175,27 +176,29 @@ export function MatchHeaderCard({ match }: MatchHeaderCardProps) {
           />
         </div>
 
-        <div
-          className={cn(
-            "match-header-meta flex flex-wrap items-center justify-center gap-2 border-t border-white/8 pt-3.5",
-            active && "match-header-meta--in",
-          )}
-        >
-          <span className="match-header-chip inline-flex items-center gap-1.5 rounded-full bg-white/8 px-3 py-1.5 text-xs font-medium text-white">
-            <Clock className="size-3.5 text-orange-50" strokeWidth={2.25} />
-            {match.time}
-          </span>
-          <span className="match-header-chip inline-flex items-center gap-1.5 rounded-full bg-white/8 px-3 py-1.5 text-xs font-medium text-white">
-            <Trophy className="size-3.5 text-blue-40" strokeWidth={2.25} />
-            {match.venue}
-          </span>
-          {match.date && (
-            <span className="match-header-chip inline-flex items-center gap-1.5 rounded-full bg-white/8 px-3 py-1.5 text-xs font-medium text-gray-30">
-              <Calendar className="size-3.5 text-gray-40" strokeWidth={2.25} />
-              {formatMatchDate(match.date)}
+        {showMeta && (
+          <div
+            className={cn(
+              "match-header-meta flex flex-wrap items-center justify-center gap-2 border-t border-white/8 pt-3.5",
+              active && "match-header-meta--in",
+            )}
+          >
+            <span className="match-header-chip inline-flex items-center gap-1.5 rounded-full bg-white/8 px-3 py-1.5 text-xs font-medium text-white">
+              <Clock className="size-3.5 text-orange-50" strokeWidth={2.25} />
+              {match.time}
             </span>
-          )}
-        </div>
+            <span className="match-header-chip inline-flex items-center gap-1.5 rounded-full bg-white/8 px-3 py-1.5 text-xs font-medium text-white">
+              <Trophy className="size-3.5 text-blue-40" strokeWidth={2.25} />
+              {match.venue}
+            </span>
+            {match.date && (
+              <span className="match-header-chip inline-flex items-center gap-1.5 rounded-full bg-white/8 px-3 py-1.5 text-xs font-medium text-gray-30">
+                <Calendar className="size-3.5 text-gray-40" strokeWidth={2.25} />
+                {formatMatchDate(match.date)}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
