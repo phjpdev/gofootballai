@@ -65,21 +65,24 @@ export const QA_ITEMS: QAItem[] = [
 
 export const POLICY_SECTIONS = [
   {
+    id: "terms-of-service",
     title: "服務條款",
     content:
       "使用 GO Football AI 即表示你同意僅以合法方式使用本平台。賽事數據及 AI 分析僅供參考，不應作為投注或財務決策的唯一依據。",
   },
   {
+    id: "privacy",
     title: "私隱政策",
     content:
       "我們僅收集改善 AI 模型所需的最少使用數據，絕不會向第三方出售個人資料。管理員上傳的媒體會安全儲存，並公開顯示於首頁動態。",
   },
   {
+    id: "content-policy",
     title: "內容政策",
     content:
       "管理員只可上傳與 2026 世界盃及足球相關的內容。冒犯性、侵權或誤導性資料將被移除。如有不當內容，可透過會員頁面反映。",
   },
-];
+] as const;
 
 export const BETTING_DISCLAIMER =
   "所有分析僅供參考，請在香港賽馬會（HKJC）進行合法投注。\n博彩要有節制，量力而為。\n未滿十八歲人士不得投注或進入投注場所。\n向非法或海外莊家下注屬違法行為，一經定罪可被判監禁。\n切勿沉迷賭博。如需尋求輔導協助，請致電平和基金熱線：1834 633。";

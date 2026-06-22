@@ -10,9 +10,9 @@ const NAV_ITEMS = [
 ] as const;
 
 const LEGAL_ITEMS = [
-  { href: "/member#terms", label: "服務條款" },
-  { href: "/member#terms", label: "私隱政策" },
-  { href: "/member#terms", label: "內容政策" },
+  { href: "/member#terms-of-service", label: "服務條款" },
+  { href: "/member#privacy", label: "私隱政策" },
+  { href: "/member#content-policy", label: "內容政策" },
 ] as const;
 
 export function SiteFooter() {
