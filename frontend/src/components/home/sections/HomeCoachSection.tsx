@@ -50,8 +50,8 @@ export function HomeCoachSection() {
   return (
     <section className="flex w-full flex-col items-center gap-12">
       <HomeSectionHeader
-        title="專業分析團隊"
-        description="連接資深足球分析師，獲取最貼近你需求的戰術洞察。"
+        title="簡單易用 · 5星級投注體驗"
+        description="簡潔直觀介面、智慧推薦、讓你隨時隨地都能享受專業、高效且愉快的分析體驗。"
       />
 
       <div className="relative h-[340px] w-full max-w-[343px] overflow-hidden drop-shadow-[0px_4px_4px_rgba(15,23,42,0.03),0px_8px_8px_rgba(15,23,42,0.02)]">

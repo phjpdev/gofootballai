@@ -21,8 +21,8 @@ export function HomeAiCoachSection() {
   return (
     <section className="flex w-full flex-col items-center gap-12">
       <HomeSectionHeader
-        title="AI 戰術分析助手"
-        description="你的 AI 教練隨時提供戰術建議、賽事預測及數據解讀支援。"
+        title="會員營利紀錄"
+        description="實會員投注紀錄與盈利統計透明呈現，見證穩定回報，讓你更有信心跟隨專業分析前進。"
       />
 
       <div className="flex h-[340px] w-full max-w-[320px] items-center">
