@@ -6,7 +6,7 @@ export const NAV = {
   records: "紀錄",
   member: "會員",
   manage: "管理",
-  telegram: "Telegram",
+  telegram: "聯絡我們",
 } as const;
 
 export const ROLE_LABEL: Record<UserRole, string> = {
