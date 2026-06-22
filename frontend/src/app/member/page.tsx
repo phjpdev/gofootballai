@@ -23,14 +23,15 @@ export default async function MemberPage({ searchParams }: MemberPageProps) {
 
       <MemberFaqSection items={QA_ITEMS} />
 
-      <section id="terms" className="flex flex-col gap-3 scroll-mt-24">
-        <h2 className="text-base font-bold tracking-[-0.048px] text-white">
+      <section className="flex flex-col gap-3 scroll-mt-24">
+        <h2 id="terms" className="text-base font-bold tracking-[-0.048px] text-white">
           政策條款
         </h2>
         {POLICY_SECTIONS.map((section) => (
           <div
-            key={section.title}
-            className="rounded-[24px] bg-gray-90 p-4"
+            key={section.id}
+            id={section.id}
+            className="scroll-mt-24 rounded-[24px] bg-gray-90 p-4"
           >
             <h3 className="text-sm font-bold text-white">{section.title}</h3>
             <p className="mt-2 text-sm leading-[1.6] tracking-[-0.028px] text-gray-20">
