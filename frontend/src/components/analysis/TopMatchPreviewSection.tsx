@@ -24,6 +24,8 @@ export function TopMatchPreviewSection() {
       return;
     }
 
+    const authToken = token;
+
     let cancelled = false;
 
     async function load() {
@@ -32,7 +34,7 @@ export function TopMatchPreviewSection() {
         const data = await fetchHkjcMatchesFromApi();
         const fallbackId = data.matches[0]?.id ?? "";
         const ids = await findTopConfidenceMatchIds(
-          token,
+          authToken,
           fallbackId,
           PREVIEW_COUNT,
         );
