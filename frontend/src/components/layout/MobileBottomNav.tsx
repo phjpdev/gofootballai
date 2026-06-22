@@ -6,11 +6,9 @@ import { usePathname } from "next/navigation";
 import {
   FolderOpen,
   Home,
-  LayoutDashboard,
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
 import { NAV } from "@/lib/i18n/zh-hk";
 import { cn } from "@/lib/utils";
 
@@ -25,20 +23,13 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/member", label: NAV.member, icon: Users },
 ];
 
-const ADMIN_NAV: NavItem = {
-  href: "/admin",
-  label: NAV.manage,
-  icon: LayoutDashboard,
-};
-
 function isNavActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const { isAdmin } = useAuth();
-  const navItems = isAdmin ? [...NAV_ITEMS, ADMIN_NAV] : [...NAV_ITEMS];
+  const navItems = NAV_ITEMS;
   const compact = navItems.length >= 5;
 
   return (

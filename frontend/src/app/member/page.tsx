@@ -1,5 +1,5 @@
 import { AuthForm } from "@/components/member/AuthForm";
-import { QAAccordion } from "@/components/member/QAAccordion";
+import { MemberFaqSection } from "@/components/member/MemberFaqSection";
 import { QA_ITEMS, POLICY_SECTIONS, BETTING_DISCLAIMER } from "@/lib/data/member";
 
 type MemberPageProps = {
@@ -21,12 +21,7 @@ export default async function MemberPage({ searchParams }: MemberPageProps) {
         redirectTo={redirectTo}
       />
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-base font-bold tracking-[-0.048px] text-white">
-          常見問題
-        </h2>
-        <QAAccordion items={QA_ITEMS} />
-      </section>
+      <MemberFaqSection items={QA_ITEMS} />
 
       <section id="terms" className="flex flex-col gap-3 scroll-mt-24">
         <h2 className="text-base font-bold tracking-[-0.048px] text-white">
