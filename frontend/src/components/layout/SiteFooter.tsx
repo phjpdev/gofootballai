@@ -65,7 +65,7 @@ export function SiteFooter() {
         </div>
 
         <div className="border-t border-gray-90 pt-6 text-xs text-gray-40">
-          © {year} 世界盃 AI。版權所有。
+          © {year} Go Football AI。版權所有。
         </div>
       </div>
     </footer>
