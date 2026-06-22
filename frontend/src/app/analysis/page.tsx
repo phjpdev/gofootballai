@@ -13,17 +13,21 @@ import {
   HkjcMatchesSection,
   HkjcProvider,
 } from "@/components/analysis/HkjcMatchList";
+import { TopMatchPreviewSection } from "@/components/analysis/TopMatchPreviewSection";
 import { useAuth } from "@/context/AuthContext";
 import { FEATURED_COUNT, FEATURED_ITEMS } from "@/lib/data/featured";
 
 function AnalysisPageContent() {
   const searchParams = useSearchParams();
-  const topPicks = searchParams.get("picks") === "top";
+  const picksParam = searchParams.get("picks");
+  const topPicks = picksParam === "top";
+  const topPreview = picksParam === "preview";
+  const showPicksView = topPicks || topPreview;
   const { isAuthenticated, isMember, isAdmin, isLoading: authLoading } =
     useAuth();
   const canAccessPicks = isAuthenticated && (isMember || isAdmin);
 
-  if (topPicks && !authLoading && !canAccessPicks) {
+  if (showPicksView && !authLoading && !canAccessPicks) {
     return (
       <div className="flex flex-col gap-4">
         <Link
@@ -35,7 +39,9 @@ function AnalysisPageContent() {
         </Link>
         <AnalysisMemberGate
           variant="fullscreen"
-          redirectTo="/analysis?picks=top"
+          redirectTo={
+            topPreview ? "/analysis?picks=preview" : "/analysis?picks=top"
+          }
           hint="請登入會員帳戶，以查看 AI 高信心精選賽事及評分。"
         />
       </div>
@@ -45,7 +51,7 @@ function AnalysisPageContent() {
   return (
     <HkjcProvider>
       <div className="flex flex-col gap-8">
-        {topPicks && (
+        {showPicksView && (
           <Link
             href="/analysis"
             className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white"
@@ -55,11 +61,13 @@ function AnalysisPageContent() {
           </Link>
         )}
 
-        <header className="flex flex-col gap-8">
-          <HkjcDatePicker />
-        </header>
+        {!showPicksView && (
+          <header className="flex flex-col gap-8">
+            <HkjcDatePicker />
+          </header>
+        )}
 
-        {!topPicks && (
+        {!showPicksView && (
           <section className="flex flex-col gap-2">
             <SubNav
               title="精選賽事"
@@ -81,7 +89,11 @@ function AnalysisPageContent() {
           </section>
         )}
 
-        <HkjcMatchesSection mode={topPicks ? "top-picks" : "default"} />
+        {topPreview ? (
+          <TopMatchPreviewSection />
+        ) : (
+          <HkjcMatchesSection mode={topPicks ? "top-picks" : "default"} />
+        )}
       </div>
     </HkjcProvider>
   );

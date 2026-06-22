@@ -6,7 +6,7 @@ import { useState } from "react";
 import { ArrowRight, Clock, Flame } from "lucide-react";
 import { LedBorder } from "@/components/motion/LedBorder";
 import { useAuth } from "@/context/AuthContext";
-import { resolveTopMatchDetailPath } from "@/lib/top-match";
+import { resolveTopMatchDetailPath, resolveTopMatchPreviewPath } from "@/lib/top-match";
 
 type FeaturedMatchCardProps = {
   title: string;
@@ -14,6 +14,7 @@ type FeaturedMatchCardProps = {
   duration: string;
   stat: string;
   imageSrc: string;
+  pickMode: "single" | "multi";
 };
 
 export function FeaturedMatchCard({
@@ -22,6 +23,7 @@ export function FeaturedMatchCard({
   duration,
   stat,
   imageSrc,
+  pickMode,
 }: FeaturedMatchCardProps) {
   const router = useRouter();
   const { token, isAuthenticated, isMember, isAdmin, isLoading } = useAuth();
@@ -33,7 +35,10 @@ export function FeaturedMatchCard({
 
     setNavigating(true);
     try {
-      const path = await resolveTopMatchDetailPath(token, canAccess);
+      const path =
+        pickMode === "multi"
+          ? await resolveTopMatchPreviewPath(token, canAccess)
+          : await resolveTopMatchDetailPath(token, canAccess);
       router.push(path);
     } catch {
       router.push("/analysis");

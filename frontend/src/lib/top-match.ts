@@ -12,19 +12,75 @@ function pickHighestConfidenceMatchId(
   results: PrewarmResult[],
   fallbackMatchId: string,
 ): string {
-  let topMatchId = fallbackMatchId;
-  let topScore = -1;
+  const ids = pickTopConfidenceMatchIds(results, 1, fallbackMatchId);
+  return ids[0] ?? fallbackMatchId;
+}
 
-  for (const result of results) {
-    if (result.status !== "completed") continue;
-    const score = result.confidenceScore ?? 0;
-    if (score > topScore) {
-      topScore = score;
-      topMatchId = result.matchId;
+function pickTopConfidenceMatchIds(
+  results: PrewarmResult[],
+  count: number,
+  fallbackMatchId: string,
+): string[] {
+  const ranked = results
+    .filter(
+      (result) =>
+        result.status === "completed" && (result.confidenceScore ?? 0) > 0,
+    )
+    .sort(
+      (a, b) => (b.confidenceScore ?? 0) - (a.confidenceScore ?? 0),
+    );
+
+  const ids = ranked.slice(0, count).map((result) => result.matchId);
+  if (ids.length > 0) {
+    return ids;
+  }
+
+  return fallbackMatchId ? [fallbackMatchId] : [];
+}
+
+async function loadRankedMatchIds(
+  token: string,
+  fallbackMatchId: string,
+  count: number,
+): Promise<string[]> {
+  const data = await fetchHkjcMatchesFromApi();
+  const matchIds = data.matches.map((match) => match.id);
+
+  if (matchIds.length === 0) {
+    return fallbackMatchId ? [fallbackMatchId] : [];
+  }
+
+  let results = await fetchAnalysisScores(token, matchIds);
+  let topIds = pickTopConfidenceMatchIds(results, count, fallbackMatchId);
+
+  if (topIds.length > 0 && topIds[0] !== fallbackMatchId) {
+    return topIds;
+  }
+
+  if (
+    results.some(
+      (result) =>
+        result.status === "completed" && (result.confidenceScore ?? 0) > 0,
+    )
+  ) {
+    return topIds;
+  }
+
+  void prewarmAnalyses(token, matchIds);
+
+  for (let attempt = 0; attempt < TOP_MATCH_POLL_ATTEMPTS; attempt += 1) {
+    await sleep(TOP_MATCH_POLL_MS);
+    results = await fetchAnalysisScores(token, matchIds);
+    topIds = pickTopConfidenceMatchIds(results, count, fallbackMatchId);
+    if (topIds.length > 0 && topIds[0] !== fallbackMatchId) {
+      return topIds;
+    }
+    if (results.some((result) => result.status === "completed")) {
+      return topIds;
     }
   }
 
-  return topScore > 0 ? topMatchId : fallbackMatchId;
+  return topIds;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -37,40 +93,16 @@ export async function findTopConfidenceMatchId(
   token: string,
   fallbackMatchId: string,
 ): Promise<string> {
-  const data = await fetchHkjcMatchesFromApi();
-  const matchIds = data.matches.map((match) => match.id);
+  const ids = await findTopConfidenceMatchIds(token, fallbackMatchId, 1);
+  return ids[0] ?? fallbackMatchId;
+}
 
-  if (matchIds.length === 0) {
-    return fallbackMatchId;
-  }
-
-  let results = await fetchAnalysisScores(token, matchIds);
-  let topMatchId = pickHighestConfidenceMatchId(results, fallbackMatchId);
-
-  if (
-    results.some(
-      (result) =>
-        result.status === "completed" && (result.confidenceScore ?? 0) > 0,
-    )
-  ) {
-    return topMatchId;
-  }
-
-  void prewarmAnalyses(token, matchIds);
-
-  for (let attempt = 0; attempt < TOP_MATCH_POLL_ATTEMPTS; attempt += 1) {
-    await sleep(TOP_MATCH_POLL_MS);
-    results = await fetchAnalysisScores(token, matchIds);
-    topMatchId = pickHighestConfidenceMatchId(results, fallbackMatchId);
-    if (topMatchId !== fallbackMatchId) {
-      return topMatchId;
-    }
-    if (results.some((result) => result.status === "completed")) {
-      return topMatchId;
-    }
-  }
-
-  return topMatchId;
+export async function findTopConfidenceMatchIds(
+  token: string,
+  fallbackMatchId: string,
+  count = 4,
+): Promise<string[]> {
+  return loadRankedMatchIds(token, fallbackMatchId, count);
 }
 
 export async function resolveTopMatchDetailPath(
@@ -91,4 +123,23 @@ export async function resolveTopMatchDetailPath(
 
   const topMatchId = await findTopConfidenceMatchId(token, fallbackId);
   return `/analysis/${topMatchId}`;
+}
+
+export async function resolveTopMatchPreviewPath(
+  token: string | null,
+  canAccess: boolean,
+  fallbackMatchId?: string,
+): Promise<string> {
+  const data = await fetchHkjcMatchesFromApi();
+  const fallbackId = fallbackMatchId ?? data.matches[0]?.id;
+
+  if (!fallbackId) {
+    return "/analysis";
+  }
+
+  if (!canAccess || !token) {
+    return `/analysis/${fallbackId}`;
+  }
+
+  return "/analysis?picks=preview";
 }
