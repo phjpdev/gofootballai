@@ -22,10 +22,10 @@ export function HomeHeroSection() {
         <div className="absolute inset-x-0 bottom-0 flex flex-col gap-12 px-4 py-6 pb-8">
           <div className="flex flex-col gap-4 text-center">
             <h1 className="text-[30px] font-bold leading-[38px] tracking-[-0.39px] text-white">
-              歡迎使用 GO Football AI 分析平台
+              歡迎使用GO AI足球分析APP
             </h1>
             <p className="text-base leading-[1.6] text-[#d4d4d8]">
-              專為香港球迷而設，一站式掌握世界盃賽程、AI 戰術分析、球隊數據及最新會員資訊。
+              由AI驅動的專業足球分析平台，專為追求理性投注與穩定回報的你而設計
             </p>
           </div>
 

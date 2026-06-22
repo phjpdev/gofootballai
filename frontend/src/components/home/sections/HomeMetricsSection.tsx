@@ -84,8 +84,8 @@ export function HomeMetricsSection() {
   return (
     <section className="flex w-full flex-col items-center gap-12">
       <HomeSectionHeader
-        title="賽事數據洞察"
-        description="以智能分析追蹤球隊表現，掌握戰術節奏與進攻威脅指數。"
+        title="堅持專業分析"
+        description="拒絕代投注、毒會等不良誘惑，只提供純粹數據驅動的理性建議，幫助你建立長期穩定優勢。"
       />
 
       <div className="flex h-[340px] w-full max-w-[343px] flex-col justify-center gap-4">
