@@ -1,24 +1,24 @@
-import { SystemIntro } from "@/components/home/SystemIntro";
 import { PostFeed } from "@/components/home/PostFeed";
-import Image from "next/image";
+import { HomeAiCoachSection } from "@/components/home/sections/HomeAiCoachSection";
+import { HomeCoachSection } from "@/components/home/sections/HomeCoachSection";
+import { HomeDailySection } from "@/components/home/sections/HomeDailySection";
+import { HomeHeroSection } from "@/components/home/sections/HomeHeroSection";
+import { HomeMetricsSection } from "@/components/home/sections/HomeMetricsSection";
+import { HomeScoreSection } from "@/components/home/sections/HomeScoreSection";
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col gap-8">
-      <SystemIntro />
+    <div className="-mx-4 flex flex-col bg-black lg:mx-0 lg:overflow-hidden lg:rounded-[24px]">
+      <HomeHeroSection />
 
-      <PostFeed />
-
-      <section className="relative aspect-[4/3] w-full overflow-hidden rounded-[24px] sm:aspect-[16/9] lg:aspect-[21/9]">
-        <Image
-          src="/images/featured-home-hero.png"
-          alt="2026 世界盃足球賽事"
-          fill
-          className="object-cover object-center"
-          sizes="(max-width: 1024px) 100vw, 1152px"
-          priority
-        />
-      </section>
+      <div className="flex flex-col gap-12 px-4 py-12 lg:gap-16 lg:px-8 lg:py-16">
+        <HomeScoreSection />
+        <HomeDailySection />
+        <HomeMetricsSection />
+        <HomeAiCoachSection />
+        <HomeCoachSection />
+        <PostFeed />
+      </div>
     </div>
   );
 }

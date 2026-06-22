@@ -1,0 +1,7 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 24.328 11.3333" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Battery">
+<path id="Vector" opacity="0.35" d="M4 0.5H18C19.933 0.5 21.5 2.067 21.5 4V7.33301C21.5 9.266 19.933 10.833 18 10.833H4C2.067 10.833 0.5 9.266 0.5 7.33301V4C0.5 2.067 2.067 0.5 4 0.5Z" stroke="var(--stroke-0, #27272A)"/>
+<path id="Combined Shape" opacity="0.4" d="M23 3.66667V7.66667C23.8047 7.32789 24.328 6.5398 24.328 5.66667C24.328 4.79353 23.8047 4.00544 23 3.66667" fill="var(--fill-0, #27272A)"/>
+<path id="Vector_2" d="M2 4C2 2.89543 2.89543 2 4 2H18C19.1046 2 20 2.89543 20 4V7.33333C20 8.4379 19.1046 9.33333 18 9.33333H4C2.89543 9.33333 2 8.4379 2 7.33333V4Z" fill="var(--fill-0, #27272A)"/>
+</g>
+</svg>

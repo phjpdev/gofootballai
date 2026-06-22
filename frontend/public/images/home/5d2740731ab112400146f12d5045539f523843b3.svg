@@ -1,0 +1,12 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 151 50.75" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Line Chart Mini">
+<path id="Chart" opacity="0.24" d="M7.27911 3.52327H0.75V50H150.25L143.135 41.9095L136.606 36.2933L130.16 21.9455L123.715 28.3405L117.27 33.0465L110.824 31.3606L104.295 21.9455H97.8497L91.4043 18.8566L84.8751 11.7436L78.4297 18.6234L71.9843 14.4086L65.4552 22.6145L59.0098 24.8837L52.4807 19.596L46.119 12.0656L39.5899 15.4062L33.0607 24.6865L26.699 19.1721L20.1699 2L13.7245 9.79646L7.27911 3.52327Z" fill="url(#paint0_linear_24366_46245)"/>
+<path id="Chart_2" d="M0.75 3.52327H7.27911L13.7245 9.79646L20.1699 2L26.699 19.1721L33.0607 24.6865L39.5899 15.4062L46.119 12.0656L52.4807 19.596L59.0098 24.8837L65.4552 22.6145L71.9843 14.4086L78.4297 18.6234L84.8751 11.7436L91.4042 18.8566L97.8497 21.9455H104.295L110.824 31.3606L117.27 33.0465L123.715 28.3405L130.16 21.9455L136.606 36.2933L143.135 41.9095L150.25 50" stroke="var(--stroke-0, #F43F5E)" stroke-width="1.5" stroke-linecap="round"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_24366_46245" x1="75.5" y1="50" x2="75.5" y2="2" gradientUnits="userSpaceOnUse">
+<stop stop-color="#F43F5E" stop-opacity="0"/>
+<stop offset="1" stop-color="#F43F5E"/>
+</linearGradient>
+</defs>
+</svg>
