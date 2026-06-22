@@ -30,7 +30,7 @@ async function loadMatch(matchId: string): Promise<Match | null> {
     // fall through to static data
   }
 
-  return getMatchById(matchId);
+  return getMatchById(matchId) ?? null;
 }
 
 export function TopMatchPreviewCard({
