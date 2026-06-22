@@ -46,7 +46,7 @@ export function HomeOnboardingPager() {
           <HomeHeroSection onGetStarted={() => setPage(1)} />
         ) : (
           FeaturePage && (
-            <div className="flex h-full flex-col items-center justify-center px-4 pt-6">
+            <div className="flex h-full flex-col items-center justify-center px-4 pt-4">
               <FeaturePage />
             </div>
           )
@@ -55,7 +55,7 @@ export function HomeOnboardingPager() {
 
       {page > 0 && (
         <HomePageNav
-          currentStep={page - 1}
+          currentStep={page}
           totalSteps={PAGE_COUNT}
           onPrev={goPrev}
           onNext={goNext}
