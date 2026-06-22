@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ArrowRight, Clock, Flame } from "lucide-react";
 import { LedBorder } from "@/components/motion/LedBorder";
 import { useAuth } from "@/context/AuthContext";
+import { resolveFeaturedImageUrl } from "@/lib/featured-api";
 import { resolveTopMatchDetailPath, resolveTopMatchPreviewPath } from "@/lib/top-match";
 
 type FeaturedMatchCardProps = {
@@ -29,6 +30,8 @@ export function FeaturedMatchCard({
   const { token, isAuthenticated, isMember, isAdmin, isLoading } = useAuth();
   const [navigating, setNavigating] = useState(false);
   const canAccess = isAuthenticated && (isMember || isAdmin);
+  const imageUrl = resolveFeaturedImageUrl(imageSrc);
+  const isUploadedImage = imageUrl.includes("/uploads/");
 
   async function handleClick() {
     if (isLoading || navigating) return;
@@ -58,9 +61,10 @@ export function FeaturedMatchCard({
       >
         <div className="pointer-events-none absolute inset-0">
           <Image
-            src={imageSrc}
+            src={imageUrl}
             alt=""
             fill
+            unoptimized={isUploadedImage}
             className="object-cover"
             sizes="261px"
           />

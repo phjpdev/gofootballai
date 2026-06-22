@@ -78,6 +78,18 @@ export async function initDb(): Promise<void> {
     ALTER TABLE records ADD COLUMN IF NOT EXISTS display_date DATE;
     ALTER TABLE records ADD COLUMN IF NOT EXISTS star_rating REAL;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS vip_expires_at TIMESTAMPTZ;
+
+    CREATE TABLE IF NOT EXISTS featured_items (
+      id VARCHAR(32) PRIMARY KEY,
+      title VARCHAR(80) NOT NULL,
+      tag VARCHAR(40) NOT NULL,
+      duration VARCHAR(40) NOT NULL,
+      stat VARCHAR(40) NOT NULL,
+      image_src TEXT NOT NULL,
+      pick_mode VARCHAR(10) NOT NULL CHECK (pick_mode IN ('single', 'multi')),
+      sort_order INT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 }
 
