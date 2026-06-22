@@ -92,16 +92,16 @@ export function RecordDetailModal({
 
       <div
         className={cn(
-          "relative min-h-0 flex-1 overflow-hidden",
-          !hasMedia && "bg-gray-90",
+          "relative flex min-h-0 flex-1 items-center justify-center overflow-hidden",
+          hasMedia ? "bg-black" : "bg-gray-90",
         )}
       >
         {post.type === "photo" && post.mediaUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={post.mediaUrl}
-            alt={post.title}
-            className="absolute inset-0 h-full w-full object-cover"
+            alt=""
+            className="max-h-full max-w-full object-contain"
           />
         )}
 
@@ -111,40 +111,30 @@ export function RecordDetailModal({
             controls
             autoPlay
             playsInline
-            className="absolute inset-0 h-full w-full object-cover"
+            className="max-h-full max-w-full object-contain"
           />
         )}
 
-        {hasMedia && (
-          <div
-            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10"
-            aria-hidden
-          />
+        {!hasMedia && (
+          <div className="flex max-h-full w-full flex-col items-center justify-center gap-4 overflow-y-auto px-5 py-12 text-center">
+            <h2 className="text-2xl font-bold leading-snug text-white">
+              {post.title}
+            </h2>
+            {post.content && (
+              <p className="max-w-lg whitespace-pre-wrap text-base leading-[1.7] text-gray-20">
+                {post.content}
+              </p>
+            )}
+            {post.starRating !== undefined && (
+              <div className="flex items-center gap-1.5">
+                <Star className="size-5 fill-amber-400 text-amber-400" />
+                <span className="text-lg font-bold text-white">
+                  {post.starRating.toFixed(1)}
+                </span>
+              </div>
+            )}
+          </div>
         )}
-
-        <div className="absolute inset-0 flex flex-col items-center justify-end gap-4 overflow-y-auto px-5 pb-12 pt-6 text-center">
-          <h2 className="text-2xl font-bold leading-snug text-white">
-            {post.title}
-          </h2>
-          {post.content && (
-            <p
-              className={cn(
-                "max-w-lg whitespace-pre-wrap text-base leading-[1.7]",
-                hasMedia ? "text-white/90" : "text-gray-20",
-              )}
-            >
-              {post.content}
-            </p>
-          )}
-          {post.starRating !== undefined && (
-            <div className="flex items-center gap-1.5">
-              <Star className="size-5 fill-amber-400 text-amber-400" />
-              <span className="text-lg font-bold text-white">
-                {post.starRating.toFixed(1)}
-              </span>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
