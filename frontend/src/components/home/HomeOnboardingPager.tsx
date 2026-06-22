@@ -46,7 +46,7 @@ export function HomeOnboardingPager() {
           <HomeHeroSection onGetStarted={() => setPage(1)} />
         ) : (
           FeaturePage && (
-            <div className="flex h-full flex-col items-center justify-center px-4 pt-4">
+            <div className="flex h-full w-full flex-col items-center justify-center px-2 pt-2">
               <FeaturePage />
             </div>
           )
