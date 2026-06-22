@@ -25,6 +25,11 @@ export const metadata: Metadata = {
   title: "世界盃 AI — 2026 世界盃賽事分析平台",
   description:
     "專為香港球迷而設的 2026 世界盃 AI 分析平台，提供賽事預測、戰術拆解、球隊數據及會員最新資訊。",
+  icons: {
+    icon: "/images/go-football-logo.png",
+    shortcut: "/images/go-football-logo.png",
+    apple: "/images/go-football-logo.png",
+  },
 };
 
 export default function RootLayout({
