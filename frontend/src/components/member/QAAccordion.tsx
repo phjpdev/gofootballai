@@ -31,7 +31,7 @@ export function QAAccordion({ items }: { items: QAItem[] }) {
             </button>
             {isOpen && (
               <div className="border-t border-gray-80 px-4 pb-4 pt-3">
-                <p className="text-sm leading-[1.6] tracking-[-0.028px] text-gray-20">
+                <p className="whitespace-pre-line text-sm leading-[1.6] tracking-[-0.028px] text-gray-20">
                   {item.answer}
                 </p>
               </div>
