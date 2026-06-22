@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { HomeOnboardingScroll } from "@/components/home/HomeOnboardingScroll";
 import { HomePageNav } from "@/components/home/HomePageNav";
 import { HomeAiCoachSection } from "@/components/home/sections/HomeAiCoachSection";
 import { HomeCoachSection } from "@/components/home/sections/HomeCoachSection";
@@ -21,7 +22,7 @@ const FEATURE_PAGES = [
   HomeCoachSection,
 ] as const;
 
-export function HomeOnboardingPager() {
+function HomeOnboardingPagerMobile() {
   const [page, setPage] = useState(0);
   const router = useRouter();
 
@@ -40,7 +41,7 @@ export function HomeOnboardingPager() {
   const FeaturePage = page > 0 ? FEATURE_PAGES[page - 1] : null;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-black lg:min-h-[min(812px,calc(100dvh-var(--header-total)-5rem))]">
+    <div className="flex h-full flex-col overflow-hidden bg-black">
       <div className="min-h-0 flex-1 overflow-hidden">
         {page === 0 ? (
           <HomeHeroSection onGetStarted={() => setPage(1)} />
@@ -62,5 +63,18 @@ export function HomeOnboardingPager() {
         />
       )}
     </div>
+  );
+}
+
+export function HomeOnboardingPager() {
+  return (
+    <>
+      <div className="h-full lg:hidden">
+        <HomeOnboardingPagerMobile />
+      </div>
+      <div className="hidden min-h-0 lg:block">
+        <HomeOnboardingScroll />
+      </div>
+    </>
   );
 }
