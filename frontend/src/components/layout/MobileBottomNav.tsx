@@ -44,12 +44,11 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-90 bg-gray-100 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_32px_rgba(0,0,0,0.35)] lg:hidden"
+      className="z-50 shrink-0 border-t border-gray-90 bg-gray-100 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_32px_rgba(0,0,0,0.35)] lg:hidden"
     >
       <div
         className={cn(
-          "flex h-[var(--mobile-nav-bar)] w-full items-end justify-around px-3",
-          compact ? "pt-1.5" : "pt-2",
+          "flex min-h-[var(--mobile-nav-bar)] w-full items-end justify-around px-3 pt-2",
         )}
       >
         {navItems.map((item) => {

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --mobile-nav-bar: 3.5rem;
+  --mobile-nav-bar: 6.5rem;
   --mobile-nav-inset: env(safe-area-inset-bottom, 0px);
   --mobile-nav-total: calc(var(--mobile-nav-bar) + var(--mobile-nav-inset));
   --header-height: 4.5rem;
@@ -69,7 +69,7 @@ body {
     min-width: 100%;
     overflow-x: hidden;
     touch-action: pan-x pan-y;
-    overscroll-behavior: none;
+    overscroll-behavior-y: auto;
   }
 
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
