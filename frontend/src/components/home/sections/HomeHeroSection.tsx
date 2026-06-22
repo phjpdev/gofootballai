@@ -12,11 +12,11 @@ export function HomeHeroSection({ onGetStarted }: HomeHeroSectionProps) {
     <section className="relative h-full w-full overflow-hidden bg-black lg:rounded-t-[24px]">
       <div className="relative h-full w-full">
         <Image
-          src={homeAsset("hero-bg.png")}
+          src={homeAsset("hero-soccer-bg.png")}
           alt=""
           priority
           fill
-          className="object-cover object-top"
+          className="object-cover object-center"
           sizes="100vw"
         />
 
