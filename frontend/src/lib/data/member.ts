@@ -55,6 +55,12 @@ export const QA_ITEMS: QAItem[] = [
     answer:
       "足球專屬的白金計劃只包含足球分析；若想同時使用足球+賽馬，請選擇鑽石計劃。",
   },
+  {
+    id: "qa-10",
+    question: "如何聯絡Go Football？",
+    answer:
+      "歡迎隨時透過以下方式聯絡我們：\nAPP內「聯絡我們」或「客服」功能\nTelegram：@gofootballai",
+  },
 ];
 
 export const POLICY_SECTIONS = [
