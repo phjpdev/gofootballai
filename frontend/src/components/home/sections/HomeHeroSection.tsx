@@ -22,7 +22,7 @@ export function HomeHeroSection({ onGetStarted }: HomeHeroSectionProps) {
 
         <div className="absolute inset-x-0 bottom-0 h-[65%] bg-gradient-to-b from-transparent to-black" />
 
-        <div className="absolute inset-x-0 bottom-0 flex flex-col gap-12 px-4 pb-4 pt-6">
+        <div className="absolute inset-x-0 bottom-0 flex w-full flex-col gap-12 px-8 py-6">
           <div className="flex flex-col gap-4 text-center">
             <h1 className="text-[30px] font-bold leading-[38px] tracking-[-0.39px] text-white">
               歡迎使用GO AI足球分析APP
