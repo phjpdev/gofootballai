@@ -1,6 +1,6 @@
 import { AuthForm } from "@/components/member/AuthForm";
 import { QAAccordion } from "@/components/member/QAAccordion";
-import { QA_ITEMS, POLICY_SECTIONS } from "@/lib/data/member";
+import { QA_ITEMS, POLICY_SECTIONS, BETTING_DISCLAIMER } from "@/lib/data/member";
 
 type MemberPageProps = {
   searchParams: Promise<{ redirect?: string }>;
@@ -43,6 +43,11 @@ export default async function MemberPage({ searchParams }: MemberPageProps) {
             </p>
           </div>
         ))}
+        <div className="rounded-[24px] border border-gray-80 bg-gray-90 p-4">
+          <p className="whitespace-pre-line text-sm leading-[1.6] tracking-[-0.028px] text-gray-20">
+            {BETTING_DISCLAIMER}
+          </p>
+        </div>
       </section>
     </div>
   );
