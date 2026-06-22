@@ -44,13 +44,9 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="主要導覽"
-      className="z-50 shrink-0 border-t border-gray-90 bg-gray-100 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_32px_rgba(0,0,0,0.35)] lg:hidden"
+      className="z-50 shrink-0 overflow-visible border-t border-gray-90 bg-gray-100 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_32px_rgba(0,0,0,0.35)] lg:hidden"
     >
-      <div
-        className={cn(
-          "flex min-h-[var(--mobile-nav-bar)] w-full items-end justify-around px-3 pt-2",
-        )}
-      >
+      <div className="flex w-full items-end justify-around px-2 py-1">
         {navItems.map((item) => {
           const { href, label } = item;
           const isActive = isNavActive(pathname, href);
@@ -66,16 +62,16 @@ export function MobileBottomNav() {
                 isActive ? "text-orange-50" : "text-gray-40",
               )}
             >
-              <span className="flex h-20 w-full items-end justify-center">
+              <span className="flex h-6 w-full items-end justify-center">
                 {isLogoItem ? (
                   <Image
                     src="/images/go-football-logo.png"
                     alt=""
-                    width={80}
-                    height={80}
+                    width={56}
+                    height={56}
                     aria-hidden
                     className={cn(
-                      "size-20 shrink-0 rounded-t-full rounded-br-none rounded-bl-none object-cover",
+                      "size-14 shrink-0 -translate-y-3 rounded-t-full rounded-br-none rounded-bl-none object-cover",
                       isActive ? "opacity-100" : "opacity-70",
                     )}
                   />
