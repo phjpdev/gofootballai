@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { TelegramIcon, TELEGRAM_URL } from "@/components/icons/TelegramIcon";
 import { useAuth } from "@/context/AuthContext";
 import { formatRole, NAV } from "@/lib/i18n/zh-hk";
 import { cn } from "@/lib/utils";
@@ -79,7 +80,8 @@ export function SiteHeader() {
   const { isAdmin, isAuthenticated } = useAuth();
   const showOnMobile = isMemberRoute(pathname);
 
-  const navItems = isAdmin ? [...NAV_ITEMS, ADMIN_NAV] : [...NAV_ITEMS];
+  const mainNavItems = NAV_ITEMS;
+  const showAdminNav = isAdmin;
 
   return (
     <header
@@ -95,7 +97,7 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-4 lg:flex">
           <nav className="flex items-center gap-1">
-            {navItems.map(({ href, label }) => {
+            {mainNavItems.map(({ href, label }) => {
               const isActive = isNavActive(pathname, href);
               return (
                 <Link
@@ -112,6 +114,30 @@ export function SiteHeader() {
                 </Link>
               );
             })}
+
+            <a
+              href={TELEGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={NAV.telegram}
+              className="flex size-10 items-center justify-center rounded-xl text-gray-40 transition-colors hover:bg-gray-90 hover:text-white"
+            >
+              <TelegramIcon className="size-[18px]" />
+            </a>
+
+            {showAdminNav && (
+              <Link
+                href={ADMIN_NAV.href}
+                className={cn(
+                  "rounded-xl px-4 py-2 text-sm font-medium transition-colors",
+                  isNavActive(pathname, ADMIN_NAV.href)
+                    ? "bg-gray-90 text-orange-50"
+                    : "text-gray-40 hover:text-white",
+                )}
+              >
+                {ADMIN_NAV.label}
+              </Link>
+            )}
           </nav>
 
           {isAuthenticated && (
