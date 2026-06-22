@@ -12,15 +12,31 @@ import {
 import { NAV } from "@/lib/i18n/zh-hk";
 import { cn } from "@/lib/utils";
 
+const TELEGRAM_URL = "https://t.me/gofootballai";
+
 type NavItem =
-  | { href: string; label: string; icon: LucideIcon; logo?: false }
-  | { href: string; label: string; logo: true; hideLabel?: boolean; icon?: never };
+  | { href: string; label: string; icon: LucideIcon; logo?: false; external?: false }
+  | { href: string; label: string; logo: true; hideLabel?: boolean; icon?: never; external?: false }
+  | {
+      href: string;
+      label: string;
+      imageIcon: string;
+      external: true;
+      hideLabel?: boolean;
+    };
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/home", label: NAV.home, icon: Home },
   { href: "/analysis", label: NAV.analysis, logo: true, hideLabel: true },
   { href: "/records", label: NAV.records, icon: FolderOpen },
   { href: "/member", label: NAV.member, icon: Users },
+  {
+    href: TELEGRAM_URL,
+    label: NAV.telegram,
+    imageIcon: "/images/telegram-icon.png",
+    external: true,
+    hideLabel: true,
+  },
 ];
 
 function isNavActive(pathname: string, href: string) {
@@ -29,8 +45,7 @@ function isNavActive(pathname: string, href: string) {
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const navItems = NAV_ITEMS;
-  const compact = navItems.length >= 5;
+  const compact = NAV_ITEMS.length >= 5;
 
   return (
     <nav
@@ -38,21 +53,25 @@ export function MobileBottomNav() {
       className="z-50 shrink-0 overflow-visible border-t border-gray-90 bg-black pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_32px_rgba(0,0,0,0.35)] lg:hidden"
     >
       <div className="flex w-full items-end justify-around px-2 py-1">
-        {navItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const { href, label } = item;
-          const isActive = isNavActive(pathname, href);
+          const isExternal = "external" in item && item.external;
+          const isActive = !isExternal && isNavActive(pathname, href);
           const isLogoItem = "logo" in item && item.logo;
-          return (
-            <Link
-              key={href}
-              href={href}
-              aria-label={label}
-              className={cn(
-                "flex min-h-0 min-w-0 flex-1 flex-col items-center justify-end",
-                compact ? "gap-0.5 px-0.5" : "gap-1 px-1",
-                isActive ? "text-orange-50" : "text-gray-40",
-              )}
-            >
+          const isImageIcon = "imageIcon" in item;
+
+          const className = cn(
+            "flex min-h-0 min-w-0 flex-1 flex-col items-center justify-end",
+            compact ? "gap-0.5 px-0.5" : "gap-1 px-1",
+            isActive ? "text-orange-50" : "text-gray-40",
+          );
+
+          const Icon = "icon" in item ? item.icon : null;
+
+          const hideLabel = "hideLabel" in item && item.hideLabel;
+
+          const content = (
+            <>
               <span className="flex h-6 w-full items-end justify-center">
                 {isLogoItem ? (
                   <Image
@@ -66,14 +85,23 @@ export function MobileBottomNav() {
                       isActive ? "opacity-100" : "opacity-70",
                     )}
                   />
-                ) : (
-                  <item.icon
+                ) : isImageIcon ? (
+                  <Image
+                    src={item.imageIcon}
+                    alt=""
+                    width={40}
+                    height={40}
+                    aria-hidden
+                    className="size-10 shrink-0 scale-150 object-contain"
+                  />
+                ) : Icon ? (
+                  <Icon
                     className={compact ? "size-[18px]" : "size-5"}
                     strokeWidth={isActive ? 2.5 : 2}
                   />
-                )}
+                ) : null}
               </span>
-              {!(isLogoItem && item.hideLabel) && (
+              {!hideLabel && (
                 <span
                   className={cn(
                     "w-full truncate text-center font-medium leading-none",
@@ -83,6 +111,27 @@ export function MobileBottomNav() {
                   {label}
                 </span>
               )}
+            </>
+          );
+
+          if (isExternal) {
+            return (
+              <a
+                key={href}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                className={className}
+              >
+                {content}
+              </a>
+            );
+          }
+
+          return (
+            <Link key={href} href={href} aria-label={label} className={className}>
+              {content}
             </Link>
           );
         })}
