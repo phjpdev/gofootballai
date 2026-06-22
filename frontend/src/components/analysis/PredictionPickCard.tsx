@@ -1,11 +1,5 @@
-"use client";
-
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { LedBorder } from "@/components/motion/LedBorder";
-import { useAuth } from "@/context/AuthContext";
-import { resolveTopMatchDetailPath } from "@/lib/top-match";
 import type { AnalysisPick } from "@/types/analysis";
 
 type PredictionPickCardProps = {
@@ -26,26 +20,8 @@ function splitPickSelection(selection: string): { label: string; value: string }
   return { label: normalized, value: "" };
 }
 
-export function PredictionPickCard({ pick, matchId }: PredictionPickCardProps) {
-  const router = useRouter();
-  const { token, isAuthenticated, isMember, isAdmin } = useAuth();
-  const [navigating, setNavigating] = useState(false);
+export function PredictionPickCard({ pick }: PredictionPickCardProps) {
   const { label, value } = splitPickSelection(pick.selection);
-  const canAccess = isAuthenticated && (isMember || isAdmin);
-
-  async function handleClick() {
-    if (navigating) return;
-
-    setNavigating(true);
-    try {
-      const path = await resolveTopMatchDetailPath(token, canAccess, matchId);
-      router.push(path);
-    } catch {
-      router.push(`/analysis/${matchId}`);
-    } finally {
-      setNavigating(false);
-    }
-  }
 
   return (
     <LedBorder
@@ -53,12 +29,9 @@ export function PredictionPickCard({ pick, matchId }: PredictionPickCardProps) {
       borderWidth={3}
       borderRadius={16}
     >
-      <button
-        type="button"
-        onClick={() => void handleClick()}
-        disabled={navigating}
-        aria-label="查看最高 AI 評分賽事分析"
-        className="relative block h-full w-full bg-gray-90 text-left transition-opacity hover:opacity-95 active:opacity-90 disabled:opacity-70"
+      <div
+        aria-label={`預測 ${pick.selection}`}
+        className="relative block h-full w-full bg-gray-90 text-left"
       >
         <Image
           src="/images/prediction-hero.png"
@@ -85,7 +58,7 @@ export function PredictionPickCard({ pick, matchId }: PredictionPickCardProps) {
             </div>
           </div>
         </div>
-      </button>
+      </div>
     </LedBorder>
   );
 }
