@@ -44,7 +44,7 @@ export function CreateRecordModal({
   const [title, setTitle] = useState("");
   const [displayDate, setDisplayDate] = useState(todayDateInputValue());
   const [content, setContent] = useState("");
-  const [starRating, setStarRating] = useState("4.0");
+  const [starRating, setStarRating] = useState("5.0");
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -70,7 +70,7 @@ export function CreateRecordModal({
     setTitle("");
     setDisplayDate(todayDateInputValue());
     setContent("");
-    setStarRating("4.0");
+    setStarRating("5.0");
     setFile(null);
     setPreviewUrl(null);
     setError("");

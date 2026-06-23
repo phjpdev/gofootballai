@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import { figmaAsset } from "@/lib/figma-assets";
 import { cn } from "@/lib/utils";
+import { VipContentLock } from "@/components/analysis/VipContentLock";
 
 type AthleticSliderProps = {
   level?: number;
@@ -11,6 +12,7 @@ type AthleticSliderProps = {
   label?: string;
   description?: string;
   middleContent?: ReactNode;
+  vipLocked?: boolean;
 };
 
 const TRACK_WIDTH = 343;
@@ -38,6 +40,7 @@ export function AthleticSlider({
   label = "戰術強度",
   description = "球隊具備應對高強度對抗的戰術能力",
   middleContent,
+  vipLocked = false,
 }: AthleticSliderProps) {
   const clampedLevel =
     score !== undefined
@@ -106,26 +109,28 @@ export function AthleticSlider({
 
       {middleContent ? <div className="w-full">{middleContent}</div> : null}
 
-      <div className="flex w-full flex-col items-center gap-4 lg:max-w-3xl">
-        <p className="w-full text-center text-[36px] font-bold leading-[44px] tracking-[-0.504px] text-white lg:text-[42px] lg:leading-[50px]">
-          {label}
-        </p>
-        <p className="w-full text-center text-base leading-[1.6] text-[#d4d4d8] lg:text-lg">
-          {description}
-        </p>
-        <div className="flex items-center justify-center gap-2">
-          <Image
-            src={figmaAsset("1f69d9de72d939fe5a8e4f19976aacac9dc61091")}
-            alt=""
-            width={20}
-            height={20}
-            className="size-5"
-          />
-          <p className="text-sm leading-5 tracking-[-0.084px] text-[#d4d4d8]">
-            AI 量化引擎即時演算
+      <VipContentLock locked={vipLocked} className="w-full rounded-[24px]">
+        <div className="flex w-full flex-col items-center gap-4 lg:max-w-3xl">
+          <p className="w-full text-center text-[36px] font-bold leading-[44px] tracking-[-0.504px] text-white lg:text-[42px] lg:leading-[50px]">
+            {label}
           </p>
+          <p className="w-full text-center text-base leading-[1.6] text-[#d4d4d8] lg:text-lg">
+            {description}
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <Image
+              src={figmaAsset("1f69d9de72d939fe5a8e4f19976aacac9dc61091")}
+              alt=""
+              width={20}
+              height={20}
+              className="size-5"
+            />
+            <p className="text-sm leading-5 tracking-[-0.084px] text-[#d4d4d8]">
+              AI 量化引擎即時演算
+            </p>
+          </div>
         </div>
-      </div>
+      </VipContentLock>
     </div>
   );
 }
