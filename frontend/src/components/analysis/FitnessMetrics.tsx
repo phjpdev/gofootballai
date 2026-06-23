@@ -309,7 +309,11 @@ export function FitnessMetrics({
               <ValueBlock
                 value={String(shots)}
                 unit="次"
-                subtitle={`${pick.market} · ${pick.selection}`}
+                subtitle={
+                  pick.market && pick.selection
+                    ? `${pick.market} · ${pick.selection}`
+                    : "VIP 會員專屬"
+                }
               />
               <HeartRateChart />
             </div>

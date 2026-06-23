@@ -139,12 +139,14 @@ export function MatchAnalysisView({
                   description="球隊具備應對高強度對抗的戰術能力"
                   vipLocked={vipLocked}
                   middleContent={
-                    <VipContentLock locked={vipLocked} className="rounded-[24px]">
+                    vipLocked ? (
+                      <VipContentLock locked size="default" className="rounded-[24px]" />
+                    ) : (
                       <AnalysisNarrative
                         narrative={analysis.narrative}
                         riskFlags={analysis.riskFlags}
                       />
-                    </VipContentLock>
+                    )
                   }
                 />
               </div>

@@ -235,7 +235,32 @@ export function patchAnalysisConfidence(
   return { ...analysis, confidenceScore };
 }
 
-export function toPublicAnalysis(row: MatchAnalysisRow | null) {
+export function redactAnalysisForVip(
+  analysis: MatchAnalysisData | null,
+  canViewVip: boolean,
+): MatchAnalysisData | null {
+  if (!analysis || canViewVip) {
+    return analysis;
+  }
+
+  return {
+    ...analysis,
+    recommendationLabel: "",
+    narrative: "",
+    riskFlags: [],
+    pick: {
+      market: "",
+      selection: "",
+      odds: 0,
+      ev: "",
+    },
+  };
+}
+
+export function toPublicAnalysis(
+  row: MatchAnalysisRow | null,
+  canViewVip = true,
+) {
   if (!row) {
     return {
       matchId: "",
@@ -244,7 +269,9 @@ export function toPublicAnalysis(row: MatchAnalysisRow | null) {
     };
   }
 
-  const analysis = row.analysis ? patchAnalysisConfidence(row.analysis) : null;
+  const analysis = row.analysis
+    ? redactAnalysisForVip(patchAnalysisConfidence(row.analysis), canViewVip)
+    : null;
 
   return {
     matchId: row.hkjc_match_id,
