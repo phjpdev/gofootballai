@@ -24,7 +24,11 @@ export function ScoreBreakdown({
             <RadarChart dimensions={dimensions} />
           </div>
         </div>
-        <VipContentLock locked={vipLocked} compact className="min-w-0 flex-1 rounded-2xl lg:flex">
+        <VipContentLock
+          locked={vipLocked}
+          size="compact"
+          className="min-w-0 flex-1 rounded-2xl lg:flex"
+        >
           <PredictionPickCard pick={pick} matchId={matchId} />
         </VipContentLock>
       </div>

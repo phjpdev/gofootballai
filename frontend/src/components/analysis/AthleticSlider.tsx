@@ -109,7 +109,9 @@ export function AthleticSlider({
 
       {middleContent ? <div className="w-full">{middleContent}</div> : null}
 
-      <VipContentLock locked={vipLocked} className="w-full rounded-[24px]">
+      {vipLocked ? (
+        <VipContentLock locked size="feature" className="w-full rounded-[24px]" />
+      ) : (
         <div className="flex w-full flex-col items-center gap-4 lg:max-w-3xl">
           <p className="w-full text-center text-[36px] font-bold leading-[44px] tracking-[-0.504px] text-white lg:text-[42px] lg:leading-[50px]">
             {label}
@@ -130,7 +132,7 @@ export function AthleticSlider({
             </p>
           </div>
         </div>
-      </VipContentLock>
+      )}
     </div>
   );
 }

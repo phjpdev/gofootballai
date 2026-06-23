@@ -5,6 +5,7 @@ import {
   isPendingStale,
   needsAnalysis,
   patchAnalysisConfidence,
+  redactAnalysisForVip,
   toPublicAnalysis,
 } from "../lib/analyses.js";
 import {
@@ -24,8 +25,23 @@ import {
   requireMember,
   type AuthedRequest,
 } from "../middleware/auth.js";
+import { findUserById } from "../lib/users.js";
+import { canViewVipAnalysis } from "../lib/vip.js";
 
 const router = Router();
+
+async function resolveCanViewVip(req: AuthedRequest): Promise<boolean> {
+  if (!req.user) return false;
+  if (req.user.role === "admin") return true;
+
+  const user = await findUserById(req.user.sub);
+  if (!user) return false;
+
+  return canViewVipAnalysis({
+    role: user.role,
+    vipExpiresAt: user.vipExpiresAt,
+  });
+}
 
 function paramId(value: string | string[]): string {
   return Array.isArray(value) ? value[0] : value;
@@ -46,13 +62,17 @@ router.get(
   async (req: AuthedRequest, res) => {
     const matchId = paramId(req.params.matchId);
     const promptVersion = MATCH_ANALYSIS_PROMPT_VERSION;
+    const canViewVip = await resolveCanViewVip(req);
 
     const cached = await getCachedAnalysis<CachedAnalysisPayload>(
       matchId,
       promptVersion,
     );
     if (cached?.status === "completed" && cached.analysis) {
-      const analysis = patchAnalysisConfidence(cached.analysis as MatchAnalysisData);
+      const analysis = redactAnalysisForVip(
+        patchAnalysisConfidence(cached.analysis as MatchAnalysisData),
+        canViewVip,
+      );
       res.json({ ...cached, analysis });
       return;
     }
@@ -65,9 +85,13 @@ router.get(
       row = await getAnalysisByMatchId(matchId, promptVersion);
     }
 
-    const payload = toPublicAnalysis(row);
+    const payload = toPublicAnalysis(row, canViewVip);
     if (row?.status === "completed" && row.analysis) {
-      await setCachedAnalysis(matchId, promptVersion, payload);
+      await setCachedAnalysis(
+        matchId,
+        promptVersion,
+        toPublicAnalysis(row, true),
+      );
     }
 
     res.json(payload);
