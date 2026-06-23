@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { EditHomeSectionModal } from "@/components/home/EditHomeSectionModal";
 import { HomeOnboardingScroll } from "@/components/home/HomeOnboardingScroll";
 import { HomePageNav } from "@/components/home/HomePageNav";
 import { HomeAiCoachSection } from "@/components/home/sections/HomeAiCoachSection";
@@ -10,6 +11,7 @@ import { HomeDailySection } from "@/components/home/sections/HomeDailySection";
 import { HomeHeroSection } from "@/components/home/sections/HomeHeroSection";
 import { HomeMetricsSection } from "@/components/home/sections/HomeMetricsSection";
 import { HomeScoreSection } from "@/components/home/sections/HomeScoreSection";
+import { HomeSectionsProvider } from "@/context/HomeSectionsContext";
 
 const PAGE_COUNT = 6;
 const FEATURE_PAGE_COUNT = PAGE_COUNT - 1;
@@ -68,13 +70,14 @@ function HomeOnboardingPagerMobile() {
 
 export function HomeOnboardingPager() {
   return (
-    <>
+    <HomeSectionsProvider>
       <div className="h-full lg:hidden">
         <HomeOnboardingPagerMobile />
       </div>
       <div className="hidden min-h-0 lg:block">
         <HomeOnboardingScroll />
       </div>
-    </>
+      <EditHomeSectionModal />
+    </HomeSectionsProvider>
   );
 }

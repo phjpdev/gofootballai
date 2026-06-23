@@ -90,6 +90,19 @@ export async function initDb(): Promise<void> {
       sort_order INT NOT NULL DEFAULT 0,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS home_sections (
+      id VARCHAR(16) PRIMARY KEY,
+      eyebrow VARCHAR(80),
+      title VARCHAR(120) NOT NULL,
+      description TEXT NOT NULL,
+      image_src TEXT NOT NULL,
+      cta_text VARCHAR(40),
+      login_prompt VARCHAR(80),
+      login_link_text VARCHAR(40),
+      sort_order INT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 }
 

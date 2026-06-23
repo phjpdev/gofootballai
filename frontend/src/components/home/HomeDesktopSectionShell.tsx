@@ -1,14 +1,18 @@
+import { HomeSectionEditButton } from "@/components/home/HomeSectionEditButton";
+import type { HomeSectionId } from "@/lib/data/home-sections";
 import { cn } from "@/lib/utils";
 
 type HomeDesktopSectionShellProps = {
   index: number;
   reverse?: boolean;
+  sectionId?: HomeSectionId;
   children: React.ReactNode;
 };
 
 export function HomeDesktopSectionShell({
   index,
   reverse = false,
+  sectionId,
   children,
 }: HomeDesktopSectionShellProps) {
   const isAlt = index % 2 === 1;
@@ -20,6 +24,12 @@ export function HomeDesktopSectionShell({
         isAlt && "lg:bg-gray-100",
       )}
     >
+      {sectionId && (
+        <div className="absolute right-2 top-2 z-20 lg:right-10 lg:top-8">
+          <HomeSectionEditButton sectionId={sectionId} />
+        </div>
+      )}
+
       <div
         className={cn(
           "pointer-events-none absolute inset-0 hidden opacity-60 lg:block",
