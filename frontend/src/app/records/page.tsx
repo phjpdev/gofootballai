@@ -37,7 +37,7 @@ export default function RecordsPage() {
           </div>
         ) : (
           <p className="text-sm leading-[1.6] text-gray-40">
-            瀏覽管理員上傳的相片、影片及文字公告。
+            Go football 每日紀錄
           </p>
         )}
 

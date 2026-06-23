@@ -1,4 +1,5 @@
 import { Lock, Sparkles } from "lucide-react";
+import { TELEGRAM_URL } from "@/components/icons/TelegramIcon";
 import { cn } from "@/lib/utils";
 
 export type VipLockSize = "compact" | "default" | "feature";
@@ -82,7 +83,16 @@ function VipLockPanel({
             isCompact ? "text-[11px]" : "text-xs",
           )}
         >
-          請聯絡管理員升級 VIP，以查看完整 AI 預測及覆盤內容
+          請聯絡
+          <a
+            href={TELEGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-orange-50 underline decoration-orange-50/40 underline-offset-2 hover:text-orange-30"
+          >
+            管理員
+          </a>
+          升級 VIP，以查看完整 AI 預測及覆盤內容
         </p>
       </div>
     </div>
