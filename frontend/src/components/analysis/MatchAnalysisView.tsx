@@ -137,6 +137,7 @@ export function MatchAnalysisView({
                   level={analysis.recommendationLevel}
                   label={analysis.recommendationLabel}
                   description="球隊具備應對高強度對抗的戰術能力"
+                  vipLocked={vipLocked}
                   middleContent={
                     <VipContentLock locked={vipLocked} className="rounded-[24px]">
                       <AnalysisNarrative
