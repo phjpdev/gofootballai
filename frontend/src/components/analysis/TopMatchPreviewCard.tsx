@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { MatchHeaderCard } from "@/components/analysis/MatchHeaderCard";
 import { ScoreBreakdown } from "@/components/analysis/ScoreBreakdown";
 import { AnimateIn } from "@/components/motion/AnimateIn";
 import { useAuth } from "@/context/AuthContext";
+import { hasPreviewOverrides, type TopMatchPreviewSlot } from "@/lib/data/top-match-previews";
 import { fetchMatchAnalysis } from "@/lib/analyses-api";
 import { getMatchById } from "@/lib/data/matches";
 import { hkjcMatchToLegacy } from "@/lib/hkjc/fetch-matches";
@@ -16,6 +17,7 @@ import type { Match } from "@/types";
 
 type TopMatchPreviewCardProps = {
   matchId: string;
+  slot?: TopMatchPreviewSlot;
   delay?: number;
 };
 
@@ -34,6 +36,7 @@ async function loadMatch(matchId: string): Promise<Match | null> {
 
 export function TopMatchPreviewCard({
   matchId,
+  slot,
   delay = 0,
 }: TopMatchPreviewCardProps) {
   const { token, canViewVipAnalysis } = useAuth();
@@ -41,6 +44,26 @@ export function TopMatchPreviewCard({
   const [analysis, setAnalysis] = useState<MatchAnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const overrides = slot && hasPreviewOverrides(slot) ? slot : undefined;
+
+  const displayMatch = useMemo(() => {
+    if (!match || !overrides) return match;
+    return {
+      ...match,
+      homeTeam: overrides.homeTeam || match.homeTeam,
+      awayTeam: overrides.awayTeam || match.awayTeam,
+      title: `${overrides.homeTeam || match.homeTeam} 對 ${overrides.awayTeam || match.awayTeam}`,
+    };
+  }, [match, overrides]);
+
+  const displayPick = useMemo(() => {
+    if (!analysis || !overrides?.pickSelection) return analysis?.pick;
+    return {
+      ...analysis.pick,
+      selection: overrides.pickSelection,
+    };
+  }, [analysis, overrides]);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,14 +130,14 @@ export function TopMatchPreviewCard({
           <p className="py-8 text-center text-sm text-gray-40">{error}</p>
         )}
 
-        {!loading && match && analysis && (
+        {!loading && displayMatch && analysis && displayPick && (
           <div className="flex flex-col gap-4">
-            <MatchHeaderCard match={match} showMeta={false} />
+            <MatchHeaderCard match={displayMatch} showMeta={false} />
             <ScoreBreakdown
               dimensions={analysis.dimensions}
-              pick={analysis.pick}
-              matchId={match.id}
-              vipLocked={!canViewVipAnalysis}
+              pick={displayPick}
+              matchId={displayMatch.id}
+              vipLocked={!canViewVipAnalysis && !overrides?.pickSelection}
             />
           </div>
         )}
