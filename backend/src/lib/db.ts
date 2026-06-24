@@ -103,6 +103,22 @@ export async function initDb(): Promise<void> {
       sort_order INT NOT NULL DEFAULT 0,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS top_match_previews (
+      id VARCHAR(16) PRIMARY KEY,
+      match_id VARCHAR(64) NOT NULL DEFAULT '',
+      home_team VARCHAR(80) NOT NULL DEFAULT '',
+      away_team VARCHAR(80) NOT NULL DEFAULT '',
+      pick_selection VARCHAR(80) NOT NULL DEFAULT '',
+      sort_order INT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    ALTER TABLE top_match_previews ADD COLUMN IF NOT EXISTS home_team VARCHAR(80) NOT NULL DEFAULT '';
+    ALTER TABLE top_match_previews ADD COLUMN IF NOT EXISTS away_team VARCHAR(80) NOT NULL DEFAULT '';
+    ALTER TABLE top_match_previews ADD COLUMN IF NOT EXISTS pick_selection VARCHAR(80) NOT NULL DEFAULT '';
   `);
 }
 

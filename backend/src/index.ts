@@ -12,8 +12,10 @@ import usersRoutes from "./routes/users.js";
 import hkjcRoutes from "./routes/hkjc.js";
 import featuredRoutes from "./routes/featured.js";
 import homeSectionsRoutes from "./routes/home-sections.js";
+import topMatchPreviewsRoutes from "./routes/top-match-previews.js";
 import { seedFeaturedItems } from "./lib/featured.js";
 import { seedHomeSections } from "./lib/home-sections.js";
+import { seedTopMatchPreviews } from "./lib/top-match-previews.js";
 
 dns.setDefaultResultOrder("ipv4first");
 
@@ -41,6 +43,7 @@ app.use("/api/users", usersRoutes);
 app.use("/api/hkjc", hkjcRoutes);
 app.use("/api/featured", featuredRoutes);
 app.use("/api/home-sections", homeSectionsRoutes);
+app.use("/api/top-match-previews", topMatchPreviewsRoutes);
 
 async function start() {
   if (!process.env.DATABASE_URL) {
@@ -51,6 +54,7 @@ async function start() {
   await initDb();
   await seedFeaturedItems();
   await seedHomeSections();
+  await seedTopMatchPreviews();
 
   app.listen(port, () => {
     console.log(`Backend listening on http://localhost:${port}`);
