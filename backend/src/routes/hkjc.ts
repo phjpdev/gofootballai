@@ -4,6 +4,7 @@ import {
   getArchivedMatchById,
   listAdminPastDates,
   listArchivedMatchesByDate,
+  syncArchivedFromAnalyses,
 } from "../lib/archived-hkjc.js";
 import {
   fetchHkjcMatchById,
@@ -68,6 +69,7 @@ router.get(
     }
 
     try {
+      await syncArchivedFromAnalyses();
       const matches = await listArchivedMatchesByDate(dateKey);
       res.json({ date: dateKey, matches, total: matches.length });
     } catch (error) {
