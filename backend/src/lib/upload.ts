@@ -2,9 +2,12 @@ import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import path from "node:path";
 import multer from "multer";
+import { isAllowedUploadFile } from "./media-files.js";
 
 const uploadDir = path.join(process.cwd(), "uploads");
 mkdirSync(uploadDir, { recursive: true });
+
+export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 export const upload = multer({
   storage: multer.diskStorage({
@@ -14,9 +17,9 @@ export const upload = multer({
       cb(null, `${randomUUID()}${ext}`);
     },
   }),
-  limits: { fileSize: 50 * 1024 * 1024 },
+  limits: { fileSize: MAX_UPLOAD_BYTES },
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/")) {
+    if (isAllowedUploadFile(file)) {
       cb(null, true);
       return;
     }
