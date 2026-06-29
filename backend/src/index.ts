@@ -5,6 +5,7 @@ import express from "express";
 import path from "node:path";
 import { initDb } from "./lib/db.js";
 import { ensureDatabase } from "./lib/ensure-database.js";
+import { syncArchivedFromAnalyses } from "./lib/archived-hkjc.js";
 import authRoutes from "./routes/auth.js";
 import analysesRoutes from "./routes/analyses.js";
 import recordsRoutes from "./routes/records.js";
@@ -52,6 +53,10 @@ async function start() {
 
   await ensureDatabase(process.env.DATABASE_URL);
   await initDb();
+  const synced = await syncArchivedFromAnalyses();
+  if (synced > 0) {
+    console.log(`Synced ${synced} archived matches from analyses`);
+  }
   await seedFeaturedItems();
   await seedHomeSections();
   await seedTopMatchPreviews();

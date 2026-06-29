@@ -113,6 +113,16 @@ export async function initDb(): Promise<void> {
       sort_order INT NOT NULL DEFAULT 0,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS archived_hkjc_matches (
+      hkjc_match_id VARCHAR(64) PRIMARY KEY,
+      match_date DATE NOT NULL,
+      match_data JSONB NOT NULL,
+      archived_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS archived_hkjc_matches_match_date_idx
+      ON archived_hkjc_matches (match_date DESC);
   `);
 
   await pool.query(`

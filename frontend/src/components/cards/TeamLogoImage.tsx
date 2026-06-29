@@ -48,6 +48,19 @@ export function TeamLogoImage({
   }, [src, queryName]);
 
   const handleError = () => {
+    if (!usedLookupFallback && lookupName?.trim() && lookupName !== name) {
+      setUsedLookupFallback(true);
+      void fetchTeamLogo(name).then((url) => {
+        if (url) {
+          setLogoUrl(url);
+          setFailed(false);
+        } else {
+          setFailed(true);
+        }
+      });
+      return;
+    }
+
     if (!usedLookupFallback && queryName) {
       setUsedLookupFallback(true);
       void fetchTeamLogo(queryName).then((url) => {
@@ -60,6 +73,7 @@ export function TeamLogoImage({
       });
       return;
     }
+
     setFailed(true);
   };
 

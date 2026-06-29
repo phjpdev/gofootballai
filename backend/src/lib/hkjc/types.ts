@@ -63,7 +63,12 @@ export type HkjcInputSnapshot = {
   frontEndId: string;
   homeTeam: string;
   awayTeam: string;
+  homeTeamEn?: string;
+  awayTeamEn?: string;
+  homeTeamId?: string;
+  awayTeamId?: string;
   tournamentName: string;
+  tournamentCode?: string;
   kickOffTime: string;
   hadOdds: HkjcHadOdds | null;
   hdcOdds: HkjcHdcOdds | null;
