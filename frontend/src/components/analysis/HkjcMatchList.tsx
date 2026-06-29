@@ -14,6 +14,11 @@ import { AnimateIn } from "@/components/motion/AnimateIn";
 import { HkjcMatchCard } from "@/components/cards/HkjcMatchCard";
 import { filterMatchesByDate } from "@/lib/hkjc/transform";
 import { fetchAnalysisScores, prewarmAnalyses } from "@/lib/analyses-api";
+import {
+  fetchArchivedDates,
+  fetchArchivedMatches,
+} from "@/lib/hkjc/archived-matches-api";
+import { enrichArchivedMatches } from "@/lib/hkjc/enrich-archived-logos";
 import { fetchHkjcMatchesFromApi } from "@/lib/hkjc/matches-api";
 import { useAuth } from "@/context/AuthContext";
 import type { HkjcDateItem, HkjcMatch, HkjcMatchesResponse } from "@/types/hkjc";
@@ -25,20 +30,29 @@ type HkjcContextValue = {
   selectedIndex: number;
   setSelectedIndex: (index: number) => void;
   reload: (refresh?: boolean) => Promise<void>;
+  archivedDates: HkjcDateItem[];
+  archivedMatchesByDate: Record<string, HkjcMatch[]>;
+  archivedLoading: boolean;
+  adminPastTabCount: number;
 };
 
 const HkjcContext = createContext<HkjcContextValue | null>(null);
 
 function findDefaultDateIndex(): number {
-  // index 0 is "All"
   return 0;
 }
 
 export function HkjcProvider({ children }: { children: React.ReactNode }) {
+  const { token, isAdmin } = useAuth();
   const [data, setData] = useState<HkjcMatchesResponse | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [archivedDates, setArchivedDates] = useState<HkjcDateItem[]>([]);
+  const [archivedMatchesByDate, setArchivedMatchesByDate] = useState<
+    Record<string, HkjcMatch[]>
+  >({});
+  const [archivedLoading, setArchivedLoading] = useState(false);
 
   const reload = useCallback(async (refresh = false) => {
     setLoading(true);
@@ -52,11 +66,14 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
         setData(retry);
       }
     } catch {
-      if (data?.total) {
-        setError("無法更新賽事資料，顯示上次快取結果。");
-      } else {
-        setError("無法載入馬會賽事資料，請稍後再試。");
-      }
+      setData((current) => {
+        if (current?.total) {
+          setError("無法更新賽事資料，顯示上次快取結果。");
+        } else {
+          setError("無法載入馬會賽事資料，請稍後再試。");
+        }
+        return current;
+      });
     } finally {
       setLoading(false);
     }
@@ -66,6 +83,79 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
     void reload();
   }, [reload]);
 
+  useEffect(() => {
+    if (!isAdmin || !token) {
+      setArchivedDates([]);
+      setArchivedMatchesByDate({});
+      return;
+    }
+
+    let cancelled = false;
+
+    void fetchArchivedDates(token)
+      .then((dates) => {
+        if (!cancelled) {
+          setArchivedDates(dates);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setArchivedDates([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, token, data?.updatedAt]);
+
+  const adminPastTabCount = isAdmin ? archivedDates.length : 0;
+
+  useEffect(() => {
+    if (!isAdmin || !token || adminPastTabCount === 0) return;
+    if (selectedIndex === 0 || selectedIndex > adminPastTabCount) return;
+
+    const dateKey = archivedDates[selectedIndex - 1]?.key;
+    if (!dateKey || archivedMatchesByDate[dateKey]) return;
+
+    let cancelled = false;
+    setArchivedLoading(true);
+
+    void fetchArchivedMatches(token, dateKey)
+      .then((matches) => {
+        if (!cancelled) {
+          setArchivedMatchesByDate((current) => ({
+            ...current,
+            [dateKey]: enrichArchivedMatches(matches),
+          }));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setArchivedMatchesByDate((current) => ({
+            ...current,
+            [dateKey]: [],
+          }));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setArchivedLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isAdmin,
+    token,
+    adminPastTabCount,
+    selectedIndex,
+    archivedDates,
+    archivedMatchesByDate,
+  ]);
+
   const value = useMemo(
     () => ({
       data,
@@ -74,8 +164,22 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
       selectedIndex,
       setSelectedIndex,
       reload,
+      archivedDates,
+      archivedMatchesByDate,
+      archivedLoading,
+      adminPastTabCount,
     }),
-    [data, loading, error, selectedIndex, reload],
+    [
+      data,
+      loading,
+      error,
+      selectedIndex,
+      reload,
+      archivedDates,
+      archivedMatchesByDate,
+      archivedLoading,
+      adminPastTabCount,
+    ],
   );
 
   return <HkjcContext.Provider value={value}>{children}</HkjcContext.Provider>;
@@ -90,16 +194,36 @@ function useHkjc() {
 }
 
 export function HkjcDatePicker() {
-  const { data, loading, selectedIndex, setSelectedIndex } = useHkjc();
+  const {
+    data,
+    loading,
+    selectedIndex,
+    setSelectedIndex,
+    archivedDates,
+    adminPastTabCount,
+  } = useHkjc();
 
   const datePickerItems = useMemo(
-    () =>
-      (data?.dates ?? []).map((date) => ({
+    () => {
+      const liveItems = (data?.dates ?? []).map((date) => ({
         day: date.day,
         date: date.date,
         hasEvent: date.hasEvent,
-      })),
-    [data?.dates],
+      }));
+
+      if (adminPastTabCount === 0) {
+        return liveItems;
+      }
+
+      const archivedItems = archivedDates.map((date) => ({
+        day: date.day,
+        date: date.date,
+        hasEvent: date.hasEvent,
+      }));
+
+      return [...archivedItems, ...liveItems];
+    },
+    [data?.dates, archivedDates, adminPastTabCount],
   );
 
   if (loading || datePickerItems.length === 0) {
@@ -121,7 +245,17 @@ export function HkjcMatchesSection({
 }: {
   mode?: "default" | "top-picks";
 }) {
-  const { data, loading, error, selectedIndex, reload } = useHkjc();
+  const {
+    data,
+    loading,
+    error,
+    selectedIndex,
+    reload,
+    archivedDates,
+    archivedMatchesByDate,
+    archivedLoading,
+    adminPastTabCount,
+  } = useHkjc();
   const { token, isAuthenticated, isMember, isAdmin, isLoading: authLoading } =
     useAuth();
   const [analysisScores, setAnalysisScores] = useState<Record<string, number>>(
@@ -129,15 +263,35 @@ export function HkjcMatchesSection({
   );
   const [scoresLoading, setScoresLoading] = useState(false);
   const isTopPicks = mode === "top-picks";
-  const listKey = `${mode}-${selectedIndex}-${data?.updatedAt ?? "loading"}`;
+  const listKey = `${mode}-${selectedIndex}-${data?.updatedAt ?? "loading"}-${archivedLoading}`;
 
   const matches = useMemo(() => {
+    if (selectedIndex === 0) {
+      return data?.matches ?? [];
+    }
+
+    if (adminPastTabCount > 0 && selectedIndex <= adminPastTabCount) {
+      const dateKey = archivedDates[selectedIndex - 1]?.key;
+      return dateKey ? archivedMatchesByDate[dateKey] ?? [] : [];
+    }
+
     if (!data) return [] as HkjcMatch[];
-    if (selectedIndex === 0) return data.matches;
-    const selectedDateKey = data.dates[selectedIndex - 1]?.key;
+    const liveIndex = selectedIndex - 1 - adminPastTabCount;
+    const selectedDateKey = data.dates[liveIndex]?.key;
     if (!selectedDateKey) return [] as HkjcMatch[];
     return filterMatchesByDate(data.matches, selectedDateKey);
-  }, [data, selectedIndex]);
+  }, [
+    data,
+    selectedIndex,
+    adminPastTabCount,
+    archivedDates,
+    archivedMatchesByDate,
+  ]);
+
+  const viewingArchived =
+    adminPastTabCount > 0 &&
+    selectedIndex > 0 &&
+    selectedIndex <= adminPastTabCount;
 
   const canAccessPicks = isAuthenticated && (isMember || isAdmin);
   const canPrewarm = canAccessPicks && Boolean(token);
@@ -166,20 +320,31 @@ export function HkjcMatchesSection({
         setScoresLoading(false);
       });
 
-    void prewarmAnalyses(token, matchIds).then((results) => {
-      const scores: Record<string, number> = {};
-      for (const result of results) {
-        if (result.confidenceScore !== undefined && result.confidenceScore > 0) {
-          scores[result.matchId] = result.confidenceScore;
-        }
-      }
-      if (Object.keys(scores).length > 0) {
-        setAnalysisScores((prev) => ({ ...prev, ...scores }));
-      }
-    }).catch(() => {
-      // prewarm is best-effort
-    });
-  }, [canPrewarm, token, matches, isTopPicks, data?.matches.length]);
+    if (!viewingArchived) {
+      void prewarmAnalyses(token, matchIds)
+        .then((results) => {
+          const scores: Record<string, number> = {};
+          for (const result of results) {
+            if (result.confidenceScore !== undefined && result.confidenceScore > 0) {
+              scores[result.matchId] = result.confidenceScore;
+            }
+          }
+          if (Object.keys(scores).length > 0) {
+            setAnalysisScores((prev) => ({ ...prev, ...scores }));
+          }
+        })
+        .catch(() => {
+          // prewarm is best-effort
+        });
+    }
+  }, [
+    canPrewarm,
+    token,
+    matches,
+    isTopPicks,
+    data?.matches.length,
+    viewingArchived,
+  ]);
 
   const displayMatches = useMemo(() => {
     if (!isTopPicks) return matches;
@@ -191,7 +356,7 @@ export function HkjcMatchesSection({
     });
   }, [matches, isTopPicks, analysisScores]);
 
-  if (loading || (isTopPicks && authLoading)) {
+  if (loading || (isTopPicks && authLoading) || (viewingArchived && archivedLoading)) {
     return (
       <div className="flex flex-col gap-3">
         {Array.from({ length: 4 }).map((_, index) => (
@@ -236,9 +401,11 @@ export function HkjcMatchesSection({
         />
         {data?.updatedAt && (
           <p className="pb-0.5 text-[10px] font-medium text-gray-60">
-            {isTopPicks
-              ? `按 AI 評分排序 · ${scoredCount} 場`
-              : `馬會 · ${data.total} 場進行中`}
+            {viewingArchived
+              ? `資料庫 · ${matches.length} 場過往賽事`
+              : isTopPicks
+                ? `按 AI 評分排序 · ${scoredCount} 場`
+                : `馬會 · ${data.total} 場進行中`}
           </p>
         )}
       </div>
@@ -249,7 +416,9 @@ export function HkjcMatchesSection({
 
       {displayMatches.length === 0 ? (
         <div className="rounded-[24px] bg-gray-90 p-6 text-center">
-          <p className="text-sm text-gray-40">此日期暫無馬會賽事。</p>
+          <p className="text-sm text-gray-40">
+            {viewingArchived ? "此日期暫無已儲存的過往賽事。" : "此日期暫無馬會賽事。"}
+          </p>
           <button
             type="button"
             onClick={() => void reload(true)}

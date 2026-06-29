@@ -5,6 +5,7 @@ import {
   transformHkjcMatch,
   type RawMatch,
 } from "./transform.js";
+import { archiveHkjcMatches } from "../archived-hkjc.js";
 import { createFootballAPI } from "./graphql-client.js";
 import type { HkjcMatch, HkjcMatchesResponse } from "./types.js";
 
@@ -64,6 +65,9 @@ export async function fetchHkjcMatches(options?: {
         expiresAt: Date.now() + CACHE_TTL_MS,
         savedAt: Date.now(),
       };
+      void archiveHkjcMatches(matches).catch((error) => {
+        console.warn("Failed to archive HKJC matches:", error);
+      });
       return matches;
     }
   } catch (error) {
@@ -123,6 +127,9 @@ export async function fetchHkjcMatchById(
     matchByIdCache.set(matchId, {
       match,
       expiresAt: Date.now() + MATCH_BY_ID_TTL_MS,
+    });
+    void archiveHkjcMatches([match]).catch((error) => {
+      console.warn(`Failed to archive HKJC match ${matchId}:`, error);
     });
     return match;
   } catch (error) {
