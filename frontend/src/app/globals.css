@@ -293,7 +293,7 @@ body {
 }
 
 .led-border__track--dim {
-  stroke: rgba(255, 255, 255, 0.1);
+  stroke: rgba(249, 115, 22, 0.22);
   stroke-width: 1.5px;
 }
 

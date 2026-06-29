@@ -49,7 +49,9 @@ export function LedBorder({
   const heatCoreDash = Math.max(32, Math.min(44, perimeter * 0.045));
   const heatGlowDash = heatCoreDash * 1.15;
   const heatTrailDash = heatCoreDash * 1.3;
-  const heatGap = (dash: number) => Math.max(perimeter - dash, dash);
+  const dualGap = Math.max((perimeter - heatCoreDash * 2) / 2, heatCoreDash);
+  const dualDashPattern = (dash: number) =>
+    `${dash} ${dualGap} ${dash} ${dualGap}`;
 
   const heatGradientId = `led-heat-${uid}`;
   const heatBlurHeavyId = `led-heat-blur-heavy-${uid}`;
@@ -131,20 +133,20 @@ export function LedBorder({
             className="led-border__track led-border__track--heat-trail"
             stroke={`url(#${heatGradientId})`}
             filter={`url(#${heatBlurHeavyId})`}
-            strokeDasharray={`${heatTrailDash} ${heatGap(heatTrailDash)}`}
+            strokeDasharray={dualDashPattern(heatTrailDash)}
             {...trackProps}
           />
           <rect
             className="led-border__track led-border__track--heat-glow"
             stroke={`url(#${heatGradientId})`}
             filter={`url(#${heatBlurMidId})`}
-            strokeDasharray={`${heatGlowDash} ${heatGap(heatGlowDash)}`}
+            strokeDasharray={dualDashPattern(heatGlowDash)}
             {...trackProps}
           />
           <rect
             className="led-border__track led-border__track--heat-core"
             stroke={`url(#${heatGradientId})`}
-            strokeDasharray={`${heatCoreDash} ${heatGap(heatCoreDash)}`}
+            strokeDasharray={dualDashPattern(heatCoreDash)}
             {...trackProps}
           />
         </svg>

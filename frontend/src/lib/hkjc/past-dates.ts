@@ -1,0 +1,46 @@
+import type { HkjcDateItem } from "@/types/hkjc";
+
+export const ADMIN_PAST_TAB_COUNT = 2;
+
+export function getTodayDateKeyHk(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Hong_Kong",
+  }).format(new Date());
+}
+
+function addDaysToDateKey(dateKey: string, delta: number): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + delta));
+  return date.toISOString().slice(0, 10);
+}
+
+export function getPreviousHKDateKeys(count: number): string[] {
+  const today = getTodayDateKeyHk();
+  const keys: string[] = [];
+  for (let offset = count; offset >= 1; offset -= 1) {
+    keys.push(addDaysToDateKey(today, -offset));
+  }
+  return keys;
+}
+
+function formatDay(dateKey: string): string {
+  const date = new Date(`${dateKey}T12:00:00+08:00`);
+  return date.toLocaleDateString("zh-HK", {
+    weekday: "short",
+    timeZone: "Asia/Hong_Kong",
+  });
+}
+
+export function buildAdminPastDateItems(
+  count = ADMIN_PAST_TAB_COUNT,
+): HkjcDateItem[] {
+  return getPreviousHKDateKeys(count).map((key) => {
+    const [, , day] = key.split("-").map(Number);
+    return {
+      key,
+      day: formatDay(key),
+      date: day,
+      hasEvent: false,
+    };
+  });
+}

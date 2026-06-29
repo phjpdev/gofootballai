@@ -19,6 +19,10 @@ import {
   fetchArchivedMatches,
 } from "@/lib/hkjc/archived-matches-api";
 import { enrichArchivedMatches } from "@/lib/hkjc/enrich-archived-logos";
+import {
+  ADMIN_PAST_TAB_COUNT,
+  buildAdminPastDateItems,
+} from "@/lib/hkjc/past-dates";
 import { fetchHkjcMatchesFromApi } from "@/lib/hkjc/matches-api";
 import { useAuth } from "@/context/AuthContext";
 import type { HkjcDateItem, HkjcMatch, HkjcMatchesResponse } from "@/types/hkjc";
@@ -38,21 +42,40 @@ type HkjcContextValue = {
 
 const HkjcContext = createContext<HkjcContextValue | null>(null);
 
-function findDefaultDateIndex(): number {
-  return 0;
-}
-
 export function HkjcProvider({ children }: { children: React.ReactNode }) {
-  const { token, isAdmin } = useAuth();
+  const { token, isAdmin, isLoading: authLoading } = useAuth();
   const [data, setData] = useState<HkjcMatchesResponse | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [archivedDates, setArchivedDates] = useState<HkjcDateItem[]>([]);
+  const [archivedHasEventByKey, setArchivedHasEventByKey] = useState<
+    Record<string, boolean>
+  >({});
   const [archivedMatchesByDate, setArchivedMatchesByDate] = useState<
     Record<string, HkjcMatch[]>
   >({});
-  const [archivedLoading, setArchivedLoading] = useState(false);
+  const [loadedArchivedDateKeys, setLoadedArchivedDateKeys] = useState<
+    Set<string>
+  >(() => new Set());
+
+  const adminPastTabCount =
+    !authLoading && isAdmin ? ADMIN_PAST_TAB_COUNT : 0;
+
+  const clientPastDates = useMemo(() => {
+    if (adminPastTabCount === 0) return [] as HkjcDateItem[];
+    return buildAdminPastDateItems(ADMIN_PAST_TAB_COUNT);
+  }, [adminPastTabCount]);
+
+  const archivedDates = useMemo(
+    () =>
+      clientPastDates.map((date) => ({
+        ...date,
+        hasEvent:
+          archivedHasEventByKey[date.key] ??
+          (archivedMatchesByDate[date.key]?.length ?? 0) > 0,
+      })),
+    [clientPastDates, archivedHasEventByKey, archivedMatchesByDate],
+  );
 
   const reload = useCallback(async (refresh = false) => {
     setLoading(true);
@@ -60,7 +83,6 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
     try {
       const json = await fetchHkjcMatchesFromApi({ refresh });
       setData(json);
-      setSelectedIndex(findDefaultDateIndex());
       if (json.total === 0 && !refresh) {
         const retry = await fetchHkjcMatchesFromApi({ refresh: true });
         setData(retry);
@@ -84,64 +106,72 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
   }, [reload]);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!isAdmin || !token) {
-      setArchivedDates([]);
+      setArchivedHasEventByKey({});
       setArchivedMatchesByDate({});
-      return;
+      setLoadedArchivedDateKeys(new Set());
     }
+  }, [authLoading, isAdmin, token]);
+
+  useEffect(() => {
+    if (authLoading || !isAdmin || !token) return;
 
     let cancelled = false;
 
     void fetchArchivedDates(token)
       .then((dates) => {
-        if (!cancelled) {
-          setArchivedDates(dates);
+        if (cancelled) return;
+        const next: Record<string, boolean> = {};
+        for (const date of dates) {
+          next[date.key] = date.hasEvent;
         }
+        setArchivedHasEventByKey(next);
       })
       .catch(() => {
-        if (!cancelled) {
-          setArchivedDates([]);
-        }
+        // Keep client-side tabs; hasEvent falls back to loaded match counts.
       });
 
     return () => {
       cancelled = true;
     };
-  }, [isAdmin, token, data?.updatedAt]);
-
-  const adminPastTabCount = isAdmin ? archivedDates.length : 0;
+  }, [authLoading, isAdmin, token, data?.updatedAt]);
 
   useEffect(() => {
     if (!isAdmin || !token || adminPastTabCount === 0) return;
-    if (selectedIndex === 0 || selectedIndex > adminPastTabCount) return;
 
-    const dateKey = archivedDates[selectedIndex - 1]?.key;
-    if (!dateKey || archivedMatchesByDate[dateKey]) return;
+    const pendingKeys = clientPastDates
+      .map((date) => date.key)
+      .filter((key) => key && !loadedArchivedDateKeys.has(key));
+
+    if (pendingKeys.length === 0) return;
 
     let cancelled = false;
-    setArchivedLoading(true);
 
-    void fetchArchivedMatches(token, dateKey)
-      .then((matches) => {
-        if (!cancelled) {
-          setArchivedMatchesByDate((current) => ({
-            ...current,
-            [dateKey]: enrichArchivedMatches(matches),
-          }));
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setArchivedMatchesByDate((current) => ({
-            ...current,
-            [dateKey]: [],
-          }));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setArchivedLoading(false);
-        }
+    void Promise.all(
+      pendingKeys.map((dateKey) =>
+        fetchArchivedMatches(token, dateKey)
+          .then((matches) => ({ dateKey, matches }))
+          .catch(() => ({ dateKey, matches: [] as HkjcMatch[] })),
+      ),
+    )
+      .then((results) => {
+        if (cancelled) return;
+
+        setArchivedMatchesByDate((current) => {
+          const next = { ...current };
+          for (const { dateKey, matches } of results) {
+            next[dateKey] = enrichArchivedMatches(matches);
+          }
+          return next;
+        });
+        setLoadedArchivedDateKeys((current) => {
+          const next = new Set(current);
+          for (const { dateKey } of results) {
+            next.add(dateKey);
+          }
+          return next;
+        });
       });
 
     return () => {
@@ -151,9 +181,25 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
     isAdmin,
     token,
     adminPastTabCount,
+    clientPastDates,
+    loadedArchivedDateKeys,
+  ]);
+
+  const archivedLoading = useMemo(() => {
+    if (
+      adminPastTabCount === 0 ||
+      selectedIndex === 0 ||
+      selectedIndex > adminPastTabCount
+    ) {
+      return false;
+    }
+    const dateKey = archivedDates[selectedIndex - 1]?.key;
+    return Boolean(dateKey && !loadedArchivedDateKeys.has(dateKey));
+  }, [
+    adminPastTabCount,
     selectedIndex,
     archivedDates,
-    archivedMatchesByDate,
+    loadedArchivedDateKeys,
   ]);
 
   const value = useMemo(
