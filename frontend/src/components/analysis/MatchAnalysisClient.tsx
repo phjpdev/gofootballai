@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { EditMatchPickModal } from "@/components/analysis/EditMatchPickModal";
 import { MatchAnalysisView } from "@/components/analysis/MatchAnalysisView";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -10,7 +11,8 @@ import {
   fetchMatchAnalysis,
   regenerateAnalysis,
 } from "@/lib/analyses-api";
-import type { AnalysisResponse } from "@/types/analysis";
+import { fetchMatchPickOverride } from "@/lib/match-pick-overrides-api";
+import type { AnalysisResponse, MatchAnalysisResult } from "@/types/analysis";
 import type { Match } from "@/types";
 
 type MatchAnalysisClientProps = {
@@ -31,8 +33,35 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [pendingSince, setPendingSince] = useState<number | null>(null);
+  const [pickOverride, setPickOverride] = useState("");
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const canAccess = isAuthenticated && (isMember || isAdmin);
+
+  const loadPickOverride = useCallback(async () => {
+    try {
+      const selection = await fetchMatchPickOverride(match.id);
+      setPickOverride(selection);
+    } catch {
+      setPickOverride("");
+    }
+  }, [match.id]);
+
+  const displayAnalysis = useMemo((): MatchAnalysisResult | null => {
+    const base = analysisState?.analysis ?? null;
+    if (!base) return null;
+
+    const selection = pickOverride.trim() || base.pick.selection;
+    if (selection === base.pick.selection) return base;
+
+    return {
+      ...base,
+      pick: {
+        ...base.pick,
+        selection,
+      },
+    };
+  }, [analysisState?.analysis, pickOverride]);
 
   const loadAnalysis = useCallback(async () => {
     if (!token || !canAccess) return;
@@ -60,6 +89,10 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
     }
     void loadAnalysis();
   }, [isLoading, canAccess, loadAnalysis]);
+
+  useEffect(() => {
+    void loadPickOverride();
+  }, [loadPickOverride]);
 
   useEffect(() => {
     if (analysisState?.status === "pending") {
@@ -121,29 +154,50 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
     }
   };
 
+  const modalPickSelection =
+    pickOverride.trim() ||
+    analysisState?.analysis?.pick.selection ||
+    "";
+
   return (
-    <MatchAnalysisView
-      match={match}
-      analysis={analysisState?.analysis ?? null}
-      loading={isLoading || (canAccess && loading && !analysisState)}
-      pending={analysisState?.status === "pending" && !timedOut}
-      locked={!isLoading && !canAccess}
-      canViewVipContent={canViewVipAnalysis}
-      lockedHint={
-        isAuthenticated && user && !canAccess
-          ? "此帳戶無法查看會員分析，請使用會員帳戶登入。"
-          : "請登入或註冊會員帳戶，以查看 AI 賽事量化分析。"
-      }
-      loginRedirectTo={pathname}
-      error={
-        timedOut
-          ? "分析逾時，請點擊重新分析"
-          : analysisState?.status === "failed"
-            ? (error ?? "分析生成失敗，請點擊重新分析")
-            : error ?? undefined
-      }
-      onRetry={handleRetry}
-      retrying={retrying}
-    />
+    <>
+      <MatchAnalysisView
+        match={match}
+        analysis={displayAnalysis}
+        loading={isLoading || (canAccess && loading && !analysisState)}
+        pending={analysisState?.status === "pending" && !timedOut}
+        locked={!isLoading && !canAccess}
+        canViewVipContent={canViewVipAnalysis}
+        lockedHint={
+          isAuthenticated && user && !canAccess
+            ? "此帳戶無法查看會員分析，請使用會員帳戶登入。"
+            : "請登入或註冊會員帳戶，以查看 AI 賽事量化分析。"
+        }
+        loginRedirectTo={pathname}
+        error={
+          timedOut
+            ? "分析逾時，請點擊重新分析"
+            : analysisState?.status === "failed"
+              ? (error ?? "分析生成失敗，請點擊重新分析")
+              : error ?? undefined
+        }
+        onRetry={handleRetry}
+        retrying={retrying}
+        showEditPick={isAdmin && Boolean(displayAnalysis)}
+        onEditPick={() => setEditModalOpen(true)}
+        pickOverridden={Boolean(pickOverride.trim())}
+      />
+
+      {isAdmin && token && (
+        <EditMatchPickModal
+          open={editModalOpen}
+          matchId={match.id}
+          token={token}
+          initialPickSelection={modalPickSelection}
+          onClose={() => setEditModalOpen(false)}
+          onSaved={setPickOverride}
+        />
+      )}
+    </>
   );
 }

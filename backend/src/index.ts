@@ -14,6 +14,7 @@ import hkjcRoutes from "./routes/hkjc.js";
 import featuredRoutes from "./routes/featured.js";
 import homeSectionsRoutes from "./routes/home-sections.js";
 import topMatchPreviewsRoutes from "./routes/top-match-previews.js";
+import matchPickOverridesRoutes from "./routes/match-pick-overrides.js";
 import { seedFeaturedItems } from "./lib/featured.js";
 import { seedHomeSections } from "./lib/home-sections.js";
 import { seedTopMatchPreviews } from "./lib/top-match-previews.js";
@@ -45,6 +46,7 @@ app.use("/api/hkjc", hkjcRoutes);
 app.use("/api/featured", featuredRoutes);
 app.use("/api/home-sections", homeSectionsRoutes);
 app.use("/api/top-match-previews", topMatchPreviewsRoutes);
+app.use("/api/match-pick-overrides", matchPickOverridesRoutes);
 
 async function start() {
   if (!process.env.DATABASE_URL) {
