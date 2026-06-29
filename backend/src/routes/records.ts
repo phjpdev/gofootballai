@@ -1,4 +1,5 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
+import multer from "multer";
 import {
   createRecord,
   deleteRecord,
@@ -6,8 +7,10 @@ import {
   listRecords,
   updateRecord,
 } from "../lib/records.js";
+import { isImageFile, isVideoFile } from "../lib/media-files.js";
 import {
   deleteUploadedFile,
+  MAX_UPLOAD_BYTES,
   publicUploadPath,
   upload,
 } from "../lib/upload.js";
@@ -45,6 +48,16 @@ function parseStarRating(value: unknown): number | null {
 
 function handleUpload(req: Request, res: Response, next: NextFunction) {
   upload.single("file")(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        res.status(400).json({
+          error: `檔案大小不能超過 ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))} MB`,
+        });
+        return;
+      }
+      res.status(400).json({ error: err.message });
+      return;
+    }
     if (err) {
       res.status(400).json({ error: err.message });
       return;
@@ -105,12 +118,12 @@ router.post(
       return;
     }
 
-    if (type === "photo" && !req.file?.mimetype.startsWith("image/")) {
+    if (type === "photo" && req.file && !isImageFile(req.file)) {
       res.status(400).json({ error: "相片紀錄需要圖片檔案" });
       return;
     }
 
-    if (type === "video" && !req.file?.mimetype.startsWith("video/")) {
+    if (type === "video" && req.file && !isVideoFile(req.file)) {
       res.status(400).json({ error: "影片紀錄需要影片檔案" });
       return;
     }
@@ -183,12 +196,12 @@ router.patch(
     if (type === "text") {
       mediaUrl = null;
     } else if (req.file) {
-      if (type === "photo" && !req.file.mimetype.startsWith("image/")) {
+      if (type === "photo" && !isImageFile(req.file)) {
         deleteUploadedFile(publicUploadPath(req.file.filename));
         res.status(400).json({ error: "相片紀錄需要圖片檔案" });
         return;
       }
-      if (type === "video" && !req.file.mimetype.startsWith("video/")) {
+      if (type === "video" && !isVideoFile(req.file)) {
         deleteUploadedFile(publicUploadPath(req.file.filename));
         res.status(400).json({ error: "影片紀錄需要影片檔案" });
         return;

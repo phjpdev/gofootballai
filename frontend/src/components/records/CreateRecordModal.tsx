@@ -18,6 +18,21 @@ const TYPE_LABEL: Record<"photo" | "video", string> = {
   video: "影片",
 };
 
+const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
+
+const VIDEO_ACCEPT =
+  "video/mp4,video/quicktime,video/webm,video/x-m4v,.mp4,.mov,.m4v,.webm,.avi,.mkv,.3gp";
+
+function isVideoFile(file: File): boolean {
+  if (file.type.startsWith("video/")) return true;
+  return /\.(mp4|mov|webm|m4v|avi|mkv|mpeg|mpg|3gp|3g2|wmv)$/i.test(file.name);
+}
+
+function isPhotoFile(file: File): boolean {
+  if (file.type.startsWith("image/")) return true;
+  return /\.(jpe?g|png|gif|webp|heic|heif|bmp|avif)$/i.test(file.name);
+}
+
 function todayDateInputValue(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -110,6 +125,32 @@ export function CreateRecordModal({
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0] ?? null;
+    if (!selected) {
+      setFile(null);
+      return;
+    }
+
+    if (selected.size > MAX_UPLOAD_BYTES) {
+      setError(`檔案大小不能超過 ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB`);
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    if (type === "video" && !isVideoFile(selected)) {
+      setError("請選擇有效的影片檔案（例如 MP4、MOV）");
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    if (type === "photo" && !isPhotoFile(selected)) {
+      setError("請選擇有效的圖片檔案");
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     setFile(selected);
     setError("");
   }
@@ -160,7 +201,7 @@ export function CreateRecordModal({
 
   if (!open) return null;
 
-  const accept = type === "photo" ? "image/*" : "video/*";
+  const accept = type === "photo" ? "image/*" : VIDEO_ACCEPT;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
@@ -289,7 +330,7 @@ export function CreateRecordModal({
                 </span>
                 <span className="flex items-center gap-1 text-xs text-gray-40">
                   <Upload className="size-3" />
-                  上限 50 MB
+                  上限 100 MB
                 </span>
               </button>
 
