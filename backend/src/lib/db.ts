@@ -123,6 +123,12 @@ export async function initDb(): Promise<void> {
 
     CREATE INDEX IF NOT EXISTS archived_hkjc_matches_match_date_idx
       ON archived_hkjc_matches (match_date DESC);
+
+    CREATE TABLE IF NOT EXISTS match_pick_overrides (
+      hkjc_match_id VARCHAR(64) PRIMARY KEY,
+      pick_selection VARCHAR(80) NOT NULL DEFAULT '',
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 
   await pool.query(`
