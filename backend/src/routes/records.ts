@@ -14,8 +14,12 @@ import {
   MAX_UPLOAD_BYTES,
   publicUploadPath,
   upload,
+  uploadsDir,
 } from "../lib/upload.js";
-import { optimizeUploadedVideo } from "../lib/transcode-video.js";
+import {
+  optimizeUploadedVideo,
+  optimizeUploadedVideoByUrl,
+} from "../lib/transcode-video.js";
 import {
   requireAdmin,
   requireAuth,
@@ -141,9 +145,20 @@ router.post(
       return;
     }
 
-    const mediaUrl = req.file
-      ? await resolveUploadedMediaUrl(req.file, type)
-      : undefined;
+    let mediaUrl: string | undefined;
+    try {
+      if (req.file) {
+        mediaUrl = await resolveUploadedMediaUrl(req.file, type);
+      }
+    } catch (error) {
+      if (req.file) {
+        deleteUploadedFile(publicUploadPath(req.file.filename));
+      }
+      res.status(400).json({
+        error: error instanceof Error ? error.message : "影片處理失敗",
+      });
+      return;
+    }
 
     try {
       const record = await createRecord({
@@ -221,7 +236,15 @@ router.patch(
         res.status(400).json({ error: "影片紀錄需要影片檔案" });
         return;
       }
-      mediaUrl = await resolveUploadedMediaUrl(req.file, type);
+      try {
+        mediaUrl = await resolveUploadedMediaUrl(req.file, type);
+      } catch (error) {
+        deleteUploadedFile(publicUploadPath(req.file.filename));
+        res.status(400).json({
+          error: error instanceof Error ? error.message : "影片處理失敗",
+        });
+        return;
+      }
     } else if (type !== existing.type) {
       res.status(400).json({
         error: "更改紀錄類型時請上傳新檔案",
@@ -262,6 +285,51 @@ router.patch(
     } catch {
       if (req.file) deleteUploadedFile(publicUploadPath(req.file.filename));
       res.status(500).json({ error: "更新紀錄失敗" });
+    }
+  },
+);
+
+router.post(
+  "/:id/retranscode",
+  requireAuth,
+  requireAdmin,
+  async (req: AuthedRequest, res) => {
+    const id = String(req.params.id);
+    const existing = await getRecordById(id);
+
+    if (!existing || existing.type !== "video" || !existing.mediaUrl) {
+      res.status(404).json({ error: "找不到影片紀錄" });
+      return;
+    }
+
+    try {
+      const nextMediaUrl = await optimizeUploadedVideoByUrl(
+        existing.mediaUrl,
+        uploadsDir,
+      );
+      const record = await updateRecord(id, {
+        type: existing.type,
+        title: existing.title,
+        content: existing.content,
+        mediaUrl: nextMediaUrl,
+        displayDate: existing.displayDate ?? existing.createdAt.slice(0, 10),
+        starRating: existing.starRating ?? 0,
+      });
+
+      if (!record) {
+        res.status(404).json({ error: "找不到紀錄" });
+        return;
+      }
+
+      if (existing.mediaUrl !== nextMediaUrl) {
+        deleteUploadedFile(existing.mediaUrl);
+      }
+
+      res.json({ record });
+    } catch (error) {
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "影片轉換失敗",
+      });
     }
   },
 );

@@ -7,6 +7,8 @@ import { isAllowedUploadFile } from "./media-files.js";
 const uploadDir = path.join(process.cwd(), "uploads");
 mkdirSync(uploadDir, { recursive: true });
 
+export const uploadsDir = uploadDir;
+
 export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 export const upload = multer({
