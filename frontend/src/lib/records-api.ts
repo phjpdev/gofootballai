@@ -34,13 +34,13 @@ function appendCacheKey(url: string, cacheKey?: string): string {
   return `${url}${separator}v=${encodeURIComponent(cacheKey)}`;
 }
 
-function mapRecord(record: ApiRecord): Post {
+function mapRecord(record: ApiRecord, cacheKey?: string): Post {
   return {
     id: record.id,
     type: record.type,
     title: record.title,
     content: record.content ?? undefined,
-    mediaUrl: resolveMediaUrl(record.mediaUrl, record.id),
+    mediaUrl: resolveMediaUrl(record.mediaUrl, cacheKey ?? record.id),
     displayDate: record.displayDate ?? undefined,
     starRating: record.starRating ?? undefined,
     createdAt: record.createdAt,
@@ -67,7 +67,7 @@ export async function fetchPublicRecords(): Promise<Post[]> {
   }
 
   const data = (await response.json()) as { records: ApiRecord[] };
-  return data.records.map(mapRecord);
+  return data.records.map((record) => mapRecord(record));
 }
 
 export async function fetchRecords(token: string): Promise<Post[]> {
@@ -80,7 +80,7 @@ export async function fetchRecords(token: string): Promise<Post[]> {
   }
 
   const data = (await response.json()) as { records: ApiRecord[] };
-  return data.records.map(mapRecord);
+  return data.records.map((record) => mapRecord(record));
 }
 
 export type RecordInput = {
@@ -228,6 +228,20 @@ export async function updateRecord(
 
   const data = (await response.json()) as { record: ApiRecord };
   return mapRecord(data.record);
+}
+
+export async function retranscodeRecord(token: string, id: string): Promise<Post> {
+  const response = await fetch(`${API_URL}/api/records/${id}/retranscode`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  const data = (await response.json()) as { record: ApiRecord };
+  return mapRecord(data.record, `${data.record.id}-${Date.now()}`);
 }
 
 export async function deleteRecord(token: string, id: string): Promise<void> {

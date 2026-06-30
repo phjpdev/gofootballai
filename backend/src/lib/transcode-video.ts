@@ -174,7 +174,8 @@ export async function optimizeUploadedVideoByUrl(
     throw new Error("只支援重新處理已上傳的媒體檔案");
   }
 
-  const fileName = path.basename(mediaUrl);
+  const cleanUrl = mediaUrl.split("?")[0];
+  const fileName = path.basename(cleanUrl);
   const filePath = path.join(uploadDir, fileName);
   const finalPath = await optimizeUploadedVideo(filePath);
   return `/uploads/${path.basename(finalPath)}`;
