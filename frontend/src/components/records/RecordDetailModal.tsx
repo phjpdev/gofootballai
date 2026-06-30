@@ -107,10 +107,11 @@ export function RecordDetailModal({
 
         {post.type === "video" && post.mediaUrl && (
           <video
+            key={post.mediaUrl}
             src={post.mediaUrl}
             controls
-            autoPlay
             playsInline
+            preload="auto"
             className="max-h-full max-w-full object-contain"
           />
         )}
