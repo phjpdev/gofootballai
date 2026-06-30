@@ -237,7 +237,11 @@ export function CreateRecordModal({
             <Loader2 className="size-10 animate-spin text-orange-50" />
             <div className="flex w-full max-w-[220px] flex-col items-center gap-2 px-6">
               <p className="text-sm font-medium text-white">
-                {isUploading ? `上傳影片中… ${uploadProgress}%` : "儲存紀錄中…"}
+                {isUploading
+                  ? uploadProgress !== null && uploadProgress >= 100
+                    ? "上傳完成，正在轉換影片格式…"
+                    : `上傳影片中… ${uploadProgress}%`
+                  : "儲存紀錄中…"}
               </p>
               {isUploading && (
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-70">

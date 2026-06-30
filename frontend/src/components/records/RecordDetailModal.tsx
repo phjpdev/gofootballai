@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Pencil, Star, Trash2, X } from "lucide-react";
+import { RecordVideo } from "@/components/records/RecordVideo";
 import type { Post } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,8 @@ export function RecordDetailModal({
   onEdit?: (post: Post) => void;
   onDelete?: (id: string) => void;
 }) {
+  const [videoError, setVideoError] = useState(false);
+
   useEffect(() => {
     if (!post) return;
     document.body.style.overflow = "hidden";
@@ -46,6 +49,10 @@ export function RecordDetailModal({
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [post, onClose]);
+
+  useEffect(() => {
+    setVideoError(false);
+  }, [post?.mediaUrl]);
 
   if (!post) return null;
 
@@ -105,15 +112,19 @@ export function RecordDetailModal({
           />
         )}
 
-        {post.type === "video" && post.mediaUrl && (
-          <video
-            key={post.mediaUrl}
+        {post.type === "video" && post.mediaUrl && !videoError && (
+          <RecordVideo
             src={post.mediaUrl}
-            controls
-            playsInline
-            preload="auto"
-            className="max-h-full max-w-full object-contain"
+            mode="player"
+            onError={() => setVideoError(true)}
+            className="h-full w-full max-h-full max-w-full object-contain"
           />
+        )}
+
+        {post.type === "video" && videoError && (
+          <p className="px-6 text-center text-sm text-gray-30">
+            無法播放此影片。請刪除後重新上傳，系統會自動轉換為相容格式。
+          </p>
         )}
 
         {!hasMedia && (
