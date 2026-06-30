@@ -14,6 +14,25 @@ server {
     client_max_body_size 100M;
     client_body_timeout 300s;
 
+    # Serve uploaded media directly for reliable video streaming (Range requests).
+    location /uploads/ {
+        alias /var/www/gofootballai/backend/uploads/;
+        add_header Accept-Ranges bytes always;
+        add_header Access-Control-Allow-Origin https://gofootball.ai always;
+        add_header Access-Control-Expose-Headers "Content-Length, Content-Range, Accept-Ranges" always;
+        add_header Cross-Origin-Resource-Policy cross-origin always;
+
+        types {
+            video/mp4 mp4 m4v;
+            video/webm webm;
+            video/quicktime mov;
+            image/jpeg jpg jpeg;
+            image/png png;
+            image/webp webp;
+            image/gif gif;
+        }
+    }
+
     location / {
         proxy_pass http://127.0.0.1:4000;
         proxy_http_version 1.1;
@@ -26,5 +45,6 @@ server {
         proxy_send_timeout 300s;
         proxy_read_timeout 300s;
         proxy_request_buffering off;
+        proxy_buffering off;
     }
 }

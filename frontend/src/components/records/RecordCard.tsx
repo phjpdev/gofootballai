@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Star, Trash2 } from "lucide-react";
+import { Pencil, Play, Star, Trash2 } from "lucide-react";
 import type { Post } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -110,14 +110,23 @@ export function RecordCard({
       )}
 
       {post.type === "video" && post.mediaUrl && (
-        <video
-          src={post.mediaUrl}
-          muted
-          playsInline
-          loop
-          autoPlay
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        <>
+          <video
+            src={`${post.mediaUrl}#t=0.1`}
+            muted
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            aria-hidden
+          >
+            <div className="flex size-11 items-center justify-center rounded-full bg-black/45 ring-1 ring-white/25">
+              <Play className="ml-0.5 size-5 fill-white text-white" />
+            </div>
+          </div>
+        </>
       )}
 
       {hasMedia && (
