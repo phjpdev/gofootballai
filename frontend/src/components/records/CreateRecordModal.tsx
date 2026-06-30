@@ -23,6 +23,8 @@ const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 const VIDEO_ACCEPT =
   "video/mp4,video/quicktime,video/webm,video/x-m4v,.mp4,.mov,.m4v,.webm,.avi,.mkv,.3gp";
 
+const FILE_ACCEPT = `image/*,${VIDEO_ACCEPT}`;
+
 function isVideoFile(file: File): boolean {
   if (file.type.startsWith("video/")) return true;
   return /\.(mp4|mov|webm|m4v|avi|mkv|mpeg|mpg|3gp|3g2|wmv)$/i.test(file.name);
@@ -137,15 +139,12 @@ export function CreateRecordModal({
       return;
     }
 
-    if (type === "video" && !isVideoFile(selected)) {
-      setError("請選擇有效的影片檔案（例如 MP4、MOV）");
-      setFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
-    }
-
-    if (type === "photo" && !isPhotoFile(selected)) {
-      setError("請選擇有效的圖片檔案");
+    if (isVideoFile(selected)) {
+      if (type !== "video") setType("video");
+    } else if (isPhotoFile(selected)) {
+      if (type !== "photo") setType("photo");
+    } else {
+      setError("請選擇有效的圖片或影片檔案（例如 JPG、PNG、MP4、MOV）");
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
@@ -200,8 +199,6 @@ export function CreateRecordModal({
   }
 
   if (!open) return null;
-
-  const accept = type === "photo" ? "image/*" : VIDEO_ACCEPT;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
@@ -307,7 +304,7 @@ export function CreateRecordModal({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept={accept}
+                accept={FILE_ACCEPT}
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -326,7 +323,7 @@ export function CreateRecordModal({
                     ? file.name
                     : isEditing && record?.mediaUrl && type === record.type
                       ? "點擊以替換現有檔案"
-                      : `點擊上傳${TYPE_LABEL[type]}`}
+                      : `點擊上傳${TYPE_LABEL[type]}（或選擇其他媒體類型）`}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-gray-40">
                   <Upload className="size-3" />
