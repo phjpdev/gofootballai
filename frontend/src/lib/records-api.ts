@@ -15,11 +15,23 @@ type ApiRecord = {
   createdAt: string;
 };
 
-export function resolveMediaUrl(url?: string | null): string | undefined {
+export function resolveMediaUrl(
+  url?: string | null,
+  cacheKey?: string,
+): string | undefined {
   if (!url) return undefined;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return appendCacheKey(url, cacheKey);
+  }
   const base = API_URL.replace(/\/$/, "");
-  return `${base}${url.startsWith("/") ? url : `/${url}`}`;
+  const resolved = `${base}${url.startsWith("/") ? url : `/${url}`}`;
+  return appendCacheKey(resolved, cacheKey);
+}
+
+function appendCacheKey(url: string, cacheKey?: string): string {
+  if (!cacheKey) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}v=${encodeURIComponent(cacheKey)}`;
 }
 
 function mapRecord(record: ApiRecord): Post {
@@ -28,7 +40,7 @@ function mapRecord(record: ApiRecord): Post {
     type: record.type,
     title: record.title,
     content: record.content ?? undefined,
-    mediaUrl: resolveMediaUrl(record.mediaUrl),
+    mediaUrl: resolveMediaUrl(record.mediaUrl, record.id),
     displayDate: record.displayDate ?? undefined,
     starRating: record.starRating ?? undefined,
     createdAt: record.createdAt,

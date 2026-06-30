@@ -14,13 +14,16 @@ server {
     client_max_body_size 100M;
     client_body_timeout 300s;
 
-    # Serve uploaded media directly for reliable video streaming (Range requests).
+    # CRITICAL: disable etag/304 for video Range requests (304 breaks playback).
     location /uploads/ {
         alias /var/www/gofootballai/backend/uploads/;
+        etag off;
+        if_modified_since off;
         add_header Accept-Ranges bytes always;
         add_header Access-Control-Allow-Origin https://gofootball.ai always;
         add_header Access-Control-Expose-Headers "Content-Length, Content-Range, Accept-Ranges" always;
         add_header Cross-Origin-Resource-Policy cross-origin always;
+        add_header Cache-Control "public, max-age=3600" always;
 
         types {
             video/mp4 mp4 m4v;
@@ -31,6 +34,7 @@ server {
             image/webp webp;
             image/gif gif;
         }
+        default_type application/octet-stream;
     }
 
     location / {
