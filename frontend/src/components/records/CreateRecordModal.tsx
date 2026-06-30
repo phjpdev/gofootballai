@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ImageIcon, Star, Upload, Video, X } from "lucide-react";
+import { ImageIcon, Loader2, Star, Upload, Video, X } from "lucide-react";
 import { usePosts } from "@/context/PostsContext";
 import type { Post } from "@/types";
 
@@ -66,6 +66,7 @@ export function CreateRecordModal({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -111,6 +112,7 @@ export function CreateRecordModal({
   }, [open, onClose]);
 
   function handleClose() {
+    if (submitting) return;
     onClose();
   }
 
@@ -174,6 +176,7 @@ export function CreateRecordModal({
 
     setError("");
     setSubmitting(true);
+    setUploadProgress(file ? 0 : null);
 
     try {
       const payload = {
@@ -185,20 +188,34 @@ export function CreateRecordModal({
         file: file ?? undefined,
       };
 
+      const uploadOptions = file
+        ? { onUploadProgress: (percent: number) => setUploadProgress(percent) }
+        : undefined;
+
       if (isEditing && record) {
-        await editPost(record.id, payload);
+        await editPost(record.id, payload, uploadOptions);
       } else {
-        await addPost(payload);
+        await addPost(payload, uploadOptions);
       }
-      handleClose();
+      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "儲存紀錄失敗");
     } finally {
       setSubmitting(false);
+      setUploadProgress(null);
     }
   }
 
   if (!open) return null;
+
+  const isUploading = submitting && uploadProgress !== null;
+  const submitLabel = submitting
+    ? isUploading
+      ? `上傳中… ${uploadProgress}%`
+      : "儲存中…"
+    : isEditing
+      ? "儲存變更"
+      : "發佈至紀錄";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
@@ -207,9 +224,33 @@ export function CreateRecordModal({
         aria-label="關閉"
         className="absolute inset-0 bg-black/70"
         onClick={handleClose}
+        disabled={submitting}
       />
 
       <div className="relative z-10 flex max-h-[85dvh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-gray-90 sm:max-h-[90vh] sm:rounded-[24px]">
+        {submitting && (
+          <div
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 rounded-[inherit] bg-gray-90/90 backdrop-blur-[2px]"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <Loader2 className="size-10 animate-spin text-orange-50" />
+            <div className="flex w-full max-w-[220px] flex-col items-center gap-2 px-6">
+              <p className="text-sm font-medium text-white">
+                {isUploading ? `上傳影片中… ${uploadProgress}%` : "儲存紀錄中…"}
+              </p>
+              {isUploading && (
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-70">
+                  <div
+                    className="h-full rounded-full bg-orange-50 transition-[width] duration-200"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex shrink-0 items-center justify-between border-b border-gray-80 px-5 py-4">
           <div>
             <h2 className="text-base font-bold text-white">
@@ -224,7 +265,8 @@ export function CreateRecordModal({
           <button
             type="button"
             onClick={handleClose}
-            className="flex size-9 items-center justify-center rounded-full bg-gray-80 text-gray-20"
+            disabled={submitting}
+            className="flex size-9 items-center justify-center rounded-full bg-gray-80 text-gray-20 disabled:opacity-50"
           >
             <X className="size-4" />
           </button>
@@ -240,6 +282,7 @@ export function CreateRecordModal({
                 <button
                   key={value}
                   type="button"
+                  disabled={submitting}
                   onClick={() => handleTypeChange(value)}
                   className={`flex-1 rounded-[14px] px-3 py-2 text-xs font-bold tracking-[-0.018px] ${
                     type === value
@@ -258,6 +301,7 @@ export function CreateRecordModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+              disabled={submitting}
               className={fieldClass}
             />
 
@@ -268,6 +312,7 @@ export function CreateRecordModal({
                 value={displayDate}
                 onChange={(e) => setDisplayDate(e.target.value)}
                 required
+                disabled={submitting}
                 className={`${fieldClass} [color-scheme:dark]`}
               />
             </label>
@@ -279,6 +324,7 @@ export function CreateRecordModal({
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={4}
+                disabled={submitting}
                 className={`${fieldClass} min-h-[6.5rem] resize-none`}
               />
             </label>
@@ -295,6 +341,7 @@ export function CreateRecordModal({
                   value={starRating}
                   onChange={(e) => setStarRating(e.target.value)}
                   required
+                  disabled={submitting}
                   className="min-h-6 w-full bg-transparent py-0 text-sm leading-normal text-white outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
               </div>
@@ -310,6 +357,7 @@ export function CreateRecordModal({
               />
               <button
                 type="button"
+                disabled={submitting}
                 onClick={() => fileInputRef.current?.click()}
                 className="flex flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed border-gray-70 bg-gray-80 px-4 py-8 text-gray-30"
               >
@@ -356,9 +404,12 @@ export function CreateRecordModal({
             <button
               type="submit"
               disabled={submitting}
-              className="h-14 w-full rounded-[19px] bg-white text-base font-semibold tracking-[-0.048px] text-gray-100 disabled:opacity-60"
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-[19px] bg-white text-base font-semibold tracking-[-0.048px] text-gray-100 disabled:opacity-60"
             >
-              {isEditing ? "儲存變更" : "發佈至紀錄"}
+              {submitting && (
+                <Loader2 className="size-5 animate-spin text-gray-100" />
+              )}
+              {submitLabel}
             </button>
           </div>
         </form>

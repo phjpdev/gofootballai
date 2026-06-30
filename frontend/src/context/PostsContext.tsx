@@ -14,31 +14,28 @@ import {
   fetchPublicRecords,
   fetchRecords,
   updateRecord,
+  type RecordUploadOptions,
 } from "@/lib/records-api";
 import type { Post, PostType } from "@/types";
+
+type PostInput = {
+  type: PostType;
+  title: string;
+  content?: string;
+  displayDate: string;
+  starRating: number;
+  file?: File;
+};
 
 type PostsContextValue = {
   posts: Post[];
   isLoading: boolean;
   refreshPosts: () => Promise<void>;
-  addPost: (input: {
-    type: PostType;
-    title: string;
-    content?: string;
-    displayDate: string;
-    starRating: number;
-    file?: File;
-  }) => Promise<void>;
+  addPost: (input: PostInput, options?: RecordUploadOptions) => Promise<void>;
   editPost: (
     id: string,
-    input: {
-      type: PostType;
-      title: string;
-      content?: string;
-      displayDate: string;
-      starRating: number;
-      file?: File;
-    },
+    input: PostInput,
+    options?: RecordUploadOptions,
   ) => Promise<void>;
   removePost: (id: string) => Promise<void>;
 };
@@ -72,39 +69,22 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
   }, [refreshPosts]);
 
   const addPost = useCallback(
-    async (input: {
-      type: PostType;
-      title: string;
-      content?: string;
-      displayDate: string;
-      starRating: number;
-      file?: File;
-    }) => {
+    async (input: PostInput, options?: RecordUploadOptions) => {
       if (!token) {
         throw new Error("請先登入");
       }
-      const record = await createRecord(token, input);
+      const record = await createRecord(token, input, options);
       setPosts((prev) => [record, ...prev]);
     },
     [token],
   );
 
   const editPost = useCallback(
-    async (
-      id: string,
-      input: {
-        type: PostType;
-        title: string;
-        content?: string;
-        displayDate: string;
-        starRating: number;
-        file?: File;
-      },
-    ) => {
+    async (id: string, input: PostInput, options?: RecordUploadOptions) => {
       if (!token) {
         throw new Error("請先登入");
       }
-      const record = await updateRecord(token, id, input);
+      const record = await updateRecord(token, id, input, options);
       setPosts((prev) =>
         prev.map((post) => (post.id === id ? record : post)),
       );
