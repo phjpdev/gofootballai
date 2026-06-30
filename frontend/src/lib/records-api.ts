@@ -71,7 +71,7 @@ export async function fetchRecords(token: string): Promise<Post[]> {
   return data.records.map(mapRecord);
 }
 
-type RecordInput = {
+export type RecordInput = {
   type: PostType;
   title: string;
   content?: string;
@@ -80,10 +80,11 @@ type RecordInput = {
   file?: File;
 };
 
-export async function createRecord(
-  token: string,
-  input: RecordInput,
-): Promise<Post> {
+export type RecordUploadOptions = {
+  onUploadProgress?: (percent: number) => void;
+};
+
+function buildRecordFormData(input: RecordInput): FormData {
   const formData = new FormData();
   formData.append("type", input.type);
   formData.append("title", input.title);
@@ -91,14 +92,92 @@ export async function createRecord(
   formData.append("starRating", String(input.starRating));
   if (input.content) formData.append("content", input.content);
   if (input.file) formData.append("file", input.file);
+  return formData;
+}
+
+function parseXhrError(status: number, responseText: string): string {
+  if (status === 413) {
+    return "檔案太大，伺服器拒絕上傳（413）。請聯絡管理員將 Nginx client_max_body_size 設為至少 100M。";
+  }
+
+  try {
+    const data = JSON.parse(responseText) as { error?: string };
+    if (data.error) return data.error;
+  } catch {
+    // Nginx/HTML error pages are not JSON
+  }
+
+  if (status >= 500) return "伺服器錯誤，請稍後再試";
+  return "請求失敗，請稍後再試";
+}
+
+function submitRecordForm(
+  method: "POST" | "PATCH",
+  url: string,
+  token: string,
+  input: RecordInput,
+  options?: RecordUploadOptions,
+): Promise<Post> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.responseType = "text";
+
+    xhr.upload.onprogress = (event) => {
+      if (!options?.onUploadProgress || !event.lengthComputable) return;
+      const percent = Math.min(
+        100,
+        Math.round((event.loaded / event.total) * 100),
+      );
+      options.onUploadProgress(percent);
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText) as { record: ApiRecord };
+          resolve(mapRecord(data.record));
+        } catch {
+          reject(new Error("伺服器回應格式錯誤"));
+        }
+        return;
+      }
+      reject(new Error(parseXhrError(xhr.status, xhr.responseText)));
+    };
+
+    xhr.onerror = () => reject(new Error("網路錯誤，請檢查連線後再試"));
+    xhr.onabort = () => reject(new Error("上傳已取消"));
+
+    xhr.send(buildRecordFormData(input));
+  });
+}
+
+export async function createRecord(
+  token: string,
+  input: RecordInput,
+  options?: RecordUploadOptions,
+): Promise<Post> {
+  if (input.file && options?.onUploadProgress) {
+    return submitRecordForm(
+      "POST",
+      `${API_URL}/api/records`,
+      token,
+      input,
+      options,
+    );
+  }
 
   const response = await fetch(`${API_URL}/api/records`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
-    body: formData,
+    body: buildRecordFormData(input),
   });
 
   if (!response.ok) {
+    if (response.status === 413) {
+      throw new Error(parseXhrError(413, ""));
+    }
     throw new Error(await parseError(response));
   }
 
@@ -110,22 +189,28 @@ export async function updateRecord(
   token: string,
   id: string,
   input: RecordInput,
+  options?: RecordUploadOptions,
 ): Promise<Post> {
-  const formData = new FormData();
-  formData.append("type", input.type);
-  formData.append("title", input.title);
-  formData.append("displayDate", input.displayDate);
-  formData.append("starRating", String(input.starRating));
-  if (input.content) formData.append("content", input.content);
-  if (input.file) formData.append("file", input.file);
+  if (input.file && options?.onUploadProgress) {
+    return submitRecordForm(
+      "PATCH",
+      `${API_URL}/api/records/${id}`,
+      token,
+      input,
+      options,
+    );
+  }
 
   const response = await fetch(`${API_URL}/api/records/${id}`, {
     method: "PATCH",
     headers: { Authorization: `Bearer ${token}` },
-    body: formData,
+    body: buildRecordFormData(input),
   });
 
   if (!response.ok) {
+    if (response.status === 413) {
+      throw new Error(parseXhrError(413, ""));
+    }
     throw new Error(await parseError(response));
   }
 
