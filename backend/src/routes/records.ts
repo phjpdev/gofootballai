@@ -1,5 +1,6 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import multer from "multer";
+import path from "node:path";
 import {
   createRecord,
   deleteRecord,
@@ -14,6 +15,7 @@ import {
   publicUploadPath,
   upload,
 } from "../lib/upload.js";
+import { optimizeUploadedVideo } from "../lib/transcode-video.js";
 import {
   requireAdmin,
   requireAuth,
@@ -44,6 +46,17 @@ function parseStarRating(value: unknown): number | null {
   const rating = Number(value);
   if (!Number.isFinite(rating) || rating < 0 || rating > 5) return null;
   return Math.round(rating * 10) / 10;
+}
+
+async function resolveUploadedMediaUrl(
+  file: Express.Multer.File,
+  type: RecordType,
+): Promise<string> {
+  if (type === "video") {
+    const finalPath = await optimizeUploadedVideo(file.path);
+    return publicUploadPath(path.basename(finalPath));
+  }
+  return publicUploadPath(file.filename);
 }
 
 function handleUpload(req: Request, res: Response, next: NextFunction) {
@@ -128,7 +141,9 @@ router.post(
       return;
     }
 
-    const mediaUrl = req.file ? publicUploadPath(req.file.filename) : undefined;
+    const mediaUrl = req.file
+      ? await resolveUploadedMediaUrl(req.file, type)
+      : undefined;
 
     try {
       const record = await createRecord({
@@ -206,7 +221,7 @@ router.patch(
         res.status(400).json({ error: "影片紀錄需要影片檔案" });
         return;
       }
-      mediaUrl = publicUploadPath(req.file.filename);
+      mediaUrl = await resolveUploadedMediaUrl(req.file, type);
     } else if (type !== existing.type) {
       res.status(400).json({
         error: "更改紀錄類型時請上傳新檔案",
