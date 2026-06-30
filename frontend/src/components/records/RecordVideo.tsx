@@ -7,6 +7,7 @@ type RecordVideoProps = {
   className?: string;
   mode?: "preview" | "player";
   onError?: () => void;
+  onDecodeIssue?: () => void;
 };
 
 export function RecordVideo({
@@ -14,6 +15,7 @@ export function RecordVideo({
   className,
   mode = "player",
   onError,
+  onDecodeIssue,
 }: RecordVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isPreview = mode === "preview";
@@ -23,6 +25,7 @@ export function RecordVideo({
     if (!video) return;
 
     video.muted = true;
+    let decodeCheckTimer: number | undefined;
 
     function tryPlay() {
       void video?.play().catch(() => {
@@ -30,14 +33,42 @@ export function RecordVideo({
       });
     }
 
-    if (video.readyState >= 2) {
-      tryPlay();
-      return;
+    function scheduleDecodeCheck() {
+      window.clearTimeout(decodeCheckTimer);
+      decodeCheckTimer = window.setTimeout(() => {
+        if (!video) return;
+        const isPlaying = !video.paused && !video.ended && video.currentTime > 0;
+        if (isPlaying && video.videoWidth === 0) {
+          onDecodeIssue?.();
+        }
+      }, 1200);
     }
 
-    video.addEventListener("loadeddata", tryPlay, { once: true });
-    return () => video.removeEventListener("loadeddata", tryPlay);
-  }, [src, mode]);
+    function handleLoadedData() {
+      tryPlay();
+      scheduleDecodeCheck();
+    }
+
+    function handlePlaying() {
+      scheduleDecodeCheck();
+    }
+
+    if (video.readyState >= 2) {
+      handleLoadedData();
+    } else {
+      video.addEventListener("loadeddata", handleLoadedData, { once: true });
+    }
+
+    video.addEventListener("playing", handlePlaying);
+    video.addEventListener("timeupdate", scheduleDecodeCheck);
+
+    return () => {
+      window.clearTimeout(decodeCheckTimer);
+      video.removeEventListener("loadeddata", handleLoadedData);
+      video.removeEventListener("playing", handlePlaying);
+      video.removeEventListener("timeupdate", scheduleDecodeCheck);
+    };
+  }, [src, mode, onDecodeIssue]);
 
   return (
     <video

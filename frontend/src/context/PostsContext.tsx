@@ -13,6 +13,7 @@ import {
   deleteRecord,
   fetchPublicRecords,
   fetchRecords,
+  retranscodeRecord,
   updateRecord,
   type RecordUploadOptions,
 } from "@/lib/records-api";
@@ -38,6 +39,7 @@ type PostsContextValue = {
     options?: RecordUploadOptions,
   ) => Promise<void>;
   removePost: (id: string) => Promise<void>;
+  retranscodePost: (id: string) => Promise<Post>;
 };
 
 const PostsContext = createContext<PostsContextValue | null>(null);
@@ -103,9 +105,31 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
     [token],
   );
 
+  const retranscodePost = useCallback(
+    async (id: string) => {
+      if (!token) {
+        throw new Error("請先登入");
+      }
+      const record = await retranscodeRecord(token, id);
+      setPosts((prev) =>
+        prev.map((post) => (post.id === id ? record : post)),
+      );
+      return record;
+    },
+    [token],
+  );
+
   return (
     <PostsContext.Provider
-      value={{ posts, isLoading, refreshPosts, addPost, editPost, removePost }}
+      value={{
+        posts,
+        isLoading,
+        refreshPosts,
+        addPost,
+        editPost,
+        removePost,
+        retranscodePost,
+      }}
     >
       {children}
     </PostsContext.Provider>

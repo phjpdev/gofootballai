@@ -65,6 +65,7 @@ export function CreateRecordModal({
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [videoNotice, setVideoNotice] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
@@ -90,9 +91,10 @@ export function CreateRecordModal({
     setContent("");
     setStarRating("5.0");
     setFile(null);
-    setPreviewUrl(null);
-    setError("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
+      setPreviewUrl(null);
+      setError("");
+      setVideoNotice("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
   }, [open, record]);
 
   useEffect(() => {
@@ -154,6 +156,11 @@ export function CreateRecordModal({
 
     setFile(selected);
     setError("");
+    setVideoNotice(
+      isVideoFile(selected)
+        ? "iPhone 影片上傳後會自動轉換為網頁可播放格式，轉換可能需要 1–2 分鐘。"
+        : "",
+    );
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -400,6 +407,10 @@ export function CreateRecordModal({
                 />
               )}
             </div>
+
+            {videoNotice && (
+              <p className="text-xs text-gray-40">{videoNotice}</p>
+            )}
 
             {error && <p className="text-xs text-orange-50">{error}</p>}
           </div>
