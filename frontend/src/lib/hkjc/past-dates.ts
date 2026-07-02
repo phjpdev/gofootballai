@@ -1,4 +1,5 @@
 import type { HkjcDateItem } from "@/types/hkjc";
+import type { HkjcMatch } from "@/types/hkjc";
 
 export const ADMIN_PAST_TAB_COUNT = 2;
 
@@ -43,4 +44,29 @@ export function buildAdminPastDateItems(
       hasEvent: false,
     };
   });
+}
+
+export function mergeAdminTodayPassedMatches(
+  live: HkjcMatch[],
+  passed: HkjcMatch[],
+): HkjcMatch[] {
+  const liveIds = new Set(live.map((match) => match.id));
+  const extra = passed.filter((match) => !liveIds.has(match.id));
+  if (extra.length === 0) return live;
+
+  return [...extra, ...live].sort(
+    (a, b) =>
+      new Date(a.kickOffTime).getTime() - new Date(b.kickOffTime).getTime(),
+  );
+}
+
+export function shouldMergeTodayPassedMatches(
+  selectedIndex: number,
+  adminPastTabCount: number,
+  selectedDateKey: string | undefined,
+): boolean {
+  if (selectedIndex === 0) return true;
+  if (!selectedDateKey) return false;
+  if (adminPastTabCount > 0 && selectedIndex <= adminPastTabCount) return false;
+  return selectedDateKey === getTodayDateKeyHk();
 }

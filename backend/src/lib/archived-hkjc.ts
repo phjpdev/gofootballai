@@ -1,8 +1,9 @@
 import { query } from "./db.js";
 import type { HkjcDateItem, HkjcMatch } from "./hkjc/types.js";
 import type { HkjcInputSnapshot } from "./hkjc/types.js";
-import { fetchHkjcMatchById } from "./hkjc/fetch-matches.js";
+import { fetchHkjcMatchById, fetchRawMatches } from "./hkjc/fetch-matches.js";
 import { resolveEnglishTeamName } from "./hkjc/team-names.js";
+import { transformHkjcMatch } from "./hkjc/transform.js";
 import { resolveTeamLogoUrl } from "./team-logos.js";
 
 type ArchivedRow = {
@@ -329,6 +330,45 @@ export async function listArchivedMatchesByDate(
 
       return enrichArchivedMatchForClient(merged);
     }),
+  );
+
+  return resolved.sort(
+    (a, b) =>
+      new Date(a.kickOffTime).getTime() - new Date(b.kickOffTime).getTime(),
+  );
+}
+
+export async function listAdminTodayPassedMatches(): Promise<HkjcMatch[]> {
+  const todayKey = getTodayDateKeyHk();
+  const now = Date.now();
+
+  function isPassedToday(kickOffTime: string): boolean {
+    const kickOff = new Date(kickOffTime).getTime();
+    if (Number.isNaN(kickOff) || kickOff > now) return false;
+    return dateKeyFromKickOff(kickOffTime) === todayKey;
+  }
+
+  const byId = new Map<string, HkjcMatch>();
+
+  const archived = await listArchivedMatchesByDate(todayKey);
+  for (const match of archived) {
+    if (isPassedToday(match.kickOffTime)) {
+      byId.set(match.id, match);
+    }
+  }
+
+  try {
+    const rawMatches = await fetchRawMatches();
+    for (const raw of rawMatches) {
+      if (!isPassedToday(raw.kickOffTime) || byId.has(raw.id)) continue;
+      byId.set(raw.id, enrichArchivedMatchLogos(transformHkjcMatch(raw)));
+    }
+  } catch {
+    // best-effort HKJC supplement
+  }
+
+  const resolved = await Promise.all(
+    [...byId.values()].map((match) => enrichArchivedMatchForClient(match)),
   );
 
   return resolved.sort(

@@ -46,4 +46,20 @@ export async function fetchArchivedMatches(
   return data.matches;
 }
 
+export async function fetchAdminTodayPassedMatches(
+  token: string,
+): Promise<HkjcMatch[]> {
+  const response = await fetch(`${API_URL}/api/hkjc/archived/today-passed`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  const data = (await response.json()) as { matches: HkjcMatch[] };
+  return data.matches;
+}
+
 export { getHkjcApiUrl };
