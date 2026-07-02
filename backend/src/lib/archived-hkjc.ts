@@ -86,18 +86,42 @@ function resolveEnglishNames(match: HkjcMatch): HkjcMatch {
 export async function enrichArchivedMatchForClient(
   match: HkjcMatch,
 ): Promise<HkjcMatch> {
-  let enriched = enrichArchivedMatchLogos(resolveEnglishNames(match));
+  const enriched = resolveEnglishNames(match);
 
-  if (!enriched.homeLogo && enriched.homeTeamEn) {
-    const logo = await resolveTeamLogoUrl(enriched.homeTeamEn);
-    if (logo) enriched = { ...enriched, homeLogo: logo };
-  }
-  if (!enriched.awayLogo && enriched.awayTeamEn) {
-    const logo = await resolveTeamLogoUrl(enriched.awayTeamEn);
-    if (logo) enriched = { ...enriched, awayLogo: logo };
+  async function resolveLogo(
+    teamId: string,
+    teamEn: string,
+    existing: string,
+  ): Promise<string> {
+    if (existing && !existing.includes("/api/hkjc/logo")) {
+      return existing;
+    }
+
+    if (teamEn) {
+      const external = await resolveTeamLogoUrl(teamEn);
+      if (external) return external;
+    }
+
+    if (teamId) {
+      return hkjcTeamLogoPath(teamId);
+    }
+
+    return existing;
   }
 
-  return enriched;
+  return {
+    ...enriched,
+    homeLogo: await resolveLogo(
+      enriched.homeTeamId,
+      enriched.homeTeamEn,
+      enriched.homeLogo,
+    ),
+    awayLogo: await resolveLogo(
+      enriched.awayTeamId,
+      enriched.awayTeamEn,
+      enriched.awayLogo,
+    ),
+  };
 }
 
 function snapshotToMatch(snapshot: HkjcInputSnapshot): HkjcMatch | null {
