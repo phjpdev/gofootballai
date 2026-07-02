@@ -70,3 +70,24 @@ export function shouldMergeTodayPassedMatches(
   if (adminPastTabCount > 0 && selectedIndex <= adminPastTabCount) return false;
   return selectedDateKey === getTodayDateKeyHk();
 }
+
+export function resolveSelectedDateKey(options: {
+  selectedIndex: number;
+  adminPastTabCount: number;
+  archivedDates: HkjcDateItem[];
+  liveDates: HkjcDateItem[];
+}): string {
+  const { selectedIndex, adminPastTabCount, archivedDates, liveDates } =
+    options;
+
+  if (selectedIndex === 0) {
+    return getTodayDateKeyHk();
+  }
+
+  if (adminPastTabCount > 0 && selectedIndex <= adminPastTabCount) {
+    return archivedDates[selectedIndex - 1]?.key ?? getTodayDateKeyHk();
+  }
+
+  const liveIndex = selectedIndex - 1 - adminPastTabCount;
+  return liveDates[liveIndex]?.key ?? getTodayDateKeyHk();
+}

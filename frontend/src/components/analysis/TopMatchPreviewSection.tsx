@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { SubNav } from "@/components/layout/SubNav";
 import { EditTopMatchPreviewModal } from "@/components/analysis/EditTopMatchPreviewModal";
@@ -13,11 +14,13 @@ import {
   sortPreviewSlots,
 } from "@/lib/data/top-match-previews";
 import { fetchTopMatchPreviews } from "@/lib/top-match-previews-api";
-import { findTopConfidenceMatchIds } from "@/lib/top-match";
-import { fetchHkjcMatchesFromApi } from "@/lib/hkjc/matches-api";
+import { findTopConfidenceMatchIds, loadMatchesForDate } from "@/lib/top-match";
+import { getTodayDateKeyHk } from "@/lib/hkjc/past-dates";
 import type { TopMatchPreviewSlot } from "@/lib/data/top-match-previews";
 
 export function TopMatchPreviewSection() {
+  const searchParams = useSearchParams();
+  const dateKey = searchParams.get("date") ?? getTodayDateKeyHk();
   const { token, isAuthenticated, isMember, isAdmin, isLoading: authLoading } =
     useAuth();
   const [slots, setSlots] = useState<TopMatchPreviewSlot[]>(
@@ -33,18 +36,19 @@ export function TopMatchPreviewSection() {
 
     setLoading(true);
     try {
-      const [configuredSlots, matchData] = await Promise.all([
+      const [configuredSlots, matches] = await Promise.all([
         fetchTopMatchPreviews().catch(() => DEFAULT_TOP_MATCH_PREVIEWS),
-        fetchHkjcMatchesFromApi(),
+        loadMatchesForDate(dateKey, token),
       ]);
 
       setSlots(configuredSlots);
 
-      const fallbackId = matchData.matches[0]?.id ?? "";
+      const fallbackId = matches[0]?.id ?? "";
       const autoRanked = await findTopConfidenceMatchIds(
         token,
         fallbackId,
         PREVIEW_SLOT_COUNT,
+        dateKey,
       );
 
       setMatchIds(
@@ -55,7 +59,7 @@ export function TopMatchPreviewSection() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, dateKey]);
 
   useEffect(() => {
     if (authLoading) return;
