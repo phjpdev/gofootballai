@@ -1,4 +1,5 @@
 import type { HkjcMatch } from "@/types/hkjc";
+import { resolveEnglishTeamName } from "@/lib/hkjc/team-names";
 
 type SportsDbTeam = {
   strTeam: string;
@@ -21,8 +22,13 @@ function normalize(name: string): string {
 }
 
 function searchQueries(teamName: string): string[] {
-  const queries = [teamName.trim()];
-  const firstWord = teamName.trim().split(/\s+/)[0];
+  const trimmed = teamName.trim();
+  const english = resolveEnglishTeamName(trimmed);
+  const queries = [trimmed];
+  if (english && !queries.includes(english)) {
+    queries.unshift(english);
+  }
+  const firstWord = trimmed.split(/\s+/)[0];
   if (firstWord && firstWord.length > 3 && !queries.includes(firstWord)) {
     queries.push(firstWord);
   }

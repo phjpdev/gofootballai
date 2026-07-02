@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TeamInitialBadge } from "@/components/cards/TeamInitialBadge";
+import { resolveEnglishTeamName } from "@/lib/hkjc/team-names";
 import { fetchTeamLogo } from "@/lib/team-logos/client-cache";
 
 type TeamLogoImageProps = {
@@ -12,6 +13,15 @@ type TeamLogoImageProps = {
   fit?: "default" | "triangle";
 };
 
+function buildLookupCandidates(name: string, lookupName?: string): string[] {
+  const english = lookupName?.trim() || resolveEnglishTeamName(name);
+  const candidates = [english, lookupName?.trim(), name.trim()].filter(
+    (value, index, arr): value is string =>
+      Boolean(value) && arr.indexOf(value) === index,
+  );
+  return candidates;
+}
+
 export function TeamLogoImage({
   src,
   name,
@@ -20,23 +30,25 @@ export function TeamLogoImage({
 }: TeamLogoImageProps) {
   const [logoUrl, setLogoUrl] = useState("");
   const [failed, setFailed] = useState(false);
-  const [usedLookupFallback, setUsedLookupFallback] = useState(false);
-  const queryName = lookupName?.trim() || name;
+  const candidates = buildLookupCandidates(name, lookupName);
 
   useEffect(() => {
     let cancelled = false;
-    setFailed(false);
-    setUsedLookupFallback(false);
 
     async function loadLogo() {
+      setFailed(false);
+
       if (src) {
         setLogoUrl(src);
         return;
       }
 
-      const url = await fetchTeamLogo(queryName);
-      if (!cancelled && url) {
-        setLogoUrl(url);
+      for (const candidate of candidates) {
+        const url = await fetchTeamLogo(candidate);
+        if (!cancelled && url) {
+          setLogoUrl(url);
+          return;
+        }
       }
     }
 
@@ -45,36 +57,20 @@ export function TeamLogoImage({
     return () => {
       cancelled = true;
     };
-  }, [src, queryName]);
+  }, [src, candidates.join("|")]);
 
   const handleError = () => {
-    if (!usedLookupFallback && lookupName?.trim() && lookupName !== name) {
-      setUsedLookupFallback(true);
-      void fetchTeamLogo(name).then((url) => {
+    void (async () => {
+      for (const candidate of candidates) {
+        const url = await fetchTeamLogo(candidate);
         if (url) {
           setLogoUrl(url);
           setFailed(false);
-        } else {
-          setFailed(true);
+          return;
         }
-      });
-      return;
-    }
-
-    if (!usedLookupFallback && queryName) {
-      setUsedLookupFallback(true);
-      void fetchTeamLogo(queryName).then((url) => {
-        if (url) {
-          setLogoUrl(url);
-          setFailed(false);
-        } else {
-          setFailed(true);
-        }
-      });
-      return;
-    }
-
-    setFailed(true);
+      }
+      setFailed(true);
+    })();
   };
 
   if (!logoUrl || failed) {
