@@ -16,6 +16,7 @@ type FeaturedMatchCardProps = {
   stat: string;
   imageSrc: string;
   pickMode: "single" | "multi";
+  dateKey?: string;
 };
 
 export function FeaturedMatchCard({
@@ -25,6 +26,7 @@ export function FeaturedMatchCard({
   stat,
   imageSrc,
   pickMode,
+  dateKey,
 }: FeaturedMatchCardProps) {
   const router = useRouter();
   const { token, isAuthenticated, isMember, isAdmin, isLoading } = useAuth();
@@ -40,8 +42,8 @@ export function FeaturedMatchCard({
     try {
       const path =
         pickMode === "multi"
-          ? await resolveTopMatchPreviewPath(token, canAccess)
-          : await resolveTopMatchDetailPath(token, canAccess);
+          ? await resolveTopMatchPreviewPath(token, canAccess, { dateKey })
+          : await resolveTopMatchDetailPath(token, canAccess, { dateKey });
       router.push(path);
     } catch {
       router.push("/analysis");

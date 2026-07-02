@@ -5,14 +5,17 @@ import { Pencil } from "lucide-react";
 import { AnimateIn } from "@/components/motion/AnimateIn";
 import { FeaturedMatchCard } from "@/components/cards/FeaturedMatchCard";
 import { EditFeaturedModal } from "@/components/analysis/EditFeaturedModal";
+import { useHkjc } from "@/components/analysis/HkjcMatchList";
 import { SubNav } from "@/components/layout/SubNav";
 import { useAuth } from "@/context/AuthContext";
 import { FEATURED_COUNT, FEATURED_ITEMS } from "@/lib/data/featured";
 import { fetchFeaturedItems } from "@/lib/featured-api";
+import { buildTopPicksHref } from "@/lib/top-match";
 import type { FeaturedItem } from "@/lib/data/featured";
 
 export function FeaturedSection() {
   const { token, isAdmin } = useAuth();
+  const { selectedDateKey } = useHkjc();
   const [items, setItems] = useState<FeaturedItem[]>(FEATURED_ITEMS);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -39,7 +42,7 @@ export function FeaturedSection() {
       <SubNav
         title="精選賽事"
         count={FEATURED_COUNT}
-        seeAllHref="/analysis?picks=top"
+        seeAllHref={buildTopPicksHref(selectedDateKey)}
         titleAction={
           isAdmin ? (
             <button
@@ -69,7 +72,7 @@ export function FeaturedSection() {
                 delay={index * 220}
                 className="shrink-0"
               >
-                <FeaturedMatchCard {...item} />
+                <FeaturedMatchCard {...item} dateKey={selectedDateKey} />
               </AnimateIn>
             ))}
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -23,7 +24,9 @@ import { enrichArchivedMatches } from "@/lib/hkjc/enrich-archived-logos";
 import {
   ADMIN_PAST_TAB_COUNT,
   buildAdminPastDateItems,
+  getTodayDateKeyHk,
   mergeAdminTodayPassedMatches,
+  resolveSelectedDateKey,
   shouldMergeTodayPassedMatches,
 } from "@/lib/hkjc/past-dates";
 import { fetchHkjcMatchesFromApi } from "@/lib/hkjc/matches-api";
@@ -43,6 +46,7 @@ type HkjcContextValue = {
   adminPastTabCount: number;
   todayPassedMatches: HkjcMatch[];
   todayPassedLoading: boolean;
+  selectedDateKey: string;
 };
 
 const HkjcContext = createContext<HkjcContextValue | null>(null);
@@ -82,6 +86,17 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
           (archivedMatchesByDate[date.key]?.length ?? 0) > 0,
       })),
     [clientPastDates, archivedHasEventByKey, archivedMatchesByDate],
+  );
+
+  const selectedDateKey = useMemo(
+    () =>
+      resolveSelectedDateKey({
+        selectedIndex,
+        adminPastTabCount,
+        archivedDates,
+        liveDates: data?.dates ?? [],
+      }),
+    [selectedIndex, adminPastTabCount, archivedDates, data?.dates],
   );
 
   const reload = useCallback(async (refresh = false) => {
@@ -248,6 +263,7 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
       adminPastTabCount,
       todayPassedMatches,
       todayPassedLoading,
+      selectedDateKey,
     }),
     [
       data,
@@ -261,6 +277,7 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
       adminPastTabCount,
       todayPassedMatches,
       todayPassedLoading,
+      selectedDateKey,
     ],
   );
 
@@ -274,6 +291,8 @@ function useHkjc() {
   }
   return context;
 }
+
+export { useHkjc };
 
 export function HkjcDatePicker() {
   const {
@@ -347,6 +366,8 @@ export function HkjcMatchesSection({
   );
   const [scoresLoading, setScoresLoading] = useState(false);
   const isTopPicks = mode === "top-picks";
+  const searchParams = useSearchParams();
+  const picksDateKey = isTopPicks ? searchParams.get("date") : null;
   const listKey = `${mode}-${selectedIndex}-${data?.updatedAt ?? "loading"}-${archivedLoading}-${todayPassedLoading}`;
 
   const selectedLiveDateKey = useMemo(() => {
@@ -367,6 +388,24 @@ export function HkjcMatchesSection({
     );
 
   const matches = useMemo(() => {
+    if (isTopPicks && picksDateKey) {
+      const todayKey = getTodayDateKeyHk();
+      if (picksDateKey === todayKey) {
+        let result = filterMatchesByDate(data?.matches ?? [], picksDateKey);
+        if (isAdmin && todayPassedMatches.length > 0) {
+          result = mergeAdminTodayPassedMatches(result, todayPassedMatches);
+        }
+        return result;
+      }
+
+      const archived = archivedMatchesByDate[picksDateKey];
+      if (archived?.length) {
+        return archived;
+      }
+
+      return filterMatchesByDate(data?.matches ?? [], picksDateKey);
+    }
+
     let result: HkjcMatch[];
 
     if (selectedIndex === 0) {
@@ -396,6 +435,9 @@ export function HkjcMatchesSection({
     archivedMatchesByDate,
     mergeTodayPassed,
     todayPassedMatches,
+    isTopPicks,
+    picksDateKey,
+    isAdmin,
   ]);
 
   const viewingArchived =
