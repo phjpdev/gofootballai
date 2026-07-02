@@ -3,6 +3,7 @@ import {
   enrichArchivedMatchForClient,
   getArchivedMatchById,
   listAdminPastDates,
+  listAdminTodayPassedMatches,
   listArchivedMatchesByDate,
   syncArchivedFromAnalyses,
 } from "../lib/archived-hkjc.js";
@@ -75,6 +76,22 @@ router.get(
     } catch (error) {
       console.error("Archived matches fetch failed:", error);
       res.status(500).json({ error: "無法載入過往賽事" });
+    }
+  },
+);
+
+router.get(
+  "/archived/today-passed",
+  requireAuth,
+  requireAdmin,
+  async (_req, res) => {
+    try {
+      await syncArchivedFromAnalyses();
+      const matches = await listAdminTodayPassedMatches();
+      res.json({ matches, total: matches.length });
+    } catch (error) {
+      console.error("Today passed matches fetch failed:", error);
+      res.status(500).json({ error: "無法載入今日已開賽賽事" });
     }
   },
 );

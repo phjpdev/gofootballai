@@ -20,7 +20,7 @@ const STALE_MAX_MS = 24 * 60 * 60 * 1000;
 const matchByIdCache = new Map<string, { match: HkjcMatch; expiresAt: number }>();
 const MATCH_BY_ID_TTL_MS = 120_000;
 
-async function fetchRawMatches(): Promise<RawMatch[]> {
+export async function fetchRawMatches(): Promise<RawMatch[]> {
   const api = createFootballAPI();
   const batchA = await api.getAllFootballMatches({
     oddsTypes: ["HAD", "HDC"],

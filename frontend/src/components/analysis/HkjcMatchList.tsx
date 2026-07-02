@@ -17,11 +17,14 @@ import { fetchAnalysisScores, prewarmAnalyses } from "@/lib/analyses-api";
 import {
   fetchArchivedDates,
   fetchArchivedMatches,
+  fetchAdminTodayPassedMatches,
 } from "@/lib/hkjc/archived-matches-api";
 import { enrichArchivedMatches } from "@/lib/hkjc/enrich-archived-logos";
 import {
   ADMIN_PAST_TAB_COUNT,
   buildAdminPastDateItems,
+  mergeAdminTodayPassedMatches,
+  shouldMergeTodayPassedMatches,
 } from "@/lib/hkjc/past-dates";
 import { fetchHkjcMatchesFromApi } from "@/lib/hkjc/matches-api";
 import { useAuth } from "@/context/AuthContext";
@@ -38,6 +41,8 @@ type HkjcContextValue = {
   archivedMatchesByDate: Record<string, HkjcMatch[]>;
   archivedLoading: boolean;
   adminPastTabCount: number;
+  todayPassedMatches: HkjcMatch[];
+  todayPassedLoading: boolean;
 };
 
 const HkjcContext = createContext<HkjcContextValue | null>(null);
@@ -57,6 +62,8 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
   const [loadedArchivedDateKeys, setLoadedArchivedDateKeys] = useState<
     Set<string>
   >(() => new Set());
+  const [todayPassedMatches, setTodayPassedMatches] = useState<HkjcMatch[]>([]);
+  const [todayPassedLoading, setTodayPassedLoading] = useState(false);
 
   const adminPastTabCount =
     !authLoading && isAdmin ? ADMIN_PAST_TAB_COUNT : 0;
@@ -111,6 +118,7 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
       setArchivedHasEventByKey({});
       setArchivedMatchesByDate({});
       setLoadedArchivedDateKeys(new Set());
+      setTodayPassedMatches([]);
     }
   }, [authLoading, isAdmin, token]);
 
@@ -185,6 +193,30 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
     loadedArchivedDateKeys,
   ]);
 
+  useEffect(() => {
+    if (authLoading || !isAdmin || !token) return;
+
+    let cancelled = false;
+    setTodayPassedLoading(true);
+
+    void fetchAdminTodayPassedMatches(token)
+      .then((matches) => {
+        if (!cancelled) {
+          setTodayPassedMatches(enrichArchivedMatches(matches));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setTodayPassedMatches([]);
+      })
+      .finally(() => {
+        if (!cancelled) setTodayPassedLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAdmin, token, data?.updatedAt]);
+
   const archivedLoading = useMemo(() => {
     if (
       adminPastTabCount === 0 ||
@@ -214,6 +246,8 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
       archivedMatchesByDate,
       archivedLoading,
       adminPastTabCount,
+      todayPassedMatches,
+      todayPassedLoading,
     }),
     [
       data,
@@ -225,6 +259,8 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
       archivedMatchesByDate,
       archivedLoading,
       adminPastTabCount,
+      todayPassedMatches,
+      todayPassedLoading,
     ],
   );
 
@@ -301,6 +337,8 @@ export function HkjcMatchesSection({
     archivedMatchesByDate,
     archivedLoading,
     adminPastTabCount,
+    todayPassedMatches,
+    todayPassedLoading,
   } = useHkjc();
   const { token, isAuthenticated, isMember, isAdmin, isLoading: authLoading } =
     useAuth();
@@ -309,29 +347,55 @@ export function HkjcMatchesSection({
   );
   const [scoresLoading, setScoresLoading] = useState(false);
   const isTopPicks = mode === "top-picks";
-  const listKey = `${mode}-${selectedIndex}-${data?.updatedAt ?? "loading"}-${archivedLoading}`;
+  const listKey = `${mode}-${selectedIndex}-${data?.updatedAt ?? "loading"}-${archivedLoading}-${todayPassedLoading}`;
+
+  const selectedLiveDateKey = useMemo(() => {
+    if (!data || selectedIndex === 0) return undefined;
+    if (adminPastTabCount > 0 && selectedIndex <= adminPastTabCount) {
+      return undefined;
+    }
+    const liveIndex = selectedIndex - 1 - adminPastTabCount;
+    return data.dates[liveIndex]?.key;
+  }, [data, selectedIndex, adminPastTabCount]);
+
+  const mergeTodayPassed =
+    isAdmin &&
+    shouldMergeTodayPassedMatches(
+      selectedIndex,
+      adminPastTabCount,
+      selectedLiveDateKey,
+    );
 
   const matches = useMemo(() => {
-    if (selectedIndex === 0) {
-      return data?.matches ?? [];
-    }
+    let result: HkjcMatch[];
 
-    if (adminPastTabCount > 0 && selectedIndex <= adminPastTabCount) {
+    if (selectedIndex === 0) {
+      result = data?.matches ?? [];
+    } else if (adminPastTabCount > 0 && selectedIndex <= adminPastTabCount) {
       const dateKey = archivedDates[selectedIndex - 1]?.key;
       return dateKey ? archivedMatchesByDate[dateKey] ?? [] : [];
+    } else if (!data) {
+      return [] as HkjcMatch[];
+    } else {
+      const liveIndex = selectedIndex - 1 - adminPastTabCount;
+      const selectedDateKey = data.dates[liveIndex]?.key;
+      if (!selectedDateKey) return [] as HkjcMatch[];
+      result = filterMatchesByDate(data.matches, selectedDateKey);
     }
 
-    if (!data) return [] as HkjcMatch[];
-    const liveIndex = selectedIndex - 1 - adminPastTabCount;
-    const selectedDateKey = data.dates[liveIndex]?.key;
-    if (!selectedDateKey) return [] as HkjcMatch[];
-    return filterMatchesByDate(data.matches, selectedDateKey);
+    if (mergeTodayPassed && todayPassedMatches.length > 0) {
+      result = mergeAdminTodayPassedMatches(result, todayPassedMatches);
+    }
+
+    return result;
   }, [
     data,
     selectedIndex,
     adminPastTabCount,
     archivedDates,
     archivedMatchesByDate,
+    mergeTodayPassed,
+    todayPassedMatches,
   ]);
 
   const viewingArchived =
@@ -402,7 +466,12 @@ export function HkjcMatchesSection({
     });
   }, [matches, isTopPicks, analysisScores]);
 
-  if (loading || (isTopPicks && authLoading) || (viewingArchived && archivedLoading)) {
+  if (
+    loading ||
+    (isTopPicks && authLoading) ||
+    (viewingArchived && archivedLoading) ||
+    (mergeTodayPassed && todayPassedLoading)
+  ) {
     return (
       <div className="flex flex-col gap-3">
         {Array.from({ length: 4 }).map((_, index) => (
@@ -449,9 +518,11 @@ export function HkjcMatchesSection({
           <p className="pb-0.5 text-[10px] font-medium text-gray-60">
             {viewingArchived
               ? `資料庫 · ${matches.length} 場過往賽事`
-              : isTopPicks
-                ? `按 AI 評分排序 · ${scoredCount} 場`
-                : `馬會 · ${data.total} 場進行中`}
+              : mergeTodayPassed && todayPassedMatches.length > 0
+                ? `馬會 · 含 ${todayPassedMatches.length} 場今日已開賽`
+                : isTopPicks
+                  ? `按 AI 評分排序 · ${scoredCount} 場`
+                  : `馬會 · ${data.total} 場進行中`}
           </p>
         )}
       </div>
