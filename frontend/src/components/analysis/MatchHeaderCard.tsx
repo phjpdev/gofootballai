@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 type MatchHeaderCardProps = {
   match: Match;
   showMeta?: boolean;
+  onVsClick?: () => void;
 };
 
 function parseTeamsFromTitle(title: string): { home: string; away: string } {
@@ -83,7 +84,11 @@ function TeamColumn({
   );
 }
 
-export function MatchHeaderCard({ match, showMeta = true }: MatchHeaderCardProps) {
+export function MatchHeaderCard({
+  match,
+  showMeta = true,
+  onVsClick,
+}: MatchHeaderCardProps) {
   const [active, setActive] = useState(false);
 
   useEffect(() => {
@@ -138,34 +143,68 @@ export function MatchHeaderCard({ match, showMeta = true }: MatchHeaderCardProps
             active={active}
           />
 
-          <div
-            className={cn(
-              "match-header-vs flex shrink-0 flex-col items-center gap-1.5 px-1",
-              active && "match-header-vs--in",
-            )}
-          >
-            {hasScore ? (
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold tabular-nums text-white sm:text-3xl">
-                  {match.homeScore}
-                </span>
-                <span className="text-sm font-medium text-gray-40">-</span>
-                <span className="text-2xl font-bold tabular-nums text-white sm:text-3xl">
-                  {match.awayScore}
-                </span>
-              </div>
-            ) : (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src="/images/vs-badge.png?v=3"
-                alt="VS"
-                className="match-header-vs__badge size-11 object-contain sm:size-12"
-              />
-            )}
-            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-40">
-              {hasScore ? "完場" : "對賽"}
-            </span>
-          </div>
+          {onVsClick ? (
+            <button
+              type="button"
+              onClick={onVsClick}
+              aria-label="編輯預測結果"
+              className={cn(
+                "match-header-vs flex shrink-0 flex-col items-center gap-1.5 rounded-xl px-1 transition-colors hover:bg-white/8",
+                active && "match-header-vs--in",
+              )}
+            >
+              {hasScore ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold tabular-nums text-white sm:text-3xl">
+                    {match.homeScore}
+                  </span>
+                  <span className="text-sm font-medium text-gray-40">-</span>
+                  <span className="text-2xl font-bold tabular-nums text-white sm:text-3xl">
+                    {match.awayScore}
+                  </span>
+                </div>
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src="/images/vs-badge.png?v=3"
+                  alt="VS"
+                  className="match-header-vs__badge size-11 object-contain sm:size-12"
+                />
+              )}
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-40">
+                {hasScore ? "完場" : "對賽"}
+              </span>
+            </button>
+          ) : (
+            <div
+              className={cn(
+                "match-header-vs flex shrink-0 flex-col items-center gap-1.5 px-1",
+                active && "match-header-vs--in",
+              )}
+            >
+              {hasScore ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold tabular-nums text-white sm:text-3xl">
+                    {match.homeScore}
+                  </span>
+                  <span className="text-sm font-medium text-gray-40">-</span>
+                  <span className="text-2xl font-bold tabular-nums text-white sm:text-3xl">
+                    {match.awayScore}
+                  </span>
+                </div>
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src="/images/vs-badge.png?v=3"
+                  alt="VS"
+                  className="match-header-vs__badge size-11 object-contain sm:size-12"
+                />
+              )}
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-40">
+                {hasScore ? "完場" : "對賽"}
+              </span>
+            </div>
+          )}
 
           <TeamColumn
             name={teams.away}

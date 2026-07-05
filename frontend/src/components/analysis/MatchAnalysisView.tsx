@@ -12,7 +12,7 @@ import { AnalysisMemberGate } from "@/components/analysis/AnalysisLockScreen";
 import { VipContentLock } from "@/components/analysis/VipContentLock";
 import type { MatchAnalysisResult } from "@/types/analysis";
 import type { Match } from "@/types";
-import { ChevronLeft, Loader2, Pencil } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 
 type MatchAnalysisViewProps = {
   match: Match;
@@ -84,29 +84,21 @@ export function MatchAnalysisView({
   return (
     <div className="flex flex-col gap-5 lg:gap-6">
       <div className="flex flex-col gap-2 lg:gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <Link
-            href="/analysis"
-            className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white lg:text-base"
-          >
-            <ChevronLeft className="size-4" />
-            返回賽事分析
-          </Link>
-
-          {showEditPick && onEditPick && (
-            <button
-              type="button"
-              onClick={onEditPick}
-              aria-label="編輯預測結果"
-              className="flex size-8 shrink-0 items-center justify-center rounded-[12px] bg-gray-90 text-orange-50 transition-colors hover:bg-gray-80 lg:size-9"
-            >
-              <Pencil className="size-4" strokeWidth={2.25} />
-            </button>
-          )}
-        </div>
+        <Link
+          href="/analysis"
+          className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white lg:text-base"
+        >
+          <ChevronLeft className="size-4" />
+          返回賽事分析
+        </Link>
 
         <AnimateIn variant="slide-right" delay={0}>
-          <MatchHeaderCard match={match} />
+          <MatchHeaderCard
+            match={match}
+            onVsClick={
+              showEditPick && onEditPick ? onEditPick : undefined
+            }
+          />
         </AnimateIn>
       </div>
 
