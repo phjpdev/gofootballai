@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Pencil } from "lucide-react";
 import { AnimateIn } from "@/components/motion/AnimateIn";
 import { FeaturedMatchCard } from "@/components/cards/FeaturedMatchCard";
 import { EditFeaturedModal } from "@/components/analysis/EditFeaturedModal";
@@ -43,18 +42,7 @@ export function FeaturedSection() {
         title="精選賽事"
         count={FEATURED_COUNT}
         seeAllHref={buildTopPicksHref(selectedDateKey)}
-        titleAction={
-          isAdmin ? (
-            <button
-              type="button"
-              onClick={() => setModalOpen(true)}
-              aria-label="編輯精選賽事"
-              className="flex size-8 shrink-0 items-center justify-center rounded-[12px] bg-gray-90 text-orange-50 transition-colors hover:bg-gray-80"
-            >
-              <Pencil className="size-4" strokeWidth={2.25} />
-            </button>
-          ) : undefined
-        }
+        onTitleClick={isAdmin ? () => setModalOpen(true) : undefined}
       />
 
       <div className="perspective-[1200px] scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 [touch-action:pan-x] lg:mx-0 lg:px-0 lg:[touch-action:auto]">
