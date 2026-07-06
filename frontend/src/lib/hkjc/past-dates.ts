@@ -32,6 +32,44 @@ function formatDay(dateKey: string): string {
   });
 }
 
+export function buildDateItem(
+  dateKey: string,
+  hasEvent = false,
+): HkjcDateItem {
+  const [, , day] = dateKey.split("-").map(Number);
+  return {
+    key: dateKey,
+    day: formatDay(dateKey),
+    date: day,
+    hasEvent,
+  };
+}
+
+export function ensureTodayInLiveDates(
+  liveDates: HkjcDateItem[],
+  archivedDateKeys: string[],
+  todayHasMatches = false,
+): HkjcDateItem[] {
+  const todayKey = getTodayDateKeyHk();
+  if (archivedDateKeys.includes(todayKey)) {
+    return liveDates;
+  }
+  if (liveDates.some((date) => date.key === todayKey)) {
+    return liveDates;
+  }
+
+  const firstLiveKey = liveDates[0]?.key;
+  const shouldInject =
+    todayHasMatches || (firstLiveKey ? todayKey < firstLiveKey : true);
+
+  if (!shouldInject) {
+    return liveDates;
+  }
+
+  const todayItem = buildDateItem(todayKey, todayHasMatches);
+  return [...liveDates, todayItem].sort((a, b) => a.key.localeCompare(b.key));
+}
+
 export function buildAdminPastDateItems(
   count = ADMIN_PAST_TAB_COUNT,
 ): HkjcDateItem[] {
