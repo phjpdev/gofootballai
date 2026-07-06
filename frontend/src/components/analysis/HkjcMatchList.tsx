@@ -13,7 +13,7 @@ import { DatePicker } from "@/components/layout/DatePicker";
 import { SubNav } from "@/components/layout/SubNav";
 import { AnimateIn } from "@/components/motion/AnimateIn";
 import { HkjcMatchCard } from "@/components/cards/HkjcMatchCard";
-import { filterMatchesByDate } from "@/lib/hkjc/transform";
+import { filterMatchesByDate, filterUpcomingMatches } from "@/lib/hkjc/transform";
 import { fetchAnalysisScores, prewarmAnalyses } from "@/lib/analyses-api";
 import {
   fetchArchivedDates,
@@ -407,21 +407,9 @@ export function HkjcMatchesSection({
 
   const matches = useMemo(() => {
     if (isTopPicks && picksDateKey) {
-      const todayKey = getTodayDateKeyHk();
-      if (picksDateKey === todayKey) {
-        let result = filterMatchesByDate(data?.matches ?? [], picksDateKey);
-        if (isAdmin && todayPassedMatches.length > 0) {
-          result = mergeAdminTodayPassedMatches(result, todayPassedMatches);
-        }
-        return result;
-      }
-
-      const archived = archivedMatchesByDate[picksDateKey];
-      if (archived?.length) {
-        return archived;
-      }
-
-      return filterMatchesByDate(data?.matches ?? [], picksDateKey);
+      return filterUpcomingMatches(
+        filterMatchesByDate(data?.matches ?? [], picksDateKey),
+      );
     }
 
     let result: HkjcMatch[];
@@ -470,8 +458,11 @@ export function HkjcMatchesSection({
   useEffect(() => {
     if (!canPrewarm || !token || matches.length === 0) return;
 
-    const limit = isTopPicks ? data?.matches.length ?? 24 : 6;
-    const matchIds = matches.slice(0, limit).map((match) => match.id);
+    const scoredMatches = isTopPicks ? filterUpcomingMatches(matches) : matches;
+    if (scoredMatches.length === 0) return;
+
+    const limit = isTopPicks ? scoredMatches.length : 6;
+    const matchIds = scoredMatches.slice(0, limit).map((match) => match.id);
     setScoresLoading(isTopPicks);
 
     void fetchAnalysisScores(token, matchIds)
@@ -520,7 +511,9 @@ export function HkjcMatchesSection({
   const displayMatches = useMemo(() => {
     if (!isTopPicks) return matches;
 
-    return [...matches].sort((a, b) => {
+    const upcoming = filterUpcomingMatches(matches);
+
+    return [...upcoming].sort((a, b) => {
       const scoreA = analysisScores[a.id] ?? 0;
       const scoreB = analysisScores[b.id] ?? 0;
       return scoreB - scoreA;

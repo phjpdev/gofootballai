@@ -11,12 +11,16 @@ import {
   getTodayDateKeyHk,
   mergeAdminTodayPassedMatches,
 } from "@/lib/hkjc/past-dates";
-import { filterMatchesByDate } from "@/lib/hkjc/transform";
+import { filterMatchesByDate, filterUpcomingMatches } from "@/lib/hkjc/transform";
 import type { HkjcMatch } from "@/types/hkjc";
 import type { PrewarmResult } from "@/types/analysis";
 
 const TOP_MATCH_POLL_MS = 1_500;
 const TOP_MATCH_POLL_ATTEMPTS = 10;
+
+type LoadMatchesOptions = {
+  upcomingOnly?: boolean;
+};
 
 function pickTopConfidenceMatchIds(
   results: PrewarmResult[],
@@ -43,9 +47,14 @@ function pickTopConfidenceMatchIds(
 export async function loadMatchesForDate(
   dateKey: string,
   token?: string | null,
+  options?: LoadMatchesOptions,
 ): Promise<HkjcMatch[]> {
   const data = await fetchHkjcMatchesFromApi();
   let matches = filterMatchesByDate(data.matches, dateKey);
+
+  if (options?.upcomingOnly) {
+    return filterUpcomingMatches(matches);
+  }
 
   if (!token) {
     return matches;
@@ -80,7 +89,9 @@ async function loadRankedMatchIds(
   dateKey?: string,
 ): Promise<string[]> {
   const effectiveDateKey = dateKey ?? getTodayDateKeyHk();
-  const matches = await loadMatchesForDate(effectiveDateKey, token);
+  const matches = await loadMatchesForDate(effectiveDateKey, token, {
+    upcomingOnly: true,
+  });
   const matchIds = matches.map((match) => match.id);
   const fallback = fallbackMatchId || matchIds[0] || "";
 
@@ -156,7 +167,9 @@ export async function resolveTopMatchDetailPath(
   options?: { fallbackMatchId?: string; dateKey?: string },
 ): Promise<string> {
   const dateKey = options?.dateKey ?? getTodayDateKeyHk();
-  const matches = await loadMatchesForDate(dateKey, token);
+  const matches = await loadMatchesForDate(dateKey, token, {
+    upcomingOnly: true,
+  });
   const fallbackId = options?.fallbackMatchId ?? matches[0]?.id;
 
   if (!fallbackId) {
@@ -177,7 +190,9 @@ export async function resolveTopMatchPreviewPath(
   options?: { fallbackMatchId?: string; dateKey?: string },
 ): Promise<string> {
   const dateKey = options?.dateKey ?? getTodayDateKeyHk();
-  const matches = await loadMatchesForDate(dateKey, token);
+  const matches = await loadMatchesForDate(dateKey, token, {
+    upcomingOnly: true,
+  });
   const fallbackId = options?.fallbackMatchId ?? matches[0]?.id;
 
   if (!fallbackId) {

@@ -179,3 +179,13 @@ export function filterMatchesByDate(
 ): HkjcMatch[] {
   return matches.filter((match) => match.matchDate === dateKey);
 }
+
+export function filterUpcomingMatches(
+  matches: HkjcMatch[],
+  now = Date.now(),
+): HkjcMatch[] {
+  return matches.filter((match) => {
+    const kickOff = new Date(match.kickOffTime).getTime();
+    return !Number.isNaN(kickOff) && kickOff > now;
+  });
+}

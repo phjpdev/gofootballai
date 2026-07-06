@@ -38,11 +38,12 @@ export function TopMatchPreviewSection() {
     try {
       const [configuredSlots, matches] = await Promise.all([
         fetchTopMatchPreviews().catch(() => DEFAULT_TOP_MATCH_PREVIEWS),
-        loadMatchesForDate(dateKey, token),
+        loadMatchesForDate(dateKey, token, { upcomingOnly: true }),
       ]);
 
       setSlots(configuredSlots);
 
+      const upcomingIds = new Set(matches.map((match) => match.id));
       const fallbackId = matches[0]?.id ?? "";
       const autoRanked = await findTopConfidenceMatchIds(
         token,
@@ -52,7 +53,9 @@ export function TopMatchPreviewSection() {
       );
 
       setMatchIds(
-        mergePreviewMatchIds(configuredSlots, autoRanked, PREVIEW_SLOT_COUNT),
+        mergePreviewMatchIds(configuredSlots, autoRanked, PREVIEW_SLOT_COUNT).filter(
+          (matchId) => upcomingIds.has(matchId),
+        ),
       );
     } catch {
       setMatchIds([]);
