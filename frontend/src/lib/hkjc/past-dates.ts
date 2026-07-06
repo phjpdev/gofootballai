@@ -109,6 +109,30 @@ export function shouldMergeTodayPassedMatches(
   return selectedDateKey === getTodayDateKeyHk();
 }
 
+export function resolveFeaturedPicksDateKey(options: {
+  selectedDateKey: string;
+  selectedIndex: number;
+  adminPastTabCount: number;
+}): string {
+  const { selectedDateKey, selectedIndex, adminPastTabCount } = options;
+  const todayKey = getTodayDateKeyHk();
+
+  const isArchivedTab =
+    adminPastTabCount > 0 &&
+    selectedIndex > 0 &&
+    selectedIndex <= adminPastTabCount;
+
+  if (isArchivedTab || selectedIndex === 0) {
+    return todayKey;
+  }
+
+  if (selectedDateKey >= todayKey) {
+    return selectedDateKey;
+  }
+
+  return todayKey;
+}
+
 export function resolveSelectedDateKey(options: {
   selectedIndex: number;
   adminPastTabCount: number;
