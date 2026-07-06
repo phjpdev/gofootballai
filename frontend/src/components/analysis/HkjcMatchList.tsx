@@ -24,6 +24,7 @@ import { enrichArchivedMatches } from "@/lib/hkjc/enrich-archived-logos";
 import {
   ADMIN_PAST_TAB_COUNT,
   buildAdminPastDateItems,
+  ensureTodayInLiveDates,
   getTodayDateKeyHk,
   mergeAdminTodayPassedMatches,
   resolveSelectedDateKey,
@@ -47,6 +48,7 @@ type HkjcContextValue = {
   todayPassedMatches: HkjcMatch[];
   todayPassedLoading: boolean;
   selectedDateKey: string;
+  pickerLiveDates: HkjcDateItem[];
 };
 
 const HkjcContext = createContext<HkjcContextValue | null>(null);
@@ -88,15 +90,28 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
     [clientPastDates, archivedHasEventByKey, archivedMatchesByDate],
   );
 
+  const pickerLiveDates = useMemo(() => {
+    const live = data?.dates ?? [];
+    const archivedKeys = archivedDates.map((date) => date.key);
+    const todayKey = getTodayDateKeyHk();
+    const todayLiveCount = filterMatchesByDate(
+      data?.matches ?? [],
+      todayKey,
+    ).length;
+    const todayHasMatches =
+      todayLiveCount > 0 || todayPassedMatches.length > 0;
+    return ensureTodayInLiveDates(live, archivedKeys, todayHasMatches);
+  }, [data?.dates, data?.matches, archivedDates, todayPassedMatches]);
+
   const selectedDateKey = useMemo(
     () =>
       resolveSelectedDateKey({
         selectedIndex,
         adminPastTabCount,
         archivedDates,
-        liveDates: data?.dates ?? [],
+        liveDates: pickerLiveDates,
       }),
-    [selectedIndex, adminPastTabCount, archivedDates, data?.dates],
+    [selectedIndex, adminPastTabCount, archivedDates, pickerLiveDates],
   );
 
   const reload = useCallback(async (refresh = false) => {
@@ -264,6 +279,7 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
       todayPassedMatches,
       todayPassedLoading,
       selectedDateKey,
+      pickerLiveDates,
     }),
     [
       data,
@@ -278,6 +294,7 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
       todayPassedMatches,
       todayPassedLoading,
       selectedDateKey,
+      pickerLiveDates,
     ],
   );
 
@@ -296,17 +313,17 @@ export { useHkjc };
 
 export function HkjcDatePicker() {
   const {
-    data,
     loading,
     selectedIndex,
     setSelectedIndex,
     archivedDates,
     adminPastTabCount,
+    pickerLiveDates,
   } = useHkjc();
 
   const datePickerItems = useMemo(
     () => {
-      const liveItems = (data?.dates ?? []).map((date) => ({
+      const liveItems = pickerLiveDates.map((date) => ({
         day: date.day,
         date: date.date,
         hasEvent: date.hasEvent,
@@ -324,7 +341,7 @@ export function HkjcDatePicker() {
 
       return [...archivedItems, ...liveItems];
     },
-    [data?.dates, archivedDates, adminPastTabCount],
+    [pickerLiveDates, archivedDates, adminPastTabCount],
   );
 
   if (loading || datePickerItems.length === 0) {
@@ -358,6 +375,7 @@ export function HkjcMatchesSection({
     adminPastTabCount,
     todayPassedMatches,
     todayPassedLoading,
+    pickerLiveDates,
   } = useHkjc();
   const { token, isAuthenticated, isMember, isAdmin, isLoading: authLoading } =
     useAuth();
@@ -371,13 +389,13 @@ export function HkjcMatchesSection({
   const listKey = `${mode}-${selectedIndex}-${data?.updatedAt ?? "loading"}-${archivedLoading}-${todayPassedLoading}`;
 
   const selectedLiveDateKey = useMemo(() => {
-    if (!data || selectedIndex === 0) return undefined;
+    if (selectedIndex === 0) return undefined;
     if (adminPastTabCount > 0 && selectedIndex <= adminPastTabCount) {
       return undefined;
     }
     const liveIndex = selectedIndex - 1 - adminPastTabCount;
-    return data.dates[liveIndex]?.key;
-  }, [data, selectedIndex, adminPastTabCount]);
+    return pickerLiveDates[liveIndex]?.key;
+  }, [selectedIndex, adminPastTabCount, pickerLiveDates]);
 
   const mergeTodayPassed =
     isAdmin &&
@@ -417,7 +435,7 @@ export function HkjcMatchesSection({
       return [] as HkjcMatch[];
     } else {
       const liveIndex = selectedIndex - 1 - adminPastTabCount;
-      const selectedDateKey = data.dates[liveIndex]?.key;
+      const selectedDateKey = pickerLiveDates[liveIndex]?.key;
       if (!selectedDateKey) return [] as HkjcMatch[];
       result = filterMatchesByDate(data.matches, selectedDateKey);
     }
@@ -438,6 +456,7 @@ export function HkjcMatchesSection({
     isTopPicks,
     picksDateKey,
     isAdmin,
+    pickerLiveDates,
   ]);
 
   const viewingArchived =
