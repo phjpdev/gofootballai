@@ -14,7 +14,7 @@ import {
   sortPreviewSlots,
 } from "@/lib/data/top-match-previews";
 import { fetchTopMatchPreviews } from "@/lib/top-match-previews-api";
-import { findTopConfidenceMatchIds, loadMatchesForDate } from "@/lib/top-match";
+import { findTopConfidenceMatchIds, loadMatchesForDate, resolveTopPicksDateKey } from "@/lib/top-match";
 import { getTodayDateKeyHk } from "@/lib/hkjc/past-dates";
 import type { TopMatchPreviewSlot } from "@/lib/data/top-match-previews";
 
@@ -36,9 +36,10 @@ export function TopMatchPreviewSection() {
 
     setLoading(true);
     try {
+      const effectiveDateKey = await resolveTopPicksDateKey(dateKey);
       const [configuredSlots, matches] = await Promise.all([
         fetchTopMatchPreviews().catch(() => DEFAULT_TOP_MATCH_PREVIEWS),
-        loadMatchesForDate(dateKey, token, { upcomingOnly: true }),
+        loadMatchesForDate(effectiveDateKey, token, { upcomingOnly: true }),
       ]);
 
       setSlots(configuredSlots);
@@ -49,7 +50,7 @@ export function TopMatchPreviewSection() {
         token,
         fallbackId,
         PREVIEW_SLOT_COUNT,
-        dateKey,
+        effectiveDateKey,
       );
 
       setMatchIds(

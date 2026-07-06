@@ -22,6 +22,42 @@ type LoadMatchesOptions = {
   upcomingOnly?: boolean;
 };
 
+export async function resolveTopPicksDateKey(
+  preferredDateKey?: string,
+): Promise<string> {
+  const data = await fetchHkjcMatchesFromApi();
+  const todayKey = getTodayDateKeyHk();
+  const preferred = preferredDateKey?.trim() || todayKey;
+
+  const candidateKeys: string[] = [];
+  if (preferred >= todayKey) {
+    candidateKeys.push(preferred);
+  }
+  if (!candidateKeys.includes(todayKey)) {
+    candidateKeys.unshift(todayKey);
+  }
+
+  for (const key of candidateKeys) {
+    const upcoming = filterUpcomingMatches(
+      filterMatchesByDate(data.matches, key),
+    );
+    if (upcoming.length > 0) {
+      return key;
+    }
+  }
+
+  const earliestUpcoming = filterUpcomingMatches(data.matches).sort(
+    (a, b) =>
+      new Date(a.kickOffTime).getTime() - new Date(b.kickOffTime).getTime(),
+  )[0];
+
+  if (earliestUpcoming) {
+    return earliestUpcoming.matchDate;
+  }
+
+  return preferred >= todayKey ? preferred : todayKey;
+}
+
 function pickTopConfidenceMatchIds(
   results: PrewarmResult[],
   count: number,
@@ -88,7 +124,9 @@ async function loadRankedMatchIds(
   count: number,
   dateKey?: string,
 ): Promise<string[]> {
-  const effectiveDateKey = dateKey ?? getTodayDateKeyHk();
+  const effectiveDateKey = await resolveTopPicksDateKey(
+    dateKey ?? getTodayDateKeyHk(),
+  );
   const matches = await loadMatchesForDate(effectiveDateKey, token, {
     upcomingOnly: true,
   });
@@ -166,14 +204,16 @@ export async function resolveTopMatchDetailPath(
   canAccess: boolean,
   options?: { fallbackMatchId?: string; dateKey?: string },
 ): Promise<string> {
-  const dateKey = options?.dateKey ?? getTodayDateKeyHk();
+  const dateKey = await resolveTopPicksDateKey(
+    options?.dateKey ?? getTodayDateKeyHk(),
+  );
   const matches = await loadMatchesForDate(dateKey, token, {
     upcomingOnly: true,
   });
   const fallbackId = options?.fallbackMatchId ?? matches[0]?.id;
 
   if (!fallbackId) {
-    return "/analysis";
+    return `/analysis?picks=preview&date=${encodeURIComponent(dateKey)}`;
   }
 
   if (!canAccess || !token) {
@@ -189,20 +229,17 @@ export async function resolveTopMatchPreviewPath(
   canAccess: boolean,
   options?: { fallbackMatchId?: string; dateKey?: string },
 ): Promise<string> {
-  const dateKey = options?.dateKey ?? getTodayDateKeyHk();
-  const matches = await loadMatchesForDate(dateKey, token, {
-    upcomingOnly: true,
-  });
-  const fallbackId = options?.fallbackMatchId ?? matches[0]?.id;
-
-  if (!fallbackId) {
-    return "/analysis";
-  }
-
+  const dateKey = await resolveTopPicksDateKey(
+    options?.dateKey ?? getTodayDateKeyHk(),
+  );
   const dateQuery = `&date=${encodeURIComponent(dateKey)}`;
 
   if (!canAccess || !token) {
-    return `/analysis/${fallbackId}`;
+    const matches = await loadMatchesForDate(dateKey, token, {
+      upcomingOnly: true,
+    });
+    const fallbackId = matches[0]?.id;
+    return fallbackId ? `/analysis/${fallbackId}` : "/analysis";
   }
 
   return `/analysis?picks=preview${dateQuery}`;

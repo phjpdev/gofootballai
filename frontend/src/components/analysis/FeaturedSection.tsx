@@ -10,11 +10,17 @@ import { useAuth } from "@/context/AuthContext";
 import { FEATURED_COUNT, FEATURED_ITEMS } from "@/lib/data/featured";
 import { fetchFeaturedItems } from "@/lib/featured-api";
 import { buildTopPicksHref } from "@/lib/top-match";
+import { resolveFeaturedPicksDateKey } from "@/lib/hkjc/past-dates";
 import type { FeaturedItem } from "@/lib/data/featured";
 
 export function FeaturedSection() {
   const { token, isAdmin } = useAuth();
-  const { selectedDateKey } = useHkjc();
+  const { selectedDateKey, selectedIndex, adminPastTabCount } = useHkjc();
+  const featuredPicksDateKey = resolveFeaturedPicksDateKey({
+    selectedDateKey,
+    selectedIndex,
+    adminPastTabCount,
+  });
   const [items, setItems] = useState<FeaturedItem[]>(FEATURED_ITEMS);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -41,7 +47,7 @@ export function FeaturedSection() {
       <SubNav
         title="精選賽事"
         count={FEATURED_COUNT}
-        seeAllHref={buildTopPicksHref(selectedDateKey)}
+        seeAllHref={buildTopPicksHref(featuredPicksDateKey)}
         onTitleClick={isAdmin ? () => setModalOpen(true) : undefined}
       />
 
@@ -60,7 +66,7 @@ export function FeaturedSection() {
                 delay={index * 220}
                 className="shrink-0"
               >
-                <FeaturedMatchCard {...item} dateKey={selectedDateKey} />
+                <FeaturedMatchCard {...item} dateKey={featuredPicksDateKey} />
               </AnimateIn>
             ))}
       </div>
