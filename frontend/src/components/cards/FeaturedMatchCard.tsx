@@ -7,7 +7,7 @@ import { ArrowRight, Clock, Flame } from "lucide-react";
 import { LedBorder } from "@/components/motion/LedBorder";
 import { useAuth } from "@/context/AuthContext";
 import { resolveFeaturedImageUrl } from "@/lib/featured-api";
-import { resolveTopMatchDetailPath, resolveTopMatchPreviewPath } from "@/lib/top-match";
+import { resolveTopMatchPreviewPath, resolveWorldCupTopMatchDetailPath } from "@/lib/top-match";
 
 type FeaturedMatchCardProps = {
   title: string;
@@ -43,7 +43,7 @@ export function FeaturedMatchCard({
       const path =
         pickMode === "multi"
           ? await resolveTopMatchPreviewPath(token, canAccess, { dateKey })
-          : await resolveTopMatchDetailPath(token, canAccess, { dateKey });
+          : await resolveWorldCupTopMatchDetailPath(token, canAccess);
       router.push(path);
     } catch {
       router.push("/analysis");
