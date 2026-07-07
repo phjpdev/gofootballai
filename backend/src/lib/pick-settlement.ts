@@ -1,3 +1,8 @@
+import type { HkjcSettlementData } from "./hkjc-match-results.js";
+import {
+  findHadCombinationStatus,
+  mapHkjcCombinationStatus,
+} from "./hkjc-match-results.js";
 import type { HkjcInputSnapshot } from "./hkjc/types.js";
 
 export type PickOutcome = "won" | "lost" | "push";
@@ -12,7 +17,7 @@ export type AiPick = {
   selection: string;
 };
 
-const PENDING_SELECTIONS = new Set(["", "待定", "TBD", "N/A"]);
+const PENDING_SELECTIONS = new Set(["", "待定", "TBD", "N/A", "無"]);
 
 function parseSignedNumber(value: string): number | null {
   const trimmed = value.trim();
@@ -21,7 +26,62 @@ function parseSignedNumber(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function parseSideAndLines(selection: string): {
+function parseLineParts(value: string): number[] {
+  return value
+    .split("/")
+    .map((part) => parseSignedNumber(part))
+    .filter((line): line is number => line !== null);
+}
+
+function teamNameMatches(candidate: string, teamName: string | undefined): boolean {
+  if (!teamName) return false;
+  const left = candidate.trim();
+  const right = teamName.trim();
+  if (!left || !right) return false;
+  return left === right || left.includes(right) || right.includes(left);
+}
+
+function resolveHadComb(
+  selection: string,
+  snapshot?: HkjcInputSnapshot | null,
+): "H" | "D" | "A" | null {
+  const normalized = selection.trim();
+  if (
+    normalized === "主" ||
+    normalized === "主勝" ||
+    normalized === "主隊勝" ||
+    normalized.includes("主勝") ||
+    normalized.includes("主隊")
+  ) {
+    return "H";
+  }
+  if (
+    normalized === "客" ||
+    normalized === "客勝" ||
+    normalized === "客隊勝" ||
+    normalized.includes("客勝") ||
+    normalized.includes("客隊")
+  ) {
+    return "A";
+  }
+  if (normalized === "和") return "D";
+
+  if (snapshot) {
+    if (teamNameMatches(normalized, snapshot.homeTeam)) return "H";
+    if (teamNameMatches(normalized, snapshot.awayTeam)) return "A";
+
+    const withoutWin = normalized.replace(/勝$/, "").trim();
+    if (teamNameMatches(withoutWin, snapshot.homeTeam)) return "H";
+    if (teamNameMatches(withoutWin, snapshot.awayTeam)) return "A";
+  }
+
+  return null;
+}
+
+function parseSideAndLines(
+  selection: string,
+  snapshot?: HkjcInputSnapshot | null,
+): {
   side: "home" | "away" | "draw";
   lines: number[];
 } | null {
@@ -36,22 +96,42 @@ function parseSideAndLines(selection: string): {
     };
   }
 
+  const bracketOnly = normalized.match(/^\[([-+]?[\d./]+)\]$/);
+  if (bracketOnly?.[1]) {
+    const lines = parseLineParts(bracketOnly[1]);
+    if (lines.length === 0) return null;
+    return { side: "home", lines };
+  }
+
   const sideLineMatch = normalized.match(
-    /^([\u4e00-\u9fff]+)\s*([-+]?[\d./]+.*)$/,
+    /^(主|客|和)\s*([-+]?[\d./]+.*)$/,
   );
   if (sideLineMatch?.[1] && sideLineMatch[2]) {
     const label = sideLineMatch[1];
     const side =
-      label === "主" ? "home" : label === "客" ? "away" : label === "和" ? "draw" : null;
-    if (!side) return null;
-
-    const lines = sideLineMatch[2]
-      .split("/")
-      .map((part) => parseSignedNumber(part))
-      .filter((line): line is number => line !== null);
+      label === "主" ? "home" : label === "客" ? "away" : "draw";
+    const lines = parseLineParts(sideLineMatch[2]);
     if (lines.length === 0) return null;
     return { side, lines };
   }
+
+  const teamLineMatch = normalized.match(/^(.+?)([-+]\d[\d./]*)$/);
+  if (teamLineMatch?.[1] && teamLineMatch[2] && snapshot) {
+    const name = teamLineMatch[1].trim();
+    const lines = parseLineParts(teamLineMatch[2]);
+    if (lines.length === 0) return null;
+    if (teamNameMatches(name, snapshot.homeTeam)) {
+      return { side: "home", lines };
+    }
+    if (teamNameMatches(name, snapshot.awayTeam)) {
+      return { side: "away", lines };
+    }
+  }
+
+  const hadComb = resolveHadComb(normalized, snapshot);
+  if (hadComb === "H") return { side: "home", lines: [0] };
+  if (hadComb === "A") return { side: "away", lines: [0] };
+  if (hadComb === "D") return { side: "draw", lines: [0] };
 
   return null;
 }
@@ -59,11 +139,7 @@ function parseSideAndLines(selection: string): {
 function parseOverUnderLines(selection: string): number[] {
   const ouMatch = selection.trim().match(/^([大小])\s*([\d./]+.*)$/);
   if (!ouMatch?.[2]) return [];
-
-  return ouMatch[2]
-    .split("/")
-    .map((part) => parseSignedNumber(part))
-    .filter((line): line is number => line !== null);
+  return parseLineParts(ouMatch[2]);
 }
 
 function settleHad(
@@ -114,10 +190,10 @@ function settleHdc(
   return combineSplitOutcomes(outcomes);
 }
 
-function settleHil(
+function settleHilWithTotalGoals(
   selection: string,
   lines: number[],
-  score: MatchScore,
+  totalGoals: number,
   fallbackLine?: string,
 ): PickOutcome | null {
   const isOver = selection.startsWith("大");
@@ -128,15 +204,11 @@ function settleHil(
     lines.length > 0
       ? lines
       : fallbackLine
-        ? fallbackLine
-            .split("/")
-            .map((part) => parseSignedNumber(part))
-            .filter((line): line is number => line !== null)
+        ? parseLineParts(fallbackLine.replace(/[[\]]/g, ""))
         : [];
 
   if (effectiveLines.length === 0) return null;
 
-  const totalGoals = score.homeGoals + score.awayGoals;
   const outcomes = effectiveLines.map((line) => {
     if (isOver) {
       if (totalGoals > line) return "won";
@@ -151,21 +223,20 @@ function settleHil(
   return combineSplitOutcomes(outcomes);
 }
 
-export function settleAiPick(
+function settleFromScore(
   pick: AiPick,
   score: MatchScore,
   snapshot?: HkjcInputSnapshot | null,
 ): PickOutcome | null {
   const selection = pick.selection.trim();
-  if (PENDING_SELECTIONS.has(selection)) return null;
-
   const market = pick.market.trim().toUpperCase();
-  const parsed = parseSideAndLines(selection);
+  const parsed = parseSideAndLines(selection, snapshot);
 
   if (market === "HAD") {
-    if (selection === "和") return settleHad("draw", score);
-    if (selection === "主") return settleHad("home", score);
-    if (selection === "客") return settleHad("away", score);
+    const hadComb = resolveHadComb(selection, snapshot);
+    if (hadComb === "H") return settleHad("home", score);
+    if (hadComb === "A") return settleHad("away", score);
+    if (hadComb === "D") return settleHad("draw", score);
     if (!parsed || parsed.lines[0] !== 0) return null;
     return settleHad(parsed.side, score);
   }
@@ -177,20 +248,67 @@ export function settleAiPick(
 
   if (market === "HIL" || selection.startsWith("大") || selection.startsWith("小")) {
     const lines = parseOverUnderLines(selection);
-    return settleHil(selection, lines, score, snapshot?.hilOdds?.line);
+    return settleHilWithTotalGoals(
+      selection,
+      lines,
+      score.homeGoals + score.awayGoals,
+      snapshot?.hilOdds?.line,
+    );
   }
 
   if (!parsed) return null;
-
   if (parsed.side === "home" || parsed.side === "away") {
     return settleHdc(parsed.side, parsed.lines, score);
   }
+  if (parsed.side === "draw") return settleHad("draw", score);
+  return null;
+}
 
-  if (parsed.side === "draw") {
-    return settleHad("draw", score);
+export function settleAiPickWithHkjc(
+  pick: AiPick,
+  data: HkjcSettlementData,
+  snapshot?: HkjcInputSnapshot | null,
+): PickOutcome | null {
+  const selection = pick.selection.trim();
+  if (PENDING_SELECTIONS.has(selection)) return null;
+
+  const market = pick.market.trim().toUpperCase();
+
+  if (market === "HAD") {
+    const hadComb = resolveHadComb(selection, snapshot);
+    if (hadComb) {
+      const poolOutcome = findHadCombinationStatus(data.pools, hadComb);
+      if (poolOutcome) return poolOutcome;
+    }
+  }
+
+  if (data.score) {
+    const fromScore = settleFromScore(pick, data.score, snapshot);
+    if (fromScore) return fromScore;
+  }
+
+  if (
+    (market === "HIL" || selection.startsWith("大") || selection.startsWith("小")) &&
+    data.totalGoals !== null
+  ) {
+    const lines = parseOverUnderLines(selection);
+    return settleHilWithTotalGoals(
+      selection,
+      lines,
+      data.totalGoals,
+      snapshot?.hilOdds?.line,
+    );
   }
 
   return null;
+}
+
+export function settleAiPick(
+  pick: AiPick,
+  score: MatchScore,
+  snapshot?: HkjcInputSnapshot | null,
+): PickOutcome | null {
+  return settleFromScore(pick, score, snapshot);
 }
 
 export function isPickSettlable(kickOffTime: string): boolean {
@@ -199,3 +317,5 @@ export function isPickSettlable(kickOffTime: string): boolean {
   const settleAfterMs = 105 * 60 * 1000;
   return Date.now() >= kickOff + settleAfterMs;
 }
+
+export { mapHkjcCombinationStatus };

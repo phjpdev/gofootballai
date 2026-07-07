@@ -1,11 +1,11 @@
 import type { MatchAnalysisData } from "./analysis-schema.js";
 import { query } from "./db.js";
 import { dateKeyFromKickOff, getTodayDateKeyHk } from "./hk-date.js";
+import { resolveHkjcSettlementBatch } from "./hkjc-match-results.js";
 import type { HkjcInputSnapshot } from "./hkjc/types.js";
-import { resolveMatchScores } from "./match-scores.js";
 import {
   isPickSettlable,
-  settleAiPick,
+  settleAiPickWithHkjc,
   type PickOutcome,
 } from "./pick-settlement.js";
 import type { WinRateStats } from "./win-rate-stats.js";
@@ -35,7 +35,7 @@ async function loadCompletedAiPicks(): Promise<AnalysisPickRow[]> {
      WHERE status = 'completed'
        AND analysis IS NOT NULL
        AND analysis->'pick'->>'selection' IS NOT NULL
-       AND analysis->'pick'->>'selection' NOT IN ('', '待定', 'TBD', 'N/A')`,
+       AND analysis->'pick'->>'selection' NOT IN ('', '待定', 'TBD', 'N/A', '無')`,
   );
   return result.rows;
 }
@@ -55,17 +55,9 @@ export async function computeWinRateStats(options?: {
     return kickOff ? isPickSettlable(kickOff) : false;
   });
 
-  const scoreEntries = settlableRows
-    .map((row) => {
-      const kickOff = row.input_snapshot?.kickOffTime;
-      if (!kickOff) return null;
-      const dateKey = dateKeyFromKickOff(kickOff);
-      if (!dateKey) return null;
-      return { matchId: row.hkjc_match_id, dateKey };
-    })
-    .filter((entry): entry is { matchId: string; dateKey: string } => entry !== null);
-
-  const scores = await resolveMatchScores(scoreEntries);
+  const settlements = await resolveHkjcSettlementBatch(
+    settlableRows.map((row) => row.hkjc_match_id),
+  );
 
   let todayWins = 0;
   let todayTotal = 0;
@@ -77,10 +69,10 @@ export async function computeWinRateStats(options?: {
     const kickOff = row.input_snapshot?.kickOffTime;
     if (!pick || !kickOff) continue;
 
-    const score = scores.get(row.hkjc_match_id);
-    if (!score) continue;
+    const settlement = settlements.get(row.hkjc_match_id);
+    if (!settlement) continue;
 
-    const outcome = settleAiPick(pick, score, row.input_snapshot);
+    const outcome = settleAiPickWithHkjc(pick, settlement, row.input_snapshot);
     if (!isCountableOutcome(outcome)) continue;
 
     totalTotal += 1;
