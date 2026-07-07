@@ -19,7 +19,6 @@ import winRateStatsRoutes from "./routes/win-rate-stats.js";
 import { seedFeaturedItems } from "./lib/featured.js";
 import { seedHomeSections } from "./lib/home-sections.js";
 import { seedTopMatchPreviews } from "./lib/top-match-previews.js";
-import { seedWinRateStats } from "./lib/win-rate-stats.js";
 
 dns.setDefaultResultOrder("ipv4first");
 
@@ -99,8 +98,6 @@ async function start() {
   await seedFeaturedItems();
   await seedHomeSections();
   await seedTopMatchPreviews();
-  await seedWinRateStats();
-
   app.listen(port, () => {
     console.log(`Backend listening on http://localhost:${port}`);
   });

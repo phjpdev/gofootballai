@@ -7,17 +7,15 @@ import { useAuth } from "@/context/AuthContext";
 import {
   fetchWinRateStats,
   formatWinRate,
-  updateWinRateStats,
+  formatWinRateRecord,
+  type WinRateStats,
 } from "@/lib/win-rate-stats-api";
 
 export default function AdminResultsPage() {
   const { isAdmin, isAuthenticated, isLoading, token } = useAuth();
-  const [todayWinRate, setTodayWinRate] = useState("0");
-  const [totalWinRate, setTotalWinRate] = useState("0");
+  const [stats, setStats] = useState<WinRateStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   const loadStats = useCallback(async () => {
     if (!token) return;
@@ -25,9 +23,8 @@ export default function AdminResultsPage() {
     setLoading(true);
     setError(null);
     try {
-      const stats = await fetchWinRateStats(token);
-      setTodayWinRate(String(stats.todayWinRate));
-      setTotalWinRate(String(stats.totalWinRate));
+      const nextStats = await fetchWinRateStats(token);
+      setStats(nextStats);
     } catch (err) {
       setError(err instanceof Error ? err.message : "無法載入勝率資料");
     } finally {
@@ -43,35 +40,6 @@ export default function AdminResultsPage() {
     }
     void loadStats();
   }, [isLoading, isAuthenticated, isAdmin, token, loadStats]);
-
-  async function handleSave() {
-    if (!token) return;
-
-    const today = Number.parseFloat(todayWinRate);
-    const total = Number.parseFloat(totalWinRate);
-
-    if (!Number.isFinite(today) || !Number.isFinite(total)) {
-      setError("請輸入有效的勝率數值");
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-    setSaved(false);
-    try {
-      const stats = await updateWinRateStats(token, {
-        todayWinRate: today,
-        totalWinRate: total,
-      });
-      setTodayWinRate(String(stats.todayWinRate));
-      setTotalWinRate(String(stats.totalWinRate));
-      setSaved(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "無法更新勝率資料");
-    } finally {
-      setSaving(false);
-    }
-  }
 
   if (isLoading || loading) {
     return <div className="h-56 animate-pulse rounded-[24px] bg-gray-90" />;
@@ -93,7 +61,7 @@ export default function AdminResultsPage() {
           </div>
           <h1 className="text-base font-bold text-white">管理員專用</h1>
           <p className="text-sm leading-[1.6] text-gray-40">
-            此頁面僅供管理員查看及更新勝率結果。
+            此頁面僅供管理員查看勝率結果。
           </p>
         </section>
       </div>
@@ -116,7 +84,7 @@ export default function AdminResultsPage() {
             勝率結果
           </h1>
           <p className="mt-1 text-sm text-gray-40">
-            顯示及更新平台預測勝率統計。
+            根據 AI 生成預測自動計算，僅統計已完場賽事。
           </p>
         </div>
 
@@ -126,20 +94,11 @@ export default function AdminResultsPage() {
               TODAY WIN RATE
             </p>
             <p className="mt-3 text-4xl font-bold tabular-nums text-orange-50">
-              {formatWinRate(Number.parseFloat(todayWinRate) || 0)}
+              {formatWinRate(stats?.todayWinRate ?? 0)}
             </p>
-            <label className="mt-4 block text-xs font-medium text-gray-40">
-              更新數值 (%)
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step={0.1}
-                value={todayWinRate}
-                onChange={(event) => setTodayWinRate(event.target.value)}
-                className="mt-2 w-full rounded-[14px] border border-gray-80 bg-gray-90 px-3 py-2.5 text-sm text-white outline-none focus:border-orange-50"
-              />
-            </label>
+            <p className="mt-2 text-sm text-gray-40">
+              {formatWinRateRecord(stats?.todayWins, stats?.todaySettled)}
+            </p>
           </div>
 
           <div className="rounded-[20px] border border-gray-80 bg-gray-100 p-5">
@@ -147,36 +106,21 @@ export default function AdminResultsPage() {
               TOTAL WIN RATE
             </p>
             <p className="mt-3 text-4xl font-bold tabular-nums text-blue-40">
-              {formatWinRate(Number.parseFloat(totalWinRate) || 0)}
+              {formatWinRate(stats?.totalWinRate ?? 0)}
             </p>
-            <label className="mt-4 block text-xs font-medium text-gray-40">
-              更新數值 (%)
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step={0.1}
-                value={totalWinRate}
-                onChange={(event) => setTotalWinRate(event.target.value)}
-                className="mt-2 w-full rounded-[14px] border border-gray-80 bg-gray-90 px-3 py-2.5 text-sm text-white outline-none focus:border-orange-50"
-              />
-            </label>
+            <p className="mt-2 text-sm text-gray-40">
+              {formatWinRateRecord(stats?.totalWins, stats?.totalSettled)}
+            </p>
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-300">{error}</p>}
-        {saved && !error && (
-          <p className="text-sm text-green-300">勝率已更新。</p>
+        {stats?.updatedAt && (
+          <p className="text-xs text-gray-50">
+            最後更新：{new Date(stats.updatedAt).toLocaleString("zh-HK")}
+          </p>
         )}
 
-        <button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={saving}
-          className="w-full rounded-[19px] bg-orange-50 px-6 py-3 text-sm font-semibold text-white disabled:opacity-60 sm:w-fit"
-        >
-          {saving ? "儲存中…" : "儲存勝率"}
-        </button>
+        {error && <p className="text-sm text-red-300">{error}</p>}
       </section>
     </div>
   );
