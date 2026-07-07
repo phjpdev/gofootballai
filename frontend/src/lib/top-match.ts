@@ -12,6 +12,7 @@ import {
   mergeAdminTodayPassedMatches,
 } from "@/lib/hkjc/past-dates";
 import { filterMatchesByDate, filterUpcomingMatches } from "@/lib/hkjc/transform";
+import { filterWorldCupMatches } from "@/lib/hkjc/world-cup";
 import type { HkjcMatch } from "@/types/hkjc";
 import type { PrewarmResult } from "@/types/analysis";
 
@@ -123,13 +124,18 @@ async function loadRankedMatchIds(
   fallbackMatchId: string,
   count: number,
   dateKey?: string,
+  matchFilter?: (matches: HkjcMatch[]) => HkjcMatch[],
+  strictDate = false,
 ): Promise<string[]> {
-  const effectiveDateKey = await resolveTopPicksDateKey(
-    dateKey ?? getTodayDateKeyHk(),
-  );
-  const matches = await loadMatchesForDate(effectiveDateKey, token, {
+  const effectiveDateKey = strictDate
+    ? (dateKey ?? getTodayDateKeyHk())
+    : await resolveTopPicksDateKey(dateKey ?? getTodayDateKeyHk());
+  let matches = await loadMatchesForDate(effectiveDateKey, token, {
     upcomingOnly: true,
   });
+  if (matchFilter) {
+    matches = matchFilter(matches);
+  }
   const matchIds = matches.map((match) => match.id);
   const fallback = fallbackMatchId || matchIds[0] || "";
 
@@ -222,6 +228,38 @@ export async function resolveTopMatchDetailPath(
 
   const topMatchId = await findTopConfidenceMatchId(token, fallbackId, dateKey);
   return `/analysis/${topMatchId}`;
+}
+
+export async function resolveWorldCupTopMatchDetailPath(
+  token: string | null,
+  canAccess: boolean,
+): Promise<string> {
+  const dateKey = getTodayDateKeyHk();
+  let matches = filterWorldCupMatches(
+    await loadMatchesForDate(dateKey, token, { upcomingOnly: true }),
+  );
+  if (matches.length === 0) {
+    matches = filterWorldCupMatches(await loadMatchesForDate(dateKey, token));
+  }
+  const fallbackId = matches[0]?.id;
+
+  if (!fallbackId) {
+    return `/analysis?date=${encodeURIComponent(dateKey)}`;
+  }
+
+  if (!canAccess || !token) {
+    return `/analysis/${fallbackId}`;
+  }
+
+  const [topMatchId] = await loadRankedMatchIds(
+    token,
+    fallbackId,
+    1,
+    dateKey,
+    filterWorldCupMatches,
+    true,
+  );
+  return `/analysis/${topMatchId || fallbackId}`;
 }
 
 export async function resolveTopMatchPreviewPath(
