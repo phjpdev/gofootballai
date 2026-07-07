@@ -129,6 +129,13 @@ export async function initDb(): Promise<void> {
       pick_selection VARCHAR(80) NOT NULL DEFAULT '',
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS win_rate_stats (
+      id VARCHAR(16) PRIMARY KEY,
+      today_win_rate NUMERIC(5,1) NOT NULL DEFAULT 0,
+      total_win_rate NUMERIC(5,1) NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 
   await pool.query(`
