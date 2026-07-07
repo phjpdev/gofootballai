@@ -4,6 +4,7 @@ export type WinRateStats = {
   todayWinRate: number;
   totalWinRate: number;
   updatedAt: string;
+  todayDateKey?: string;
   todayWins?: number;
   todaySettled?: number;
   totalWins?: number;
@@ -41,7 +42,23 @@ export function formatWinRate(value: number): string {
 export function formatWinRateRecord(
   wins: number | undefined,
   settled: number | undefined,
+  dateKey?: string,
 ): string {
-  if (!settled || settled <= 0) return "尚無已結算預測";
+  if (!settled || settled <= 0) {
+    if (dateKey) {
+      return `${formatHkDateLabel(dateKey)} · 尚無已結算預測`;
+    }
+    return "尚無已結算預測";
+  }
   return `${wins ?? 0} / ${settled}`;
+}
+
+export function formatHkDateLabel(dateKey: string): string {
+  const date = new Date(`${dateKey}T12:00:00+08:00`);
+  if (Number.isNaN(date.getTime())) return dateKey;
+  return date.toLocaleDateString("zh-HK", {
+    month: "numeric",
+    day: "numeric",
+    timeZone: "Asia/Hong_Kong",
+  });
 }

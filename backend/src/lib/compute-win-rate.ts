@@ -89,6 +89,7 @@ export async function computeWinRateStats(options?: {
     todayWinRate: clampRate(todayWins, todayTotal),
     totalWinRate: clampRate(totalWins, totalTotal),
     updatedAt: new Date().toISOString(),
+    todayDateKey: todayKey,
     todayWins,
     todaySettled: todayTotal,
     totalWins,
