@@ -4,6 +4,7 @@ export type WinRateStats = {
   todayWinRate: number;
   totalWinRate: number;
   updatedAt: string;
+  todayDateKey: string;
   todayWins?: number;
   todaySettled?: number;
   totalWins?: number;

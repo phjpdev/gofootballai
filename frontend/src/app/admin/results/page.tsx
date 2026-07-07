@@ -6,6 +6,7 @@ import { ChevronLeft, Lock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   fetchWinRateStats,
+  formatHkDateLabel,
   formatWinRate,
   formatWinRateRecord,
   type WinRateStats,
@@ -92,12 +93,23 @@ export default function AdminResultsPage() {
           <div className="rounded-[20px] border border-gray-80 bg-gray-100 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-40">
               TODAY WIN RATE
+              {stats?.todayDateKey ? (
+                <span className="ml-1 normal-case tracking-normal text-gray-50">
+                  ({formatHkDateLabel(stats.todayDateKey)})
+                </span>
+              ) : null}
             </p>
             <p className="mt-3 text-4xl font-bold tabular-nums text-orange-50">
-              {formatWinRate(stats?.todayWinRate ?? 0)}
+              {stats?.todaySettled
+                ? formatWinRate(stats.todayWinRate)
+                : "—"}
             </p>
             <p className="mt-2 text-sm text-gray-40">
-              {formatWinRateRecord(stats?.todayWins, stats?.todaySettled)}
+              {formatWinRateRecord(
+                stats?.todayWins,
+                stats?.todaySettled,
+                stats?.todayDateKey,
+              )}
             </p>
           </div>
 
