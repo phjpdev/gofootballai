@@ -7,15 +7,18 @@ import { EditFeaturedModal } from "@/components/analysis/EditFeaturedModal";
 import { useHkjc } from "@/components/analysis/HkjcMatchList";
 import { SubNav } from "@/components/layout/SubNav";
 import { useAuth } from "@/context/AuthContext";
+import { fetchAnalysisScores, prewarmAnalyses } from "@/lib/analyses-api";
 import { FEATURED_COUNT, FEATURED_ITEMS } from "@/lib/data/featured";
 import { fetchFeaturedItems } from "@/lib/featured-api";
+import { getTodayWorldCupMatchIds } from "@/lib/hkjc/world-cup-featured";
 import { buildTopPicksHref } from "@/lib/top-match";
 import { resolveFeaturedPicksDateKey } from "@/lib/hkjc/past-dates";
 import type { FeaturedItem } from "@/lib/data/featured";
 
 export function FeaturedSection() {
-  const { token, isAdmin } = useAuth();
-  const { selectedDateKey, selectedIndex, adminPastTabCount } = useHkjc();
+  const { token, isAdmin, isAuthenticated, isMember } = useAuth();
+  const { selectedDateKey, selectedIndex, adminPastTabCount, data, todayPassedMatches } =
+    useHkjc();
   const featuredPicksDateKey = resolveFeaturedPicksDateKey({
     selectedDateKey,
     selectedIndex,
@@ -24,6 +27,9 @@ export function FeaturedSection() {
   const [items, setItems] = useState<FeaturedItem[]>(FEATURED_ITEMS);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [worldCupScores, setWorldCupScores] = useState<Record<string, number>>(
+    {},
+  );
 
   const loadItems = useCallback(async () => {
     try {
@@ -41,6 +47,50 @@ export function FeaturedSection() {
   useEffect(() => {
     void loadItems();
   }, [loadItems]);
+
+  useEffect(() => {
+    if (!token || !isAuthenticated || !(isMember || isAdmin)) {
+      setWorldCupScores({});
+      return;
+    }
+
+    const matchIds = getTodayWorldCupMatchIds(
+      data?.matches ?? [],
+      todayPassedMatches,
+    );
+    if (matchIds.length === 0) return;
+
+    let cancelled = false;
+    void fetchAnalysisScores(token, matchIds)
+      .then((results) => {
+        if (cancelled) return;
+        const scores: Record<string, number> = {};
+        for (const result of results) {
+          if (result.confidenceScore && result.confidenceScore > 0) {
+            scores[result.matchId] = result.confidenceScore;
+          }
+        }
+        setWorldCupScores(scores);
+      })
+      .catch(() => {
+        if (!cancelled) setWorldCupScores({});
+      });
+
+    void prewarmAnalyses(token, matchIds).catch(() => {
+      // best-effort so the match page loads faster for members
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    token,
+    isAuthenticated,
+    isMember,
+    isAdmin,
+    data?.matches,
+    todayPassedMatches,
+  ]);
 
   return (
     <section className="flex flex-col gap-2">
@@ -66,7 +116,11 @@ export function FeaturedSection() {
                 delay={index * 220}
                 className="shrink-0"
               >
-                <FeaturedMatchCard {...item} dateKey={featuredPicksDateKey} />
+                <FeaturedMatchCard
+                  {...item}
+                  dateKey={featuredPicksDateKey}
+                  worldCupScores={worldCupScores}
+                />
               </AnimateIn>
             ))}
       </div>
