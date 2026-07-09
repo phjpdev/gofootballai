@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { fetchAnalysisScores, prewarmAnalyses } from "@/lib/analyses-api";
 import { FEATURED_COUNT, FEATURED_ITEMS } from "@/lib/data/featured";
 import { fetchFeaturedItems } from "@/lib/featured-api";
-import { getTodayWorldCupMatchIds } from "@/lib/hkjc/world-cup-featured";
+import { getFeaturedScoreLookupIds } from "@/lib/hkjc/world-cup-featured";
 import { buildTopPicksHref } from "@/lib/top-match";
 import { resolveFeaturedPicksDateKey } from "@/lib/hkjc/past-dates";
 import type { FeaturedItem } from "@/lib/data/featured";
@@ -54,8 +54,9 @@ export function FeaturedSection() {
       return;
     }
 
-    const matchIds = getTodayWorldCupMatchIds(
+    const matchIds = getFeaturedScoreLookupIds(
       data?.matches ?? [],
+      featuredPicksDateKey,
       todayPassedMatches,
     );
     if (matchIds.length === 0) return;
@@ -90,6 +91,7 @@ export function FeaturedSection() {
     isAdmin,
     data?.matches,
     todayPassedMatches,
+    featuredPicksDateKey,
   ]);
 
   return (
