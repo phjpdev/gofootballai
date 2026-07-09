@@ -233,13 +233,19 @@ export async function resolveTopMatchDetailPath(
 export async function resolveWorldCupTopMatchDetailPath(
   token: string | null,
   _canAccess: boolean,
+  dateKey?: string,
 ): Promise<string> {
-  const dateKey = getTodayDateKeyHk();
-  const matches = await loadMatchesForDate(dateKey, token, { upcomingOnly: true });
+  const effectiveDateKey = dateKey ?? getTodayDateKeyHk();
+  const matches = await loadMatchesForDate(effectiveDateKey, token, {
+    upcomingOnly: true,
+  });
   const allToday = matches.length
     ? matches
-    : await loadMatchesForDate(dateKey, token);
-  return buildWorldCupFeaturedHref(allToday, { scores: {} });
+    : await loadMatchesForDate(effectiveDateKey, token);
+  return buildWorldCupFeaturedHref(allToday, {
+    dateKey: effectiveDateKey,
+    scores: {},
+  });
 }
 
 export async function resolveTopMatchPreviewPath(

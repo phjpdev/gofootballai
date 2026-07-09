@@ -1,25 +1,10 @@
-import { getTodayDateKeyHk, mergeAdminTodayPassedMatches } from "./past-dates";
+import {
+  getTodayDateKeyHk,
+  mergeAdminTodayPassedMatches,
+} from "./past-dates";
 import { filterMatchesByDate, filterUpcomingMatches } from "./transform";
 import { filterWorldCupMatches } from "./world-cup";
 import type { HkjcMatch } from "@/types/hkjc";
-
-export function getTodayWorldCupMatches(
-  matches: HkjcMatch[],
-  todayPassedMatches: HkjcMatch[] = [],
-): HkjcMatch[] {
-  const todayKey = getTodayDateKeyHk();
-  const today = mergeAdminTodayPassedMatches(
-    filterMatchesByDate(matches, todayKey),
-    todayPassedMatches,
-  );
-
-  const upcoming = filterWorldCupMatches(filterUpcomingMatches(today));
-  if (upcoming.length > 0) {
-    return upcoming;
-  }
-
-  return filterWorldCupMatches(today);
-}
 
 function rankMatchesByScore(
   matches: HkjcMatch[],
@@ -34,37 +19,100 @@ function rankMatchesByScore(
   });
 }
 
+function matchesForDate(
+  matches: HkjcMatch[],
+  dateKey: string,
+  todayPassedMatches: HkjcMatch[] = [],
+): HkjcMatch[] {
+  const forDate = filterMatchesByDate(matches, dateKey);
+  if (dateKey === getTodayDateKeyHk()) {
+    return mergeAdminTodayPassedMatches(forDate, todayPassedMatches);
+  }
+  return forDate;
+}
+
+export function getWorldCupMatchesForDate(
+  matches: HkjcMatch[],
+  dateKey: string,
+  todayPassedMatches: HkjcMatch[] = [],
+): HkjcMatch[] {
+  const forDate = matchesForDate(matches, dateKey, todayPassedMatches);
+  const upcoming = filterWorldCupMatches(filterUpcomingMatches(forDate));
+  if (upcoming.length > 0) {
+    return upcoming;
+  }
+  return filterWorldCupMatches(forDate);
+}
+
 export function buildWorldCupFeaturedHref(
   matches: HkjcMatch[],
   options?: {
+    dateKey?: string;
     todayPassedMatches?: HkjcMatch[];
     scores?: Record<string, number>;
   },
 ): string {
-  const todayKey = getTodayDateKeyHk();
+  const dateKey = options?.dateKey ?? getTodayDateKeyHk();
   const scores = options?.scores ?? {};
-  let pool = getTodayWorldCupMatches(
+  const todayPassed = options?.todayPassedMatches ?? [];
+
+  const pools = [
+    getWorldCupMatchesForDate(matches, dateKey, todayPassed),
+    filterUpcomingMatches(matchesForDate(matches, dateKey, todayPassed)),
+    matchesForDate(matches, dateKey, todayPassed),
+    filterUpcomingMatches(matches),
     matches,
-    options?.todayPassedMatches ?? [],
-  );
+  ];
 
-  if (pool.length === 0) {
-    pool = filterUpcomingMatches(filterMatchesByDate(matches, todayKey));
+  for (const pool of pools) {
+    if (pool.length === 0) continue;
+    const topMatch = rankMatchesByScore(pool, scores)[0];
+    if (topMatch) {
+      return `/analysis/${topMatch.id}`;
+    }
   }
 
-  if (pool.length === 0) {
-    return `/analysis?date=${encodeURIComponent(todayKey)}`;
-  }
-
-  const topMatch = rankMatchesByScore(pool, scores)[0];
-  return topMatch ? `/analysis/${topMatch.id}` : `/analysis?date=${encodeURIComponent(todayKey)}`;
+  return "/analysis";
 }
 
-export function getTodayWorldCupMatchIds(
+export function getWorldCupMatchIdsForDate(
   matches: HkjcMatch[],
+  dateKey: string,
   todayPassedMatches: HkjcMatch[] = [],
 ): string[] {
-  return getTodayWorldCupMatches(matches, todayPassedMatches).map(
+  return getWorldCupMatchesForDate(matches, dateKey, todayPassedMatches).map(
     (match) => match.id,
   );
+}
+
+// Backwards-compatible helpers
+export function getTodayWorldCupMatches(
+  matches: HkjcMatch[],
+  todayPassedMatches: HkjcMatch[] = [],
+): HkjcMatch[] {
+  return getWorldCupMatchesForDate(
+    matches,
+    getTodayDateKeyHk(),
+    todayPassedMatches,
+  );
+}
+
+export function getFeaturedScoreLookupIds(
+  matches: HkjcMatch[],
+  dateKey: string,
+  todayPassedMatches: HkjcMatch[] = [],
+): string[] {
+  const worldCupIds = getWorldCupMatchIdsForDate(
+    matches,
+    dateKey,
+    todayPassedMatches,
+  );
+  if (worldCupIds.length > 0) {
+    return worldCupIds;
+  }
+
+  const forDate = matchesForDate(matches, dateKey, todayPassedMatches);
+  const upcoming = filterUpcomingMatches(forDate);
+  const pool = upcoming.length > 0 ? upcoming : forDate;
+  return pool.slice(0, 20).map((match) => match.id);
 }

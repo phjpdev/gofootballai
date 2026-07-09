@@ -45,6 +45,7 @@ export function FeaturedMatchCard({
 
     if (pickMode === "single") {
       const path = buildWorldCupFeaturedHref(data?.matches ?? [], {
+        dateKey,
         todayPassedMatches,
         scores: worldCupScores,
       });
@@ -68,7 +69,11 @@ export function FeaturedMatchCard({
       <button
         type="button"
         onClick={() => void handleClick()}
-        disabled={isLoading || navigating}
+        disabled={
+          isLoading ||
+          navigating ||
+          (pickMode === "single" && !data?.matches?.length)
+        }
         aria-label={`查看 ${title} AI 分析`}
         className="relative h-full w-full bg-gray-90 p-4 text-left disabled:opacity-70"
       >
