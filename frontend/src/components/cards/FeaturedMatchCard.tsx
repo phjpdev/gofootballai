@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, Clock, Flame } from "lucide-react";
 import { LedBorder } from "@/components/motion/LedBorder";
+import { useHkjc } from "@/components/analysis/HkjcMatchList";
 import { useAuth } from "@/context/AuthContext";
 import { resolveFeaturedImageUrl } from "@/lib/featured-api";
-import { resolveTopMatchPreviewPath, resolveWorldCupTopMatchDetailPath } from "@/lib/top-match";
+import { buildWorldCupFeaturedHref } from "@/lib/hkjc/world-cup-featured";
+import { resolveTopMatchPreviewPath } from "@/lib/top-match";
 
 type FeaturedMatchCardProps = {
   title: string;
@@ -17,6 +19,7 @@ type FeaturedMatchCardProps = {
   imageSrc: string;
   pickMode: "single" | "multi";
   dateKey?: string;
+  worldCupScores?: Record<string, number>;
 };
 
 export function FeaturedMatchCard({
@@ -27,8 +30,10 @@ export function FeaturedMatchCard({
   imageSrc,
   pickMode,
   dateKey,
+  worldCupScores = {},
 }: FeaturedMatchCardProps) {
   const router = useRouter();
+  const { data, todayPassedMatches } = useHkjc();
   const { token, isAuthenticated, isMember, isAdmin, isLoading } = useAuth();
   const [navigating, setNavigating] = useState(false);
   const canAccess = isAuthenticated && (isMember || isAdmin);
@@ -38,12 +43,18 @@ export function FeaturedMatchCard({
   async function handleClick() {
     if (isLoading || navigating) return;
 
+    if (pickMode === "single") {
+      const path = buildWorldCupFeaturedHref(data?.matches ?? [], {
+        todayPassedMatches,
+        scores: worldCupScores,
+      });
+      router.push(path);
+      return;
+    }
+
     setNavigating(true);
     try {
-      const path =
-        pickMode === "multi"
-          ? await resolveTopMatchPreviewPath(token, canAccess, { dateKey })
-          : await resolveWorldCupTopMatchDetailPath(token, canAccess);
+      const path = await resolveTopMatchPreviewPath(token, canAccess, { dateKey });
       router.push(path);
     } catch {
       router.push("/analysis");

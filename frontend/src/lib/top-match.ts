@@ -12,7 +12,7 @@ import {
   mergeAdminTodayPassedMatches,
 } from "@/lib/hkjc/past-dates";
 import { filterMatchesByDate, filterUpcomingMatches } from "@/lib/hkjc/transform";
-import { filterWorldCupMatches } from "@/lib/hkjc/world-cup";
+import { buildWorldCupFeaturedHref } from "@/lib/hkjc/world-cup-featured";
 import type { HkjcMatch } from "@/types/hkjc";
 import type { PrewarmResult } from "@/types/analysis";
 
@@ -232,34 +232,14 @@ export async function resolveTopMatchDetailPath(
 
 export async function resolveWorldCupTopMatchDetailPath(
   token: string | null,
-  canAccess: boolean,
+  _canAccess: boolean,
 ): Promise<string> {
   const dateKey = getTodayDateKeyHk();
-  let matches = filterWorldCupMatches(
-    await loadMatchesForDate(dateKey, token, { upcomingOnly: true }),
-  );
-  if (matches.length === 0) {
-    matches = filterWorldCupMatches(await loadMatchesForDate(dateKey, token));
-  }
-  const fallbackId = matches[0]?.id;
-
-  if (!fallbackId) {
-    return `/analysis?date=${encodeURIComponent(dateKey)}`;
-  }
-
-  if (!canAccess || !token) {
-    return `/analysis/${fallbackId}`;
-  }
-
-  const [topMatchId] = await loadRankedMatchIds(
-    token,
-    fallbackId,
-    1,
-    dateKey,
-    filterWorldCupMatches,
-    true,
-  );
-  return `/analysis/${topMatchId || fallbackId}`;
+  const matches = await loadMatchesForDate(dateKey, token, { upcomingOnly: true });
+  const allToday = matches.length
+    ? matches
+    : await loadMatchesForDate(dateKey, token);
+  return buildWorldCupFeaturedHref(allToday, { scores: {} });
 }
 
 export async function resolveTopMatchPreviewPath(
