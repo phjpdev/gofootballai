@@ -76,6 +76,12 @@ export const POLICY_SECTIONS = [
     content:
       "管理員只可上傳與 2026 世界盃及足球相關的內容。冒犯性、侵權或誤導性資料將被移除。如有不當內容，可透過會員頁面反映。",
   },
+  {
+    id: "refund-policy",
+    title: "退款政策",
+    content:
+      "若為訂閱制服務，您可隨時取消下期訂閱，當期已產生的費用恕不退還。",
+  },
 ] as const;
 
 export const BETTING_DISCLAIMER =
