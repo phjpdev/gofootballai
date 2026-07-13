@@ -12,6 +12,7 @@ import { fetchMatchAnalysis } from "@/lib/analyses-api";
 import { getMatchById } from "@/lib/data/matches";
 import { hkjcMatchToLegacy } from "@/lib/hkjc/fetch-matches";
 import { fetchHkjcMatchByIdFromApi } from "@/lib/hkjc/matches-api";
+import { flipOverUnderPickSelection } from "@/lib/analysis-pick-display";
 import type { MatchAnalysisResult } from "@/types/analysis";
 import type { Match } from "@/types";
 
@@ -58,10 +59,15 @@ export function TopMatchPreviewCard({
   }, [match, overrides]);
 
   const displayPick = useMemo(() => {
-    if (!analysis || !overrides?.pickSelection) return analysis?.pick;
+    const pick = !analysis
+      ? undefined
+      : overrides?.pickSelection
+        ? { ...analysis.pick, selection: overrides.pickSelection }
+        : analysis.pick;
+    if (!pick) return undefined;
     return {
-      ...analysis.pick,
-      selection: overrides.pickSelection,
+      ...pick,
+      selection: flipOverUnderPickSelection(pick.selection),
     };
   }, [analysis, overrides]);
 

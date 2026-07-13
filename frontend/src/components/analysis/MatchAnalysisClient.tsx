@@ -12,6 +12,7 @@ import {
   regenerateAnalysis,
 } from "@/lib/analyses-api";
 import { fetchMatchPickOverride } from "@/lib/match-pick-overrides-api";
+import { flipOverUnderPickSelection } from "@/lib/analysis-pick-display";
 import type { AnalysisResponse, MatchAnalysisResult } from "@/types/analysis";
 import type { Match } from "@/types";
 
@@ -52,13 +53,12 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
     if (!base) return null;
 
     const selection = pickOverride.trim() || base.pick.selection;
-    if (selection === base.pick.selection) return base;
 
     return {
       ...base,
       pick: {
         ...base.pick,
-        selection,
+        selection: flipOverUnderPickSelection(selection),
       },
     };
   }, [analysisState?.analysis, pickOverride]);
