@@ -18,7 +18,14 @@ type RecordRow = {
 function formatDisplayDate(value: string | Date | null): string | null {
   if (!value) return null;
   if (value instanceof Date) {
-    return value.toISOString().slice(0, 10);
+    // pg parses a DATE column into LOCAL midnight. toISOString() then converts
+    // to UTC, which rolls the day backwards whenever TZ is ahead of UTC -- e.g.
+    // TZ=Asia/Hong_Kong turned a 2026-09-21 record into 2026-09-20. Read the
+    // local components instead so the stored calendar date round-trips.
+    const year = value.getFullYear();
+    const month = `${value.getMonth() + 1}`.padStart(2, "0");
+    const day = `${value.getDate()}`.padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
   return value.slice(0, 10);
 }

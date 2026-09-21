@@ -90,6 +90,18 @@ function normalizeGoalProbabilities(raw: Record<string, unknown>) {
   };
 }
 
+/**
+ * `??` only falls through on null/undefined, so an empty string from the model
+ * survived into a schema that requires .min(1) and failed the whole analysis.
+ */
+function firstNonEmpty(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return null;
+}
+
 function normalizePick(raw: Record<string, unknown>) {
   const pick = asRecord(raw.pick);
   if (!pick) {
@@ -103,8 +115,8 @@ function normalizePick(raw: Record<string, unknown>) {
 
   const odds = toNumber(pick.odds) ?? 1.01;
   return {
-    market: String(pick.market ?? pick.type ?? "HAD"),
-    selection: String(pick.selection ?? pick.side ?? pick.bet ?? "待定"),
+    market: firstNonEmpty(pick.market, pick.type) ?? "HAD",
+    selection: firstNonEmpty(pick.selection, pick.side, pick.bet) ?? "待定",
     odds: odds > 0 ? odds : 1.01,
     ev: formatEv(pick.ev ?? pick.expectedValue ?? pick.expected_value),
   };
@@ -166,9 +178,9 @@ export function normalizeGrokAnalysis(raw: unknown): unknown {
     confidenceScore,
     dimensions: normalizedDimensions,
     recommendationLevel,
-    recommendationLabel: String(
-      input.recommendationLabel ?? input.recommendation_label ?? "戰術觀望",
-    ),
+    recommendationLabel:
+      firstNonEmpty(input.recommendationLabel, input.recommendation_label) ??
+      "戰術觀望",
     goalProbabilities: normalizeGoalProbabilities(input),
     roi,
     pick: normalizePick(input),
@@ -177,7 +189,7 @@ export function normalizeGrokAnalysis(raw: unknown): unknown {
       : Array.isArray(input.risk_flags)
         ? input.risk_flags.map(String)
         : [],
-    narrative: String(input.narrative ?? input.summary ?? "暫無分析摘要"),
+    narrative: firstNonEmpty(input.narrative, input.summary) ?? "暫無分析摘要",
     momentum: normalizeSeries(input.momentum, [45, 50, 55, 60, 58, 62, 65]),
     scoreTrend: normalizeSeries(
       input.scoreTrend ?? input.score_trend,

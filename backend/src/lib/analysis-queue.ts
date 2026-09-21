@@ -117,10 +117,20 @@ function runJob(matchId: string, force = false): Promise<void> {
   const existing = activeJobs.get(matchId);
   if (existing && !force) return existing;
 
-  const job = processMatch(matchId, force).finally(() => {
-    activeJobs.delete(matchId);
-    inFlight.delete(matchId);
-  });
+  // processMatch has awaits outside its own try/catch (DB reads/writes), and two
+  // callers launch this fire-and-forget. On Node 22 one rejection here took the
+  // whole process down, so absorb it at the single choke point.
+  const job = processMatch(matchId, force)
+    .catch((error) => {
+      console.error(
+        `Analysis job crashed for ${matchId}:`,
+        error instanceof Error ? (error.stack ?? error.message) : error,
+      );
+    })
+    .finally(() => {
+      activeJobs.delete(matchId);
+      inFlight.delete(matchId);
+    });
 
   activeJobs.set(matchId, job);
   inFlight.add(matchId);

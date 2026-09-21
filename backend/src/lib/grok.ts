@@ -123,11 +123,14 @@ export async function generateMatchAnalysis(
       return await callGrok(matchOddsBlock);
     } catch (error) {
       lastError = error;
+      // 429 (capacity/rate limit) and 5xx are transient; without this they
+      // failed instantly with no backoff. 403 stays non-retryable on purpose.
       const retryable =
         error instanceof Error &&
         (error.name === "AbortError" ||
           error.message.includes("逾時") ||
-          error.message.includes("fetch failed"));
+          error.message.includes("fetch failed") ||
+          /Grok API error (?:429|5\d\d)/.test(error.message));
       if (!retryable || attempt >= GROK_MAX_RETRIES - 1) {
         throw error;
       }

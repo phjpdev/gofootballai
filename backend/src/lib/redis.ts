@@ -35,6 +35,20 @@ export async function getRedis(): Promise<RedisClientType | null> {
         },
       });
 
+      // node-redis emits 'error' as an EventEmitter event, not a rejection. With no
+      // listener, Node escalates it to an uncaught exception and the process dies --
+      // this is the "Socket closed unexpectedly" crash seen in production. The
+      // .catch() below only covers connect(); it cannot catch a later socket error.
+      next.on("error", (error: unknown) => {
+        redisDisabled = true;
+        client = null;
+        connecting = null;
+        console.warn(
+          "Redis error -- continuing without cache:",
+          error instanceof Error ? error.message : error,
+        );
+      });
+
       await next.connect();
       client = next;
       return next;
