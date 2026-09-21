@@ -21,6 +21,16 @@ import {
   optimizeUploadedVideoByUrl,
 } from "../lib/transcode-video.js";
 import {
+  appendChunk,
+  createUploadSession,
+  discardSession,
+  finalizeSession,
+  markSessionRecord,
+  readSessionMeta,
+  serializeFinalize,
+  UploadSessionError,
+} from "../lib/upload-sessions.js";
+import {
   requireAdmin,
   requireAuth,
   requireMember,
@@ -93,6 +103,58 @@ router.get("/", requireAuth, requireMember, async (_req, res) => {
   res.json({ records });
 });
 
+async function resolveMediaUrlForPath(
+  filePath: string,
+  filename: string,
+  type: RecordType,
+): Promise<string> {
+  if (type === "video") {
+    const finalPath = await optimizeUploadedVideo(filePath);
+    return publicUploadPath(path.basename(finalPath));
+  }
+  return publicUploadPath(filename);
+}
+
+/**
+ * Resumable upload endpoints.
+ *
+ * A 20MB single-shot POST holds the connection for 15s or more, so any API
+ * restart during that window loses the whole upload and surfaces as a bare 502.
+ * These let the client push short chunks and resume from the exact byte we
+ * already hold, which turns a restart into one cheap retry.
+ */
+router.post("/upload-sessions", requireAuth, requireAdmin, async (req, res) => {
+  const session = await createUploadSession(String(req.query.name ?? ""));
+  res.status(201).json(session);
+});
+
+router.put(
+  "/upload-sessions/:uploadId",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const uploadId = String(req.params.uploadId);
+    const offset = Number(req.query.offset ?? NaN);
+    if (!Number.isInteger(offset) || offset < 0) {
+      res.status(400).json({ error: "offset 無效" });
+      return;
+    }
+
+    try {
+      const result = await appendChunk(uploadId, offset, req);
+      res.json(result);
+    } catch (error) {
+      if (error instanceof UploadSessionError) {
+        res
+          .status(error.status)
+          .json({ error: error.message, received: error.received });
+        return;
+      }
+      throw error;
+    }
+  },
+);
+
 router.post(
   "/",
   requireAuth,
@@ -130,8 +192,88 @@ router.post(
       return;
     }
 
-    if ((type === "photo" || type === "video") && !req.file) {
+    const uploadId = String(req.body.uploadId ?? "").trim();
+
+    if ((type === "photo" || type === "video") && !req.file && !uploadId) {
       res.status(400).json({ error: "請上傳相片或影片檔案" });
+      return;
+    }
+
+    if (uploadId) {
+      await serializeFinalize(uploadId, async () => {
+      // Finalizing a resumable upload. If a previous attempt already created
+      // the record but its response never reached the client, return that one
+      // rather than creating a duplicate. Re-read inside the lock: an earlier
+      // attempt may have completed while we were queued.
+      const meta = await readSessionMeta(uploadId);
+      if (!meta) {
+        res.status(404).json({ error: "找不到上傳工作階段，請重新上傳" });
+        return;
+      }
+      if (meta.recordId) {
+        const existing = await getRecordById(meta.recordId);
+        if (existing) {
+          res.status(201).json({ record: existing });
+          return;
+        }
+      }
+
+      let mediaUrlFromSession: string;
+      let finalizedName = "";
+      try {
+        const finalized = await finalizeSession(uploadId);
+        finalizedName = finalized.filename;
+        const asFile = { mimetype: "", originalname: finalized.filename };
+        if (type === "photo" && !isImageFile(asFile)) {
+          deleteUploadedFile(publicUploadPath(finalized.filename));
+          await discardSession(uploadId);
+          res.status(400).json({ error: "相片紀錄需要圖片檔案" });
+          return;
+        }
+        if (type === "video" && !isVideoFile(asFile)) {
+          deleteUploadedFile(publicUploadPath(finalized.filename));
+          await discardSession(uploadId);
+          res.status(400).json({ error: "影片紀錄需要影片檔案" });
+          return;
+        }
+        mediaUrlFromSession = await resolveMediaUrlForPath(
+          finalized.filePath,
+          finalized.filename,
+          type,
+        );
+      } catch (error) {
+        if (error instanceof UploadSessionError) {
+          res.status(error.status).json({ error: error.message });
+          return;
+        }
+        if (finalizedName) deleteUploadedFile(publicUploadPath(finalizedName));
+        res.status(400).json({
+          error: error instanceof Error ? error.message : "影片處理失敗",
+        });
+        return;
+      }
+
+      try {
+        const record = await createRecord({
+          authorId: req.user!.sub,
+          type,
+          title,
+          content: content || undefined,
+          mediaUrl: mediaUrlFromSession,
+          displayDate,
+          starRating,
+        });
+        // Deliberately NOT discarded: if this 201 never reaches the client it
+        // retries, and meta.recordId lets us return the same record instead of
+        // creating a duplicate. sweepStaleSessions removes it after the TTL.
+        await markSessionRecord(uploadId, record.id);
+        res.status(201).json({ record });
+      } catch {
+        deleteUploadedFile(mediaUrlFromSession);
+        await discardSession(uploadId);
+        res.status(500).json({ error: "建立紀錄失敗" });
+      }
+      });
       return;
     }
 
