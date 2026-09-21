@@ -96,15 +96,203 @@ export type RecordUploadOptions = {
   onUploadProgress?: (percent: number) => void;
 };
 
-function buildRecordFormData(input: RecordInput): FormData {
+function buildRecordFormData(input: RecordInput, uploadId?: string): FormData {
   const formData = new FormData();
   formData.append("type", input.type);
   formData.append("title", input.title);
   formData.append("displayDate", input.displayDate);
   formData.append("starRating", String(input.starRating));
   if (input.content) formData.append("content", input.content);
-  if (input.file) formData.append("file", input.file);
+  if (uploadId) {
+    formData.append("uploadId", uploadId);
+  } else if (input.file) {
+    formData.append("file", input.file);
+  }
   return formData;
+}
+
+/**
+ * Resumable upload.
+ *
+ * A single POST of a 20MB video holds one connection for 15s or more. If the
+ * API restarts in that window the upload is lost outright -- measured at 0/6
+ * successes against a server restarting every 30s. Short chunks make a restart
+ * cost one ~1.4s retry instead of the whole file, and the server reports the
+ * byte count it actually holds so we resume exactly there.
+ */
+const CHUNK_UPLOAD_THRESHOLD = 4 * 1024 * 1024;
+const CHUNK_SIZE = 2 * 1024 * 1024;
+const CHUNK_MAX_ATTEMPTS = 6;
+const CHUNK_ATTEMPT_BUDGET = 200;
+
+function backoffMs(attempt: number): number {
+  return Math.min(4000, 400 * 2 ** (attempt - 1));
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** 502/503/504 and a dead connection all mean "try again shortly". */
+function isTransientStatus(status: number): boolean {
+  return status === 0 || status === 429 || status >= 500;
+}
+
+async function readJsonSafe(
+  response: Response,
+): Promise<{ error?: string; received?: number; uploadId?: string }> {
+  try {
+    return (await response.json()) as {
+      error?: string;
+      received?: number;
+      uploadId?: string;
+    };
+  } catch {
+    return {};
+  }
+}
+
+async function withRetry<T>(
+  label: string,
+  run: () => Promise<T>,
+  attempts = CHUNK_MAX_ATTEMPTS,
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await run();
+    } catch (error) {
+      lastError = error;
+      if (error instanceof PermanentUploadError) throw error;
+      if (attempt < attempts) await sleep(backoffMs(attempt));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(label);
+}
+
+class PermanentUploadError extends Error {}
+
+async function uploadFileInChunks(
+  token: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<string> {
+  const { uploadId } = await withRetry("無法建立上傳工作階段", async () => {
+    const response = await fetch(
+      `${API_URL}/api/records/upload-sessions?name=${encodeURIComponent(file.name)}`,
+      { method: "POST", headers: { Authorization: `Bearer ${token}` } },
+    );
+    const data = await readJsonSafe(response);
+    if (!response.ok || !data.uploadId) {
+      if (!isTransientStatus(response.status)) {
+        throw new PermanentUploadError(
+          data.error ?? parseXhrError(response.status, ""),
+        );
+      }
+      throw new Error(data.error ?? "無法建立上傳工作階段");
+    }
+    return { uploadId: data.uploadId };
+  });
+
+  let offset = 0;
+  let spent = 0;
+
+  while (offset < file.size) {
+    const end = Math.min(offset + CHUNK_SIZE, file.size);
+    const chunk = file.slice(offset, end);
+    let placed = false;
+
+    for (let attempt = 1; attempt <= CHUNK_MAX_ATTEMPTS && !placed; attempt += 1) {
+      spent += 1;
+      if (spent > CHUNK_ATTEMPT_BUDGET) {
+        throw new Error("上傳重試次數過多，請稍後再試");
+      }
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/records/upload-sessions/${uploadId}?offset=${offset}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/octet-stream",
+            },
+            body: chunk,
+          },
+        );
+
+        const data = await readJsonSafe(response);
+
+        // The server is authoritative about how many bytes it holds.
+        if (response.status === 409 && typeof data.received === "number") {
+          offset = data.received;
+          placed = true;
+          break;
+        }
+
+        if (!response.ok) {
+          if (!isTransientStatus(response.status)) {
+            throw new PermanentUploadError(
+              data.error ?? parseXhrError(response.status, ""),
+            );
+          }
+          throw new Error(data.error ?? "上傳中斷");
+        }
+
+        offset = typeof data.received === "number" ? data.received : end;
+        placed = true;
+      } catch (error) {
+        if (error instanceof PermanentUploadError) throw error;
+        if (attempt >= CHUNK_MAX_ATTEMPTS) {
+          throw error instanceof Error ? error : new Error("上傳中斷");
+        }
+        await sleep(backoffMs(attempt));
+      }
+    }
+
+    onProgress?.(Math.min(99, Math.round((offset / file.size) * 100)));
+  }
+
+  onProgress?.(100);
+  return uploadId;
+}
+
+/**
+ * Finalize is retryable: the server keys the created record to the upload
+ * session, so a retry after a lost response returns the same record rather
+ * than creating a duplicate.
+ */
+async function finalizeChunkedRecord(
+  method: "POST" | "PATCH",
+  url: string,
+  token: string,
+  input: RecordInput,
+  uploadId: string,
+): Promise<Post> {
+  return withRetry("建立紀錄失敗", async () => {
+    const response = await fetch(url, {
+      method,
+      headers: { Authorization: `Bearer ${token}` },
+      body: buildRecordFormData(input, uploadId),
+    });
+
+    if (!response.ok) {
+      const data = await readJsonSafe(response);
+      if (!isTransientStatus(response.status)) {
+        throw new PermanentUploadError(
+          data.error ?? parseXhrError(response.status, ""),
+        );
+      }
+      throw new Error(data.error ?? parseXhrError(response.status, ""));
+    }
+
+    const data = (await response.json()) as { record: ApiRecord };
+    return mapRecord(data.record);
+  });
+}
+
+function shouldChunk(file?: File): boolean {
+  return !!file && file.size > CHUNK_UPLOAD_THRESHOLD;
 }
 
 function parseXhrError(status: number, responseText: string): string {
@@ -125,7 +313,7 @@ function parseXhrError(status: number, responseText: string): string {
   // check blocks it and onload never fires. Either way the API went away
   // mid-request -- blaming the user's connection sent us hunting the wrong bug.
   if (status === 0) {
-    return "與伺服器的連線中断（伺服器可能剛重新啟動），請再試一次。";
+    return "與伺服器的連線中斷（伺服器可能剛重新啟動），請再試一次。";
   }
   if (status === 502 || status === 503 || status === 504) {
     return `伺服器暫時無法處理請求（${status}），可能正在重新啟動，請稍候再試一次。`;
@@ -181,6 +369,21 @@ export async function createRecord(
   input: RecordInput,
   options?: RecordUploadOptions,
 ): Promise<Post> {
+  if (shouldChunk(input.file)) {
+    const uploadId = await uploadFileInChunks(
+      token,
+      input.file as File,
+      options?.onUploadProgress,
+    );
+    return finalizeChunkedRecord(
+      "POST",
+      `${API_URL}/api/records`,
+      token,
+      input,
+      uploadId,
+    );
+  }
+
   if (input.file && options?.onUploadProgress) {
     return submitRecordForm(
       "POST",
@@ -214,6 +417,21 @@ export async function updateRecord(
   input: RecordInput,
   options?: RecordUploadOptions,
 ): Promise<Post> {
+  if (shouldChunk(input.file)) {
+    const uploadId = await uploadFileInChunks(
+      token,
+      input.file as File,
+      options?.onUploadProgress,
+    );
+    return finalizeChunkedRecord(
+      "PATCH",
+      `${API_URL}/api/records/${id}`,
+      token,
+      input,
+      uploadId,
+    );
+  }
+
   if (input.file && options?.onUploadProgress) {
     return submitRecordForm(
       "PATCH",
