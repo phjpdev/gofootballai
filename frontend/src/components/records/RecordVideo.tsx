@@ -24,12 +24,23 @@ export function RecordVideo({
     const video = videoRef.current;
     if (!video) return;
 
-    video.muted = true;
+    // Grid previews must stay silent: a dozen of them autoplay at once, and
+    // browsers refuse unmuted autoplay anyway. The modal player is opened by a
+    // click, so it has user activation and can start with sound.
+    video.muted = isPreview;
     let decodeCheckTimer: number | undefined;
 
     function tryPlay() {
       void video?.play().catch(() => {
-        // Autoplay may be blocked; controls remain available in player mode.
+        // Unmuted playback can still be refused -- no prior interaction with
+        // the page, or iOS's stricter policy. Retry muted so the video plays
+        // instead of sitting frozen; the controls let the viewer unmute.
+        if (video && !video.muted) {
+          video.muted = true;
+          void video.play().catch(() => {
+            // Controls remain available in player mode.
+          });
+        }
       });
     }
 
@@ -68,7 +79,7 @@ export function RecordVideo({
       video.removeEventListener("playing", handlePlaying);
       video.removeEventListener("timeupdate", scheduleDecodeCheck);
     };
-  }, [src, mode, onDecodeIssue]);
+  }, [src, isPreview, onDecodeIssue]);
 
   return (
     <video
@@ -76,7 +87,7 @@ export function RecordVideo({
       key={src}
       src={src}
       autoPlay
-      muted
+      muted={isPreview}
       playsInline
       loop={isPreview}
       controls={!isPreview}
