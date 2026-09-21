@@ -15,52 +15,134 @@ const VIDEO_EXTENSIONS = new Set([
   ".wmv",
 ]);
 
+/** ffmpeg writes progress to stderr continuously; never buffer it unbounded. */
+const MAX_CHILD_OUTPUT_CHARS = 64 * 1024;
+const FFMPEG_TIMEOUT_MS = Number(process.env.FFMPEG_TIMEOUT_MS ?? 180_000);
+const FFPROBE_TIMEOUT_MS = Number(process.env.FFPROBE_TIMEOUT_MS ?? 30_000);
+/** Cap worker threads: the x264 per-thread frame pool is what drove peak RSS. */
+const FFMPEG_THREADS = process.env.FFMPEG_THREADS ?? "2";
+/** Cap the long edge. A 1440x2560 phone clip cost ~813MB re-encoded natively. */
+const MAX_LONG_EDGE = Number(process.env.VIDEO_MAX_LONG_EDGE ?? 1280);
+
 function runCommand(
   command: string,
   args: string[],
+  timeoutMs: number = FFMPEG_TIMEOUT_MS,
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
     const child = spawn(command, args);
     let stdout = "";
     let stderr = "";
+    let settled = false;
+    let timer: NodeJS.Timeout | undefined;
+
+    const finish = (result: {
+      code: number | null;
+      stdout: string;
+      stderr: string;
+    }) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      resolve(result);
+    };
+
+    timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      finish({
+        code: null,
+        stdout,
+        stderr: `${command} exceeded ${timeoutMs}ms and was killed`,
+      });
+    }, timeoutMs);
 
     child.stdout.on("data", (chunk: Buffer) => {
-      stdout += chunk.toString();
+      if (stdout.length < MAX_CHILD_OUTPUT_CHARS) stdout += chunk.toString();
     });
     child.stderr.on("data", (chunk: Buffer) => {
-      stderr += chunk.toString();
+      if (stderr.length < MAX_CHILD_OUTPUT_CHARS) stderr += chunk.toString();
     });
     child.on("error", (error) => {
-      resolve({ code: null, stdout, stderr: error.message });
+      finish({ code: null, stdout, stderr: error.message });
     });
-    child.on("close", (code) => resolve({ code, stdout, stderr }));
+    child.on("close", (code) => finish({ code, stdout, stderr }));
   });
 }
 
-async function probeVideo(filePath: string): Promise<{
+type VideoProbe = {
   codec: string;
   pixFmt: string;
-} | null> {
-  const result = await runCommand("ffprobe", [
-    "-v",
-    "error",
-    "-select_streams",
-    "v:0",
-    "-show_entries",
-    "stream=codec_name,pix_fmt",
-    "-of",
-    "csv=p=0",
-    filePath,
-  ]);
+  width: number;
+  height: number;
+};
+
+/**
+ * Parsed as JSON on purpose: ffprobe emits csv fields in ITS own order
+ * (codec_name,width,height,pix_fmt) rather than the requested order, so
+ * positional parsing silently swaps pix_fmt for width once you add fields.
+ */
+async function probeVideo(filePath: string): Promise<VideoProbe | null> {
+  const result = await runCommand(
+    "ffprobe",
+    [
+      "-v",
+      "error",
+      "-select_streams",
+      "v:0",
+      "-show_entries",
+      "stream=codec_name,pix_fmt,width,height",
+      "-of",
+      "json",
+      filePath,
+    ],
+    FFPROBE_TIMEOUT_MS,
+  );
 
   if (result.code !== 0) return null;
-  const [codec = "", pixFmt = ""] = result.stdout.trim().split(",");
-  if (!codec) return null;
-  return { codec: codec.toLowerCase(), pixFmt: pixFmt.toLowerCase() };
+
+  try {
+    const parsed = JSON.parse(result.stdout) as {
+      streams?: Array<{
+        codec_name?: string;
+        pix_fmt?: string;
+        width?: number;
+        height?: number;
+      }>;
+    };
+    const stream = parsed.streams?.[0];
+    if (!stream?.codec_name) return null;
+    return {
+      codec: stream.codec_name.toLowerCase(),
+      pixFmt: (stream.pix_fmt ?? "").toLowerCase(),
+      width: Number(stream.width ?? 0),
+      height: Number(stream.height ?? 0),
+    };
+  } catch {
+    return null;
+  }
 }
 
-function isBrowserReadyH264(probe: { codec: string; pixFmt: string }): boolean {
-  return probe.codec === "h264" && probe.pixFmt === "yuv420p";
+/**
+ * 8-bit 4:2:0 H.264 plays everywhere, so it only needs a faststart remux.
+ * yuvj420p is the same samples with full-range flags -- it used to miss this
+ * gate and pay for a full re-encode for no benefit.
+ */
+const BROWSER_READY_PIX_FMTS = new Set(["yuv420p", "yuvj420p"]);
+
+function isBrowserReadyH264(probe: VideoProbe): boolean {
+  return probe.codec === "h264" && BROWSER_READY_PIX_FMTS.has(probe.pixFmt);
+}
+
+/** Cap the long edge, preserve aspect, keep both dimensions even for libx264. */
+function buildScaleFilter(probe: VideoProbe): string | null {
+  const longEdge = Math.max(probe.width, probe.height);
+  if (!Number.isFinite(longEdge) || longEdge <= 0 || longEdge <= MAX_LONG_EDGE) {
+    return null;
+  }
+  const ratio = MAX_LONG_EDGE / longEdge;
+  const even = (value: number) =>
+    Math.max(2, Math.round((value * ratio) / 2) * 2);
+  return `scale=${even(probe.width)}:${even(probe.height)}`;
 }
 
 async function remuxWithFaststart(
@@ -83,19 +165,28 @@ async function remuxWithFaststart(
 async function transcodeToH264(
   inputPath: string,
   outputPath: string,
+  probe: VideoProbe,
 ): Promise<boolean> {
-  const result = await runCommand("ffmpeg", [
-    "-y",
-    "-i",
-    inputPath,
+  const scale = buildScaleFilter(probe);
+  const args = ["-y", "-threads", FFMPEG_THREADS, "-i", inputPath];
+  if (scale) args.push("-vf", scale);
+  args.push(
     "-c:v",
     "libx264",
+    "-threads",
+    FFMPEG_THREADS,
+    "-preset",
+    "veryfast",
+    "-crf",
+    "23",
     "-profile:v",
-    "main",
-    "-level",
-    "4.0",
+    "high",
     "-pix_fmt",
     "yuv420p",
+    // Deliberately no explicit -level: x264 derives a conformant one. The old
+    // hardcoded "-level 4.0" was violated on every axis by a tall phone frame
+    // (1440x2560 is 14400 macroblocks against an 8192 limit) and was still
+    // stamped into the SPS, which some hardware decoders refuse outright.
     "-movflags",
     "+faststart",
     "-c:a",
@@ -103,7 +194,15 @@ async function transcodeToH264(
     "-b:a",
     "128k",
     outputPath,
-  ]);
+  );
+
+  const result = await runCommand("ffmpeg", args);
+  if (result.code !== 0) {
+    console.error(
+      "ffmpeg transcode failed:",
+      result.stderr.slice(-2000) || `exit code ${result.code}`,
+    );
+  }
   return result.code === 0;
 }
 
@@ -152,7 +251,7 @@ export async function optimizeUploadedVideo(inputPath: string): Promise<string> 
 
   const ok = isBrowserReadyH264(probe)
     ? await remuxWithFaststart(inputPath, tempPath)
-    : await transcodeToH264(inputPath, tempPath);
+    : await transcodeToH264(inputPath, tempPath, probe);
 
   if (!ok) {
     try {

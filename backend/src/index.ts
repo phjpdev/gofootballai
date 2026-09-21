@@ -84,12 +84,28 @@ app.use("/api/top-match-previews", topMatchPreviewsRoutes);
 app.use("/api/match-pick-overrides", matchPickOverridesRoutes);
 app.use("/api/win-rate-stats", winRateStatsRoutes);
 
-async function start() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is required");
-  }
+// Last-resort net. A stray rejection or an EventEmitter throw used to kill the
+// whole API: the supervisor restarted it, and for ~2.5s of cold start nginx
+// answered 502 to everything -- which is what killed in-flight video uploads.
+// Trade-off: after an uncaughtException V8 state is strictly undefined, so the
+// textbook move is to exit. We stay up deliberately, because dying is the bug we
+// are fixing, and the two known sources (pg pool, redis socket) are now handled
+// at source. These logs are loud on purpose -- if one appears, fix its source.
+process.on("unhandledRejection", (reason) => {
+  console.error(
+    "[unhandledRejection]",
+    reason instanceof Error ? (reason.stack ?? reason.message) : reason,
+  );
+});
 
-  await ensureDatabase(process.env.DATABASE_URL);
+process.on("uncaughtException", (error) => {
+  console.error("[uncaughtException]", error.stack ?? error.message);
+});
+
+const BOOTSTRAP_RETRY_MS = Number(process.env.BOOTSTRAP_RETRY_MS ?? 5_000);
+
+async function bootstrapData(): Promise<void> {
+  await ensureDatabase(process.env.DATABASE_URL as string);
   await initDb();
   const synced = await syncArchivedFromAnalyses();
   if (synced > 0) {
@@ -98,6 +114,28 @@ async function start() {
   await seedFeaturedItems();
   await seedHomeSections();
   await seedTopMatchPreviews();
+}
+
+async function start() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is required");
+  }
+
+  // Retry instead of exiting. process.exit(1) on a transient Postgres outage
+  // turned a brief DB blip into an endless restart loop with no API at all.
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await bootstrapData();
+      break;
+    } catch (error) {
+      console.error(
+        `Database bootstrap failed (attempt ${attempt}); retrying in ${BOOTSTRAP_RETRY_MS}ms:`,
+        error instanceof Error ? error.message : error,
+      );
+      await new Promise((resolve) => setTimeout(resolve, BOOTSTRAP_RETRY_MS));
+    }
+  }
+
   app.listen(port, () => {
     console.log(`Backend listening on http://localhost:${port}`);
   });

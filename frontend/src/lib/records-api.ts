@@ -119,6 +119,17 @@ function parseXhrError(status: number, responseText: string): string {
     // Nginx/HTML error pages are not JSON
   }
 
+  // status 0 means the browser never got a readable response: either the
+  // connection dropped, or nginx answered with an error page that carries no
+  // Access-Control-Allow-Origin (its `location /` block sets none), so the CORS
+  // check blocks it and onload never fires. Either way the API went away
+  // mid-request -- blaming the user's connection sent us hunting the wrong bug.
+  if (status === 0) {
+    return "與伺服器的連線中断（伺服器可能剛重新啟動），請再試一次。";
+  }
+  if (status === 502 || status === 503 || status === 504) {
+    return `伺服器暫時無法處理請求（${status}），可能正在重新啟動，請稍候再試一次。`;
+  }
   if (status >= 500) return "伺服器錯誤，請稍後再試";
   return "請求失敗，請稍後再試";
 }
@@ -158,7 +169,7 @@ function submitRecordForm(
       reject(new Error(parseXhrError(xhr.status, xhr.responseText)));
     };
 
-    xhr.onerror = () => reject(new Error("網路錯誤，請檢查連線後再試"));
+    xhr.onerror = () => reject(new Error(parseXhrError(0, "")));
     xhr.onabort = () => reject(new Error("上傳已取消"));
 
     xhr.send(buildRecordFormData(input));

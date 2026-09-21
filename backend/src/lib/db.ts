@@ -6,6 +6,15 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+// pg emits 'error' on IDLE clients when Postgres restarts or drops a connection.
+// Without a listener that is an uncaught exception and the whole API goes down.
+pool.on("error", (error) => {
+  console.error(
+    "Postgres idle-client error (ignored, pool reconnects):",
+    error instanceof Error ? error.message : error,
+  );
+});
+
 export async function initDb(): Promise<void> {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
