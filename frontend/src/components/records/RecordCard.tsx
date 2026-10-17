@@ -3,24 +3,28 @@
 import { Pencil, Star, Trash2 } from "lucide-react";
 import { RecordVideo } from "@/components/records/RecordVideo";
 import type { Post } from "@/types";
+import type { Locale } from "@/lib/i18n/config";
+import { formatDate } from "@/lib/i18n/format";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { localizedText } from "@/lib/i18n/localized";
+import { getMessages } from "@/lib/i18n/messages";
 import { cn } from "@/lib/utils";
 
 const CONTENT_PREVIEW_LENGTH = 72;
 
-function formatDisplayDate(post: Post): string {
-  const source = post.displayDate ?? post.createdAt;
+/** "2026年9月28日(週一)" / "28 Sept 2026 (Mon)" */
+export function formatRecordDate(post: Post, locale: Locale): string {
+  // displayDate is a HK calendar day; noon keeps it on the same day in any zone.
   const date = post.displayDate
-    ? new Date(`${post.displayDate}T12:00:00`)
-    : new Date(source);
-  const weekday = new Intl.DateTimeFormat("zh-HK", { weekday: "short" }).format(
-    date,
-  );
-  const formatted = new Intl.DateTimeFormat("zh-HK", {
+    ? `${post.displayDate}T12:00:00+08:00`
+    : post.createdAt;
+  const formatted = formatDate(date, locale, {
     year: "numeric",
-    month: "long",
+    month: locale === "en" ? "short" : "long",
     day: "numeric",
-  }).format(date);
-  return `${formatted}(${weekday})`;
+  });
+  const weekday = formatDate(date, locale, { weekday: "short" });
+  return getMessages(locale).records.dateLabel(formatted, weekday);
 }
 
 function StarRating({
@@ -68,12 +72,15 @@ export function RecordCard({
   onEdit?: (post: Post) => void;
   onDelete?: (id: string) => void;
 }) {
+  const { locale, t } = useI18n();
   const hasMedia =
     (post.type === "photo" || post.type === "video") && !!post.mediaUrl;
+  const title = localizedText(locale, post.title, post.titleEn);
+  const content = localizedText(locale, post.content, post.contentEn);
   const previewContent =
-    post.content && post.content.length > CONTENT_PREVIEW_LENGTH
-      ? `${post.content.slice(0, CONTENT_PREVIEW_LENGTH).trim()}…`
-      : post.content;
+    content.length > CONTENT_PREVIEW_LENGTH
+      ? `${content.slice(0, CONTENT_PREVIEW_LENGTH).trim()}…`
+      : content;
 
   function handleCardClick() {
     onOpen?.(post);
@@ -105,7 +112,7 @@ export function RecordCard({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={post.mediaUrl}
-          alt={post.title}
+          alt={title}
           className="absolute inset-0 h-full w-full object-cover"
         />
       )}
@@ -130,7 +137,7 @@ export function RecordCard({
           {onEdit && (
             <button
               type="button"
-              aria-label="編輯紀錄"
+              aria-label={t.records.card.edit}
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(post);
@@ -149,7 +156,7 @@ export function RecordCard({
           {onDelete && (
             <button
               type="button"
-              aria-label="刪除紀錄"
+              aria-label={t.records.card.delete}
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(post.id);
@@ -181,7 +188,7 @@ export function RecordCard({
             compact ? "line-clamp-2 text-lg lg:text-xl" : "line-clamp-2 text-2xl",
           )}
         >
-          {post.title}
+          {title}
         </h3>
 
         <time
@@ -191,7 +198,7 @@ export function RecordCard({
             compact ? "text-[10px] lg:text-[11px]" : "text-sm",
           )}
         >
-          {formatDisplayDate(post)}
+          {formatRecordDate(post, locale)}
         </time>
 
         {previewContent && (

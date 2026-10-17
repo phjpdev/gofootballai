@@ -1,3 +1,4 @@
+import { localizeApiError } from "@/lib/i18n/api-errors";
 import type { HkjcMatch, HkjcMatchesResponse } from "@/types/hkjc";
 
 function getServerApiUrl(): string {
@@ -24,7 +25,7 @@ export async function fetchHkjcMatchesFromApi(options?: {
     cache: "no-store",
   });
   if (!response.ok) {
-    throw new Error("載入賽事失敗");
+    throw new Error(localizeApiError("載入賽事失敗"));
   }
   return (await response.json()) as HkjcMatchesResponse;
 }
@@ -37,7 +38,7 @@ export async function fetchHkjcMatchByIdFromApi(
   });
   if (response.status === 404) return null;
   if (!response.ok) {
-    throw new Error("載入賽事失敗");
+    throw new Error(localizeApiError("載入賽事失敗"));
   }
   return (await response.json()) as HkjcMatch;
 }

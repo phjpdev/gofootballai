@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Clock, FileText } from "lucide-react";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 type MatchCardProps = {
   title: string;
@@ -21,6 +24,7 @@ export function MatchCard({
   imageSrc = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&h=200&fit=crop",
   href,
 }: MatchCardProps) {
+  const { t } = useI18n();
   const content = (
     <div className="w-full rounded-[32px] bg-gray-90 p-3 transition-colors hover:bg-gray-80">
       <div className="flex items-center gap-3">
@@ -53,7 +57,7 @@ export function MatchCard({
             <div className="flex items-center gap-1">
               <FileText className="size-4 text-gray-40" strokeWidth={2} />
               <span className="text-sm font-medium tracking-[-0.028px] text-white">
-                事件 {movements}
+                {t.analysis.matchCard.events(movements)}
               </span>
             </div>
             <span className="size-1 rounded-full bg-gray-70" />

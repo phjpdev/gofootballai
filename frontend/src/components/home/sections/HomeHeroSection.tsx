@@ -4,15 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HomeSectionEditButton } from "@/components/home/HomeSectionEditButton";
-import { useHomeSection } from "@/context/HomeSectionsContext";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
+import { useLocalizedHomeSection } from "@/context/HomeSectionsContext";
 import { resolveHomeSectionImageUrl } from "@/lib/home-sections-api";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 type HomeHeroSectionProps = {
   onGetStarted?: () => void;
 };
 
 export function HomeHeroSection({ onGetStarted }: HomeHeroSectionProps) {
-  const section = useHomeSection("hero");
+  const { t } = useI18n();
+  const section = useLocalizedHomeSection("hero");
   const imageUrl = resolveHomeSectionImageUrl(section.imageSrc);
 
   return (
@@ -20,6 +23,12 @@ export function HomeHeroSection({ onGetStarted }: HomeHeroSectionProps) {
       <div className="absolute right-2 top-2 z-20 lg:right-6 lg:top-6">
         <HomeSectionEditButton sectionId="hero" />
       </div>
+
+      {/* The mobile floating switch would collide with the pager controls here. */}
+      <LanguageToggle
+        variant="compact"
+        className="absolute left-3 top-3 z-20 lg:hidden"
+      />
 
       <div className="relative h-full w-full lg:h-auto lg:min-h-[min(900px,92vh)]">
         <Image
@@ -61,7 +70,7 @@ export function HomeHeroSection({ onGetStarted }: HomeHeroSectionProps) {
                   onClick={onGetStarted}
                   className="flex min-h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-orange-50 px-5 py-3 text-base font-semibold leading-[22px] tracking-[-0.112px] text-white transition-opacity hover:opacity-90 lg:w-auto lg:px-8"
                 >
-                  {section.ctaText ?? "立即開始"}
+                  {section.ctaText ?? t.home.hero.ctaFallback}
                   <ArrowRight className="size-5" strokeWidth={2} />
                 </button>
               ) : (
@@ -69,17 +78,17 @@ export function HomeHeroSection({ onGetStarted }: HomeHeroSectionProps) {
                   href="/analysis"
                   className="flex min-h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-orange-50 px-5 py-3 text-base font-semibold leading-[22px] tracking-[-0.112px] text-white transition-opacity hover:opacity-90 lg:w-auto lg:px-8"
                 >
-                  {section.ctaText ?? "開始分析"}
+                  {section.ctaText ?? t.home.hero.desktopCtaFallback}
                   <ArrowRight className="size-5" strokeWidth={2} />
                 </Link>
               )}
               <p className="text-center text-sm font-medium leading-5 tracking-[-0.084px] text-white lg:text-left">
-                {section.loginPrompt ?? "已有帳戶？"}{" "}
+                {section.loginPrompt ?? t.home.hero.loginPromptFallback}{" "}
                 <Link
                   href="/member"
                   className="font-bold text-orange-50 underline decoration-solid underline-offset-2"
                 >
-                  {section.loginLinkText ?? "登入"}
+                  {section.loginLinkText ?? t.home.hero.loginLinkFallback}
                 </Link>
               </p>
             </div>

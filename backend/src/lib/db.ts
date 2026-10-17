@@ -152,6 +152,32 @@ export async function initDb(): Promise<void> {
     ALTER TABLE top_match_previews ADD COLUMN IF NOT EXISTS away_team VARCHAR(80) NOT NULL DEFAULT '';
     ALTER TABLE top_match_previews ADD COLUMN IF NOT EXISTS pick_selection VARCHAR(80) NOT NULL DEFAULT '';
   `);
+
+  // English version: admin content keeps Chinese as the source and gains
+  // optional English overrides (NULL = show the Chinese). analysis_en caches the
+  // AI translation of an analysis's text fields; cleared when it is regenerated.
+  await pool.query(`
+    ALTER TABLE records ADD COLUMN IF NOT EXISTS title_en VARCHAR(300);
+    ALTER TABLE records ADD COLUMN IF NOT EXISTS content_en TEXT;
+
+    ALTER TABLE featured_items ADD COLUMN IF NOT EXISTS title_en VARCHAR(120);
+    ALTER TABLE featured_items ADD COLUMN IF NOT EXISTS tag_en VARCHAR(60);
+    ALTER TABLE featured_items ADD COLUMN IF NOT EXISTS duration_en VARCHAR(60);
+    ALTER TABLE featured_items ADD COLUMN IF NOT EXISTS stat_en VARCHAR(60);
+
+    ALTER TABLE home_sections ADD COLUMN IF NOT EXISTS eyebrow_en VARCHAR(120);
+    ALTER TABLE home_sections ADD COLUMN IF NOT EXISTS title_en VARCHAR(200);
+    ALTER TABLE home_sections ADD COLUMN IF NOT EXISTS description_en TEXT;
+    ALTER TABLE home_sections ADD COLUMN IF NOT EXISTS cta_text_en VARCHAR(80);
+    ALTER TABLE home_sections ADD COLUMN IF NOT EXISTS login_prompt_en VARCHAR(120);
+    ALTER TABLE home_sections ADD COLUMN IF NOT EXISTS login_link_text_en VARCHAR(80);
+
+    ALTER TABLE top_match_previews ADD COLUMN IF NOT EXISTS home_team_en VARCHAR(120);
+    ALTER TABLE top_match_previews ADD COLUMN IF NOT EXISTS away_team_en VARCHAR(120);
+    ALTER TABLE top_match_previews ADD COLUMN IF NOT EXISTS pick_selection_en VARCHAR(120);
+
+    ALTER TABLE match_analyses ADD COLUMN IF NOT EXISTS analysis_en JSONB;
+  `);
 }
 
 export async function query<T extends pg.QueryResultRow>(

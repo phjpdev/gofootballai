@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { Match } from "@/types";
 
 export const MATCH_DATES = [
@@ -13,6 +14,10 @@ export const MATCHES: Match[] = [
   {
     id: "mexico-south-africa",
     title: "墨西哥 對 南非",
+    homeTeam: "墨西哥",
+    awayTeam: "南非",
+    homeTeamEn: "Mexico",
+    awayTeamEn: "South Africa",
     tag: "2026 世界盃",
     progress: 75,
     movements: 4,
@@ -28,6 +33,10 @@ export const MATCHES: Match[] = [
   {
     id: "korea-denmark",
     title: "南韓 對 丹麥",
+    homeTeam: "南韓",
+    awayTeam: "丹麥",
+    homeTeamEn: "South Korea",
+    awayTeamEn: "Denmark",
     tag: "2026 世界盃",
     progress: 60,
     movements: 3,
@@ -43,6 +52,10 @@ export const MATCHES: Match[] = [
   {
     id: "canada-europe",
     title: "加拿大 對 歐洲附加賽勝者",
+    homeTeam: "加拿大",
+    awayTeam: "歐洲附加賽勝者",
+    homeTeamEn: "Canada",
+    awayTeamEn: "European play-off winner",
     tag: "2026 世界盃",
     progress: 90,
     movements: 5,
@@ -58,6 +71,10 @@ export const MATCHES: Match[] = [
   {
     id: "usa-paraguay",
     title: "美國 對 巴拉圭",
+    homeTeam: "美國",
+    awayTeam: "巴拉圭",
+    homeTeamEn: "USA",
+    awayTeamEn: "Paraguay",
     tag: "2026 世界盃",
     progress: 45,
     movements: 2,
@@ -72,8 +89,38 @@ export const MATCHES: Match[] = [
   },
 ];
 
-export function getMatchById(id: string): Match | undefined {
-  return MATCHES.find((match) => match.id === id);
+/** English display text for the static fallback matches above. */
+const MATCHES_EN: Record<string, Pick<Match, "title" | "tag" | "venue">> = {
+  "mexico-south-africa": {
+    title: "Mexico vs South Africa",
+    tag: "2026 World Cup",
+    venue: "Estadio Azteca",
+  },
+  "korea-denmark": {
+    title: "South Korea vs Denmark",
+    tag: "2026 World Cup",
+    venue: "SoFi Stadium",
+  },
+  "canada-europe": {
+    title: "Canada vs European play-off winner",
+    tag: "2026 World Cup",
+    venue: "BMO Field",
+  },
+  "usa-paraguay": {
+    title: "USA vs Paraguay",
+    tag: "2026 World Cup",
+    venue: "SoFi Stadium",
+  },
+};
+
+export function getMatchById(
+  id: string,
+  locale: Locale = DEFAULT_LOCALE,
+): Match | undefined {
+  const match = MATCHES.find((item) => item.id === id);
+  if (!match || locale !== "en") return match;
+  const english = MATCHES_EN[match.id];
+  return english ? { ...match, ...english } : match;
 }
 
 export function getMatchesByDateIndex(dateIndex: number): Match[] {

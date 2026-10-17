@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/lib/auth-api";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 type AuthMode = "login" | "signup";
 
@@ -22,14 +23,14 @@ export function AuthForm({
 }: AuthFormProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading, login, signup } = useAuth();
+  const { t } = useI18n();
+  const copy = t.member.auth;
   const [mode, setMode] = useState<AuthMode>("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  const portalLabel = portalRole === "admin" ? "管理員" : "會員";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,7 +40,7 @@ export function AuthForm({
     try {
       if (mode === "signup") {
         if (!acceptedTerms) {
-          setError("請勾選並同意服務條款");
+          setError(copy.acceptTermsRequired);
           return;
         }
         await signup(username, password, acceptedTerms, portalRole);
@@ -52,7 +53,7 @@ export function AuthForm({
       router.push(redirectTo);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "發生錯誤，請稍後再試");
+      setError(err instanceof Error ? err.message : copy.genericError);
     } finally {
       setSubmitting(false);
     }
@@ -70,7 +71,9 @@ export function AuthForm({
 
   return (
     <div className="flex flex-col gap-4 rounded-[24px] bg-gray-90 p-4">
-      <p className="text-sm font-medium text-gray-40">{portalLabel}登入</p>
+      <p className="text-sm font-medium text-gray-40">
+        {copy.portalTitle[portalRole]}
+      </p>
 
       <div className="flex rounded-[14px] bg-gray-80 p-1">
         {(["login", "signup"] as const).map((tab) => (
@@ -81,13 +84,13 @@ export function AuthForm({
               setMode(tab);
               setError("");
             }}
-            className={`flex-1 rounded-[10px] py-2 text-sm font-semibold capitalize transition-colors ${
+            className={`flex-1 rounded-[10px] py-2 text-sm font-semibold transition-colors ${
               mode === tab
                 ? "bg-gray-100 text-white"
                 : "text-gray-40 hover:text-white"
             }`}
           >
-            {tab === "login" ? "登入" : "註冊"}
+            {tab === "login" ? copy.login : copy.signup}
           </button>
         ))}
       </div>
@@ -96,7 +99,7 @@ export function AuthForm({
         <input
           type="text"
           autoComplete="username"
-          placeholder="帳戶名稱"
+          placeholder={copy.usernamePlaceholder}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="rounded-[14px] bg-gray-80 px-4 py-3 text-sm text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40"
@@ -104,7 +107,7 @@ export function AuthForm({
         <input
           type="password"
           autoComplete={mode === "signup" ? "new-password" : "current-password"}
-          placeholder="密碼"
+          placeholder={copy.passwordPlaceholder}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="rounded-[14px] bg-gray-80 px-4 py-3 text-sm text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40"
@@ -119,9 +122,9 @@ export function AuthForm({
               className="mt-0.5 size-4 shrink-0 rounded border-gray-60 accent-orange-50"
             />
             <span>
-              點擊「註冊」即表示你同意我們的{" "}
+              {copy.termsPrefix}{" "}
               <Link href={termsHref} className="text-[#2F80FF] underline">
-                《服務條款》
+                {copy.termsLink}
               </Link>
             </span>
           </label>
@@ -137,12 +140,12 @@ export function AuthForm({
           {mode === "login" ? (
             <>
               <LogIn className="size-4" />
-              登入
+              {copy.login}
             </>
           ) : (
             <>
               <UserPlus className="size-4" />
-              註冊
+              {copy.signup}
             </>
           )}
         </button>

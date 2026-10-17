@@ -78,6 +78,11 @@ export function analysisCacheKey(
   return `analysis:${matchId}:${promptVersion}`;
 }
 
+/** Cache "version" under which the English payload for an analysis is stored. */
+export function englishCacheVersion(promptVersion: string): string {
+  return `${promptVersion}:en`;
+}
+
 export async function getCachedAnalysis<T>(
   matchId: string,
   promptVersion: string,
@@ -121,7 +126,11 @@ export async function invalidateCachedAnalysis(
   if (!redis) return;
 
   try {
-    await redis.del(analysisCacheKey(matchId, promptVersion));
+    // Drop the English copy too, or it would outlive a regenerated analysis.
+    await redis.del([
+      analysisCacheKey(matchId, promptVersion),
+      analysisCacheKey(matchId, englishCacheVersion(promptVersion)),
+    ]);
   } catch {
     // cache invalidation is best-effort
   }

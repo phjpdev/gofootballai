@@ -1,11 +1,13 @@
 "use client";
 
 import { TabGroup } from "@/components/ui/TabGroup";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 const Y_LABELS = ["1,000", "900", "800", "700", "600", "500"];
 const X_LABELS = ["11:00", "12:00", "13:00", "14:00", "15:00"];
 
 export function AnalyticsChart() {
+  const { t } = useI18n();
   return (
     <div className="w-full rounded-[32px] bg-gray-90 p-4">
       <div className="flex flex-col gap-4">
@@ -92,20 +94,20 @@ export function AnalyticsChart() {
               1,187
             </span>
             <span className="mb-1 ml-0 h-[27px] text-lg font-medium tracking-[-0.072px] text-gray-40">
-              總計
+              {t.matchDetail.charts.total}
             </span>
           </div>
           <div className="flex gap-6">
             <div className="flex items-center gap-1">
               <span className="size-2 rounded-full bg-orange-50" />
               <span className="text-xs font-medium tracking-[-0.018px] text-white">
-                本場
+                {t.matchDetail.charts.thisMatch}
               </span>
             </div>
             <div className="flex items-center gap-1">
               <span className="size-2 rounded-full bg-blue-60" />
               <span className="text-xs font-medium tracking-[-0.018px] text-white">
-                上場
+                {t.matchDetail.charts.lastMatch}
               </span>
             </div>
           </div>

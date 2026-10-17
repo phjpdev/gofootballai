@@ -145,6 +145,7 @@ export function transformHkjcMatch(raw: RawMatch): HkjcMatch {
     tournamentId: raw.tournament.id,
     tournamentCode: raw.tournament.code,
     tournamentName: raw.tournament.name_ch,
+    tournamentNameEn: raw.tournament.name_en,
     matchDate: dateKey,
     kickOffTime: raw.kickOffTime,
     kickOffLabel: formatKickOff(raw.kickOffTime),

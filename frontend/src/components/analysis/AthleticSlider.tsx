@@ -5,6 +5,7 @@ import Image from "next/image";
 import { figmaAsset } from "@/lib/figma-assets";
 import { cn } from "@/lib/utils";
 import { VipContentLock } from "@/components/analysis/VipContentLock";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 type AthleticSliderProps = {
   level?: number;
@@ -37,11 +38,14 @@ function scoreToLevel(score: number): number {
 export function AthleticSlider({
   level = 4,
   score,
-  label = "戰術強度",
-  description = "球隊具備應對高強度對抗的戰術能力",
+  label: labelProp,
+  description: descriptionProp,
   middleContent,
   vipLocked = false,
 }: AthleticSliderProps) {
+  const { t } = useI18n();
+  const label = labelProp ?? t.matchDetail.slider.defaultLabel;
+  const description = descriptionProp ?? t.matchDetail.slider.description;
   const clampedLevel =
     score !== undefined
       ? scoreToLevel(score)
@@ -60,7 +64,7 @@ export function AthleticSlider({
       )}
     >
       <p className="w-full text-center text-sm font-extrabold uppercase leading-5 tracking-[1.4px] text-orange-50 lg:text-base">
-        等級 {clampedLevel}
+        {t.matchDetail.slider.level(clampedLevel)}
       </p>
 
       <div className="relative h-9 w-full max-w-[343px] rounded-2xl bg-[#27272a] shadow-[0px_4px_4px_rgba(15,23,42,0.03),0px_8px_8px_rgba(15,23,42,0.02)] lg:max-w-3xl">
@@ -128,7 +132,7 @@ export function AthleticSlider({
               className="size-5"
             />
             <p className="text-sm leading-5 tracking-[-0.084px] text-[#d4d4d8]">
-              AI 量化引擎即時演算
+              {t.matchDetail.slider.engine}
             </p>
           </div>
         </div>

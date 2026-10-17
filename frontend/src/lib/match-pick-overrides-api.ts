@@ -1,13 +1,8 @@
+import { readApiError } from "@/lib/i18n/api-errors";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
-async function parseError(response: Response): Promise<string> {
-  try {
-    const data = (await response.json()) as { error?: string };
-    return data.error ?? "請求失敗，請稍後再試";
-  } catch {
-    return "請求失敗，請稍後再試";
-  }
-}
+const parseError = readApiError;
 
 export async function fetchMatchPickOverride(
   matchId: string,

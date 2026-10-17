@@ -11,6 +11,7 @@ import {
   upload,
 } from "../lib/upload.js";
 import { requireAdmin, requireAuth, type AuthedRequest } from "../middleware/auth.js";
+import { exceedsLength, readEnglishField } from "../lib/english-fields.js";
 
 const router = Router();
 
@@ -75,6 +76,28 @@ router.patch(
       return;
     }
 
+    const heroOnly = (key: string) =>
+      id === "hero" ? readEnglishField(req.body, key) : undefined;
+    const english = {
+      eyebrowEn: heroOnly("eyebrowEn"),
+      titleEn: readEnglishField(req.body, "titleEn"),
+      descriptionEn: readEnglishField(req.body, "descriptionEn"),
+      ctaTextEn: heroOnly("ctaTextEn"),
+      loginPromptEn: heroOnly("loginPromptEn"),
+      loginLinkTextEn: heroOnly("loginLinkTextEn"),
+    };
+    if (
+      exceedsLength(english.eyebrowEn, 120) ||
+      exceedsLength(english.titleEn, 200) ||
+      exceedsLength(english.descriptionEn, 1000) ||
+      exceedsLength(english.ctaTextEn, 80) ||
+      exceedsLength(english.loginPromptEn, 120) ||
+      exceedsLength(english.loginLinkTextEn, 80)
+    ) {
+      res.status(400).json({ error: "文字內容過長" });
+      return;
+    }
+
     if (id === "hero") {
       if (!eyebrow || !ctaText || !loginPrompt || !loginLinkText) {
         res.status(400).json({ error: "請填寫首頁英雄區所有文字欄位" });
@@ -102,6 +125,7 @@ router.patch(
         ctaText: id === "hero" ? ctaText : null,
         loginPrompt: id === "hero" ? loginPrompt : null,
         loginLinkText: id === "hero" ? loginLinkText : null,
+        ...english,
       });
 
       if (!section) {

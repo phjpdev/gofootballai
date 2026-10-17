@@ -1,17 +1,10 @@
 "use client";
 
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 
 const PERIOD_TABS = ["1d", "1w", "1m", "1y", "all"] as const;
 type PeriodTabKey = (typeof PERIOD_TABS)[number];
-
-const PERIOD_TAB_LABEL: Record<PeriodTabKey, string> = {
-  "1d": "1日",
-  "1w": "1週",
-  "1m": "1月",
-  "1y": "1年",
-  all: "全部",
-};
 
 const MATCH_MINUTE_TABS = ["15", "30", "45", "60", "75", "90"] as const;
 type MatchMinuteTabKey = (typeof MATCH_MINUTE_TABS)[number];
@@ -40,6 +33,7 @@ export function TabGroup({
   variant = "dark",
   className,
 }: TabGroupProps) {
+  const { t } = useI18n();
   const isMatchMinutes = preset === "matchMinutes";
   const tabs = isMatchMinutes ? MATCH_MINUTE_TABS : PERIOD_TABS;
   const defaultActive = isMatchMinutes ? "15" : "1d";
@@ -57,7 +51,7 @@ export function TabGroup({
         const isActive = tab === resolvedActive;
         const label = isMatchMinutes
           ? MATCH_MINUTE_TAB_LABEL[tab as MatchMinuteTabKey]
-          : PERIOD_TAB_LABEL[tab as PeriodTabKey];
+          : t.layout.periodTabs[tab as PeriodTabKey];
 
         return (
           <button

@@ -1,4 +1,5 @@
 import type { HomeSection, HomeSectionId } from "@/lib/data/home-sections";
+import { readApiError } from "@/lib/i18n/api-errors";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -11,6 +12,12 @@ type ApiHomeSection = {
   ctaText: string | null;
   loginPrompt: string | null;
   loginLinkText: string | null;
+  eyebrowEn: string | null;
+  titleEn: string | null;
+  descriptionEn: string | null;
+  ctaTextEn: string | null;
+  loginPromptEn: string | null;
+  loginLinkTextEn: string | null;
 };
 
 function mapHomeSection(section: ApiHomeSection): HomeSection {
@@ -23,6 +30,12 @@ function mapHomeSection(section: ApiHomeSection): HomeSection {
     ctaText: section.ctaText,
     loginPrompt: section.loginPrompt,
     loginLinkText: section.loginLinkText,
+    eyebrowEn: section.eyebrowEn,
+    titleEn: section.titleEn,
+    descriptionEn: section.descriptionEn,
+    ctaTextEn: section.ctaTextEn,
+    loginPromptEn: section.loginPromptEn,
+    loginLinkTextEn: section.loginLinkTextEn,
   };
 }
 
@@ -35,14 +48,7 @@ export function resolveHomeSectionImageUrl(src: string): string {
   return src;
 }
 
-async function parseError(response: Response): Promise<string> {
-  try {
-    const data = (await response.json()) as { error?: string };
-    return data.error ?? "請求失敗，請稍後再試";
-  } catch {
-    return "請求失敗，請稍後再試";
-  }
-}
+const parseError = readApiError;
 
 export async function fetchHomeSections(): Promise<HomeSection[]> {
   const response = await fetch(`${API_URL}/api/home-sections/public`, {
@@ -64,6 +70,12 @@ export type HomeSectionInput = {
   ctaText?: string;
   loginPrompt?: string;
   loginLinkText?: string;
+  eyebrowEn?: string;
+  titleEn?: string;
+  descriptionEn?: string;
+  ctaTextEn?: string;
+  loginPromptEn?: string;
+  loginLinkTextEn?: string;
   file?: File;
 };
 
@@ -82,6 +94,17 @@ export async function updateHomeSection(
   }
   if (input.loginLinkText !== undefined) {
     formData.append("loginLinkText", input.loginLinkText);
+  }
+  for (const key of [
+    "eyebrowEn",
+    "titleEn",
+    "descriptionEn",
+    "ctaTextEn",
+    "loginPromptEn",
+    "loginLinkTextEn",
+  ] as const) {
+    const value = input[key];
+    if (value !== undefined) formData.append(key, value);
   }
   if (input.file) formData.append("file", input.file);
 

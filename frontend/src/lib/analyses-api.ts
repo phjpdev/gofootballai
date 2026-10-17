@@ -3,23 +3,20 @@ import type {
   MatchAnalysisResult,
   PrewarmResult,
 } from "@/types/analysis";
+import { readApiError } from "@/lib/i18n/api-errors";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
-async function parseError(response: Response): Promise<string> {
-  try {
-    const data = (await response.json()) as { error?: string };
-    return data.error ?? "請求失敗，請稍後再試";
-  } catch {
-    return "請求失敗，請稍後再試";
-  }
-}
+const parseError = readApiError;
 
 export async function fetchMatchAnalysis(
   token: string,
   matchId: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<AnalysisResponse> {
-  const response = await fetch(`${API_URL}/api/analyses/${matchId}`, {
+  const query = locale === "en" ? "?lang=en" : "";
+  const response = await fetch(`${API_URL}/api/analyses/${matchId}${query}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });

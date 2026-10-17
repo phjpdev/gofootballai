@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Clock, FileText } from "lucide-react";
 import { TeamLogoImage } from "@/components/cards/TeamLogoImage";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { localizedMatchTitle } from "@/lib/i18n/localized";
 import type { HkjcMatch } from "@/types/hkjc";
 
 function MatchLogoBox({
@@ -72,6 +76,7 @@ type HkjcMatchCardProps = {
 };
 
 export function HkjcMatchCard({ match, href, analysisScore }: HkjcMatchCardProps) {
+  const { locale, t } = useI18n();
   const homeOdds = match.hadOdds ? Number.parseFloat(match.hadOdds.home) : 2;
   const implied = Math.min(95, Math.round((1 / homeOdds) * 100));
 
@@ -92,7 +97,7 @@ export function HkjcMatchCard({ match, href, analysisScore }: HkjcMatchCardProps
           <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:gap-2">
             <div className="flex items-center gap-1.5">
               <h3 className="truncate text-sm font-bold tracking-[-0.04px] text-white sm:text-base">
-                {match.homeTeam} 對 {match.awayTeam}
+                {localizedMatchTitle(locale, match)}
               </h3>
               <span className="flex h-5 shrink-0 items-center justify-center rounded-md bg-white/15 px-1.5 text-[10px] font-semibold text-white sm:h-6 sm:rounded-lg sm:px-2 sm:text-xs">
                 {match.tournamentCode}
@@ -130,7 +135,7 @@ export function HkjcMatchCard({ match, href, analysisScore }: HkjcMatchCardProps
                 <>
                   <span className="size-1 rounded-full bg-gray-70" />
                   <span className="text-xs font-medium text-white sm:text-sm">
-                    主 {match.hadOdds.home}
+                    {t.common.home} {match.hadOdds.home}
                   </span>
                   <span className="text-xs font-medium text-gray-40 sm:text-sm">
                     {implied}%

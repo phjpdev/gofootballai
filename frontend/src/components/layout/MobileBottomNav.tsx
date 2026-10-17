@@ -9,9 +9,11 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { NAV } from "@/lib/i18n/zh-hk";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import type { Messages } from "@/lib/i18n/messages";
 import { cn } from "@/lib/utils";
 import { TelegramIcon, TELEGRAM_URL } from "@/components/icons/TelegramIcon";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
 
 type NavIcon = LucideIcon | typeof TelegramIcon;
 
@@ -26,18 +28,20 @@ type NavItem =
     }
   | { href: string; label: string; logo: true; hideLabel?: boolean; icon?: never; external?: false };
 
-const NAV_ITEMS: NavItem[] = [
-  { href: "/home", label: NAV.home, icon: Home },
-  { href: "/analysis", label: NAV.analysis, logo: true, hideLabel: true },
-  { href: "/records", label: NAV.records, icon: FolderOpen },
-  { href: "/member", label: NAV.member, icon: Users },
-  {
-    href: TELEGRAM_URL,
-    label: NAV.telegram,
-    icon: TelegramIcon,
-    external: true,
-  },
-];
+function navItems(nav: Messages["layout"]["nav"]): NavItem[] {
+  return [
+    { href: "/home", label: nav.home, icon: Home },
+    { href: "/analysis", label: nav.analysis, logo: true, hideLabel: true },
+    { href: "/records", label: nav.records, icon: FolderOpen },
+    { href: "/member", label: nav.member, icon: Users },
+    {
+      href: TELEGRAM_URL,
+      label: nav.telegram,
+      icon: TelegramIcon,
+      external: true,
+    },
+  ];
+}
 
 function isNavActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -45,15 +49,25 @@ function isNavActive(pathname: string, href: string) {
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const compact = NAV_ITEMS.length >= 5;
+  const { t } = useI18n();
+  const items = navItems(t.layout.nav);
+  const compact = items.length >= 5;
 
   return (
     <nav
-      aria-label="主要導覽"
-      className="z-50 shrink-0 overflow-visible border-t border-gray-90 bg-black pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_32px_rgba(0,0,0,0.35)] lg:hidden"
+      aria-label={t.layout.nav.mainNavigation}
+      className="relative z-50 shrink-0 overflow-visible border-t border-gray-90 bg-black pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_32px_rgba(0,0,0,0.35)] lg:hidden"
     >
+      {/* Mobile has no header on most pages, so the switch floats just above the
+          nav. /home's pager controls sit there, so its hero carries the switch. */}
+      {pathname !== "/home" && (
+        <LanguageToggle
+          variant="compact"
+          className="absolute right-3 bottom-[calc(100%+12px)]"
+        />
+      )}
       <div className="flex w-full items-end justify-around px-2 py-1">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const { href, label } = item;
           const isExternal = "external" in item && item.external;
           const isActive = !isExternal && isNavActive(pathname, href);

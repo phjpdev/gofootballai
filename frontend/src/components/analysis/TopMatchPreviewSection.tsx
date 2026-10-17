@@ -16,9 +16,11 @@ import {
 import { fetchTopMatchPreviews } from "@/lib/top-match-previews-api";
 import { findTopConfidenceMatchIds, loadMatchesForDate, resolveTopPicksDateKey } from "@/lib/top-match";
 import { getTodayDateKeyHk } from "@/lib/hkjc/past-dates";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import type { TopMatchPreviewSlot } from "@/lib/data/top-match-previews";
 
 export function TopMatchPreviewSection() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const dateKey = searchParams.get("date") ?? getTodayDateKeyHk();
   const { token, isAuthenticated, isMember, isAdmin, isLoading: authLoading } =
@@ -98,14 +100,14 @@ export function TopMatchPreviewSection() {
   return (
     <section className="flex flex-col gap-4">
       <SubNav
-        title="AI 精選預測"
+        title={t.analysis.topPicksTitle}
         count={matchIds.length}
         titleAction={
           isAdmin ? (
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              aria-label="編輯 AI 精選預測"
+              aria-label={t.analysis.topPreview.editAriaLabel}
               className="flex size-8 shrink-0 items-center justify-center rounded-[12px] bg-gray-90 text-orange-50 transition-colors hover:bg-gray-80"
             >
               <Pencil className="size-4" strokeWidth={2.25} />

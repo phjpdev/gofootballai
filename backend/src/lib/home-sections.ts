@@ -1,4 +1,5 @@
 import { query } from "./db.js";
+import { pushEnglishSets } from "./english-fields.js";
 
 export type HomeSectionId =
   | "hero"
@@ -17,6 +18,21 @@ export type HomeSection = {
   ctaText: string | null;
   loginPrompt: string | null;
   loginLinkText: string | null;
+  eyebrowEn: string | null;
+  titleEn: string | null;
+  descriptionEn: string | null;
+  ctaTextEn: string | null;
+  loginPromptEn: string | null;
+  loginLinkTextEn: string | null;
+};
+
+export type HomeSectionEnglishInput = {
+  eyebrowEn?: string | null;
+  titleEn?: string | null;
+  descriptionEn?: string | null;
+  ctaTextEn?: string | null;
+  loginPromptEn?: string | null;
+  loginLinkTextEn?: string | null;
 };
 
 type HomeSectionRow = {
@@ -28,7 +44,25 @@ type HomeSectionRow = {
   cta_text: string | null;
   login_prompt: string | null;
   login_link_text: string | null;
+  eyebrow_en: string | null;
+  title_en: string | null;
+  description_en: string | null;
+  cta_text_en: string | null;
+  login_prompt_en: string | null;
+  login_link_text_en: string | null;
   sort_order: number;
+};
+
+const SECTION_COLUMNS = `id, eyebrow, title, description, image_src,
+       cta_text, login_prompt, login_link_text,
+       eyebrow_en, title_en, description_en, cta_text_en,
+       login_prompt_en, login_link_text_en, sort_order`;
+
+const NO_ENGLISH = {
+  eyebrowEn: null,
+  ctaTextEn: null,
+  loginPromptEn: null,
+  loginLinkTextEn: null,
 };
 
 const DEFAULT_SECTIONS: HomeSection[] = [
@@ -42,6 +76,13 @@ const DEFAULT_SECTIONS: HomeSection[] = [
     ctaText: "立即開始",
     loginPrompt: "已有帳戶？",
     loginLinkText: "登入",
+    eyebrowEn: "GO Football AI",
+    titleEn: "Welcome to GO Football AI",
+    descriptionEn:
+      "An AI-driven football analysis platform built for bettors who want rational decisions and steady returns.",
+    ctaTextEn: "Get started",
+    loginPromptEn: "Already have an account?",
+    loginLinkTextEn: "Log in",
   },
   {
     id: "score",
@@ -53,6 +94,10 @@ const DEFAULT_SECTIONS: HomeSection[] = [
     ctaText: null,
     loginPrompt: null,
     loginLinkText: null,
+    ...NO_ENGLISH,
+    titleEn: "Every match, precisely calculated",
+    descriptionEn:
+      "In-depth professional analysis with high-accuracy confidence scores (90%+) to help you find real value bets.",
   },
   {
     id: "daily",
@@ -64,6 +109,10 @@ const DEFAULT_SECTIONS: HomeSection[] = [
     ctaText: null,
     loginPrompt: null,
     loginLinkText: null,
+    ...NO_ENGLISH,
+    titleEn: "Leagues from around the world",
+    descriptionEn:
+      "Every major competition updated live, every day. Follow top leagues and lesser-known fixtures with ease.",
   },
   {
     id: "metrics",
@@ -75,6 +124,10 @@ const DEFAULT_SECTIONS: HomeSection[] = [
     ctaText: null,
     loginPrompt: null,
     loginLinkText: null,
+    ...NO_ENGLISH,
+    titleEn: "Committed to professional analysis",
+    descriptionEn:
+      "No proxy betting, no shady syndicates: only purely data-driven, rational advice to help you build a lasting edge.",
   },
   {
     id: "records",
@@ -86,6 +139,10 @@ const DEFAULT_SECTIONS: HomeSection[] = [
     ctaText: null,
     loginPrompt: null,
     loginLinkText: null,
+    ...NO_ENGLISH,
+    titleEn: "Member profit records",
+    descriptionEn:
+      "Real member betting records and profit statistics, shown transparently. See the steady returns and follow professional analysis with confidence.",
   },
   {
     id: "rating",
@@ -97,6 +154,10 @@ const DEFAULT_SECTIONS: HomeSection[] = [
     ctaText: null,
     loginPrompt: null,
     loginLinkText: null,
+    ...NO_ENGLISH,
+    titleEn: "Easy to use · 5-star betting experience",
+    descriptionEn:
+      "A clean, intuitive interface and smart recommendations make professional analysis fast and enjoyable, anytime, anywhere.",
   },
 ];
 
@@ -110,6 +171,12 @@ function mapHomeSection(row: HomeSectionRow): HomeSection {
     ctaText: row.cta_text,
     loginPrompt: row.login_prompt,
     loginLinkText: row.login_link_text,
+    eyebrowEn: row.eyebrow_en,
+    titleEn: row.title_en,
+    descriptionEn: row.description_en,
+    ctaTextEn: row.cta_text_en,
+    loginPromptEn: row.login_prompt_en,
+    loginLinkTextEn: row.login_link_text_en,
   };
 }
 
@@ -135,12 +202,39 @@ export async function seedHomeSections(): Promise<void> {
       ],
     );
   }
+  await fillDefaultEnglish();
+}
+
+/**
+ * Give untouched default sections their English text. Only where the Chinese
+ * is still the seeded default and no English was set, so admin edits always win.
+ */
+async function fillDefaultEnglish(): Promise<void> {
+  const pairs = [
+    ["eyebrow", "eyebrow_en", "eyebrow", "eyebrowEn"],
+    ["title", "title_en", "title", "titleEn"],
+    ["description", "description_en", "description", "descriptionEn"],
+    ["cta_text", "cta_text_en", "ctaText", "ctaTextEn"],
+    ["login_prompt", "login_prompt_en", "loginPrompt", "loginPromptEn"],
+    ["login_link_text", "login_link_text_en", "loginLinkText", "loginLinkTextEn"],
+  ] as const;
+  for (const section of DEFAULT_SECTIONS) {
+    for (const [zhColumn, enColumn, zhKey, enKey] of pairs) {
+      const zh = section[zhKey];
+      const en = section[enKey];
+      if (!zh || !en) continue;
+      await query(
+        `UPDATE home_sections SET ${enColumn} = $3
+         WHERE id = $1 AND ${zhColumn} = $2 AND ${enColumn} IS NULL`,
+        [section.id, zh, en],
+      );
+    }
+  }
 }
 
 export async function listHomeSections(): Promise<HomeSection[]> {
   const result = await query<HomeSectionRow>(
-    `SELECT id, eyebrow, title, description, image_src,
-            cta_text, login_prompt, login_link_text, sort_order
+    `SELECT ${SECTION_COLUMNS}
      FROM home_sections
      ORDER BY sort_order ASC, id ASC`,
   );
@@ -152,8 +246,7 @@ export async function getHomeSectionById(
   id: HomeSectionId,
 ): Promise<HomeSection | null> {
   const result = await query<HomeSectionRow>(
-    `SELECT id, eyebrow, title, description, image_src,
-            cta_text, login_prompt, login_link_text, sort_order
+    `SELECT ${SECTION_COLUMNS}
      FROM home_sections
      WHERE id = $1`,
     [id],
@@ -173,31 +266,43 @@ export async function updateHomeSection(
     ctaText?: string | null;
     loginPrompt?: string | null;
     loginLinkText?: string | null;
-  },
+  } & HomeSectionEnglishInput,
 ): Promise<HomeSection | null> {
+  const sets = [
+    "eyebrow = $2",
+    "title = $3",
+    "description = $4",
+    "image_src = COALESCE($5, image_src)",
+    "cta_text = $6",
+    "login_prompt = $7",
+    "login_link_text = $8",
+    "updated_at = NOW()",
+  ];
+  const params: unknown[] = [
+    id,
+    input.eyebrow ?? null,
+    input.title,
+    input.description,
+    input.imageSrc ?? null,
+    input.ctaText ?? null,
+    input.loginPrompt ?? null,
+    input.loginLinkText ?? null,
+  ];
+  pushEnglishSets(sets, params, [
+    ["eyebrow_en", input.eyebrowEn],
+    ["title_en", input.titleEn],
+    ["description_en", input.descriptionEn],
+    ["cta_text_en", input.ctaTextEn],
+    ["login_prompt_en", input.loginPromptEn],
+    ["login_link_text_en", input.loginLinkTextEn],
+  ]);
+
   const result = await query<HomeSectionRow>(
     `UPDATE home_sections
-     SET eyebrow = $2,
-         title = $3,
-         description = $4,
-         image_src = COALESCE($5, image_src),
-         cta_text = $6,
-         login_prompt = $7,
-         login_link_text = $8,
-         updated_at = NOW()
+     SET ${sets.join(", ")}
      WHERE id = $1
-     RETURNING id, eyebrow, title, description, image_src,
-               cta_text, login_prompt, login_link_text, sort_order`,
-    [
-      id,
-      input.eyebrow ?? null,
-      input.title,
-      input.description,
-      input.imageSrc ?? null,
-      input.ctaText ?? null,
-      input.loginPrompt ?? null,
-      input.loginLinkText ?? null,
-    ],
+     RETURNING ${SECTION_COLUMNS}`,
+    params,
   );
 
   const row = result.rows[0];

@@ -100,6 +100,7 @@ export function hkjcMatchToLegacy(match: HkjcMatch) {
     date: match.matchDate,
     time: match.kickOffLabel,
     venue: match.tournamentName,
+    tournamentNameEn: match.tournamentNameEn,
     frontEndId: match.frontEndId,
     hadOdds: match.hadOdds,
     homeTeam: match.homeTeam,

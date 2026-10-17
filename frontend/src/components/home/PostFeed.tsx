@@ -5,19 +5,21 @@ import { RecordCard } from "@/components/records/RecordCard";
 import { RecordDetailModal } from "@/components/records/RecordDetailModal";
 import { SubNav } from "@/components/layout/SubNav";
 import { usePosts } from "@/context/PostsContext";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import type { Post } from "@/types";
 
 export function PostFeed() {
   const { posts } = usePosts();
+  const { t } = useI18n();
   const [viewingRecord, setViewingRecord] = useState<Post | null>(null);
 
   if (posts.length === 0) {
     return (
       <section className="flex flex-col gap-3">
-        <SubNav title="最新動態" />
+        <SubNav title={t.home.postFeed.title} />
         <div className="flex h-[320px] items-center justify-center rounded-[20px] bg-gray-90 p-6 text-center lg:max-w-md">
           <p className="text-sm leading-[1.6] text-gray-40">
-            暫無最新資訊，管理員上傳後會顯示於此。
+            {t.home.postFeed.empty}
           </p>
         </div>
       </section>
@@ -26,7 +28,7 @@ export function PostFeed() {
 
   return (
     <section className="flex flex-col gap-4">
-      <SubNav title="最新動態" count={posts.length} />
+      <SubNav title={t.home.postFeed.title} count={posts.length} />
       <div className="record-grid">
         {posts.map((post) => (
           <RecordCard

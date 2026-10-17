@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BarChart2, LayoutDashboard } from "lucide-react";
 import { QAAccordion } from "@/components/member/QAAccordion";
 import { useAuth } from "@/context/AuthContext";
-import { NAV } from "@/lib/i18n/zh-hk";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import type { QAItem } from "@/types";
 
 type MemberFaqSectionProps = {
@@ -13,25 +13,26 @@ type MemberFaqSectionProps = {
 
 export function MemberFaqSection({ items }: MemberFaqSectionProps) {
   const { isAdmin } = useAuth();
+  const { t } = useI18n();
 
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-bold tracking-[-0.048px] text-white">
-          常見問題
+          {t.member.faq.title}
         </h2>
         {isAdmin && (
           <div className="flex items-center gap-2">
             <Link
               href="/admin/results"
-              aria-label="勝率結果"
+              aria-label={t.member.faq.winRateResults}
               className="flex size-10 shrink-0 items-center justify-center rounded-[14px] bg-gray-90 text-orange-50 transition-colors hover:bg-gray-80"
             >
               <BarChart2 className="size-5" strokeWidth={2.5} />
             </Link>
             <Link
               href="/admin"
-              aria-label={NAV.manage}
+              aria-label={t.layout.nav.manage}
               className="flex size-10 shrink-0 items-center justify-center rounded-[14px] bg-gray-90 text-orange-50 transition-colors hover:bg-gray-80"
             >
               <LayoutDashboard className="size-5" strokeWidth={2.5} />

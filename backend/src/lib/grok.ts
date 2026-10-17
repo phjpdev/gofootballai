@@ -56,7 +56,16 @@ function extractJson(content: string): unknown {
   throw new Error("Grok response did not contain JSON");
 }
 
-async function callGrok(matchOddsBlock: string): Promise<GrokAnalysisResult> {
+/**
+ * One JSON-mode chat completion. Returns the parsed JSON plus the raw payload.
+ * Throws "Grok API error <status>" / "Grok API 逾時" so retry logic can classify.
+ */
+export async function requestGrokJson(input: {
+  system: string;
+  user: string;
+  temperature: number;
+  maxTokens: number;
+}): Promise<{ json: unknown; rawResponse: GrokResponse; model: string }> {
   const model = getModel();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GROK_TIMEOUT_MS);
@@ -71,15 +80,12 @@ async function callGrok(matchOddsBlock: string): Promise<GrokAnalysisResult> {
       signal: controller.signal,
       body: JSON.stringify({
         model,
-        temperature: 0.2,
-        max_tokens: 900,
+        temperature: input.temperature,
+        max_tokens: input.maxTokens,
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: MATCH_ANALYSIS_SYSTEM_PROMPT },
-          {
-            role: "user",
-            content: buildMatchAnalysisUserPrompt(matchOddsBlock),
-          },
+          { role: "system", content: input.system },
+          { role: "user", content: input.user },
         ],
       }),
     });
@@ -95,14 +101,7 @@ async function callGrok(matchOddsBlock: string): Promise<GrokAnalysisResult> {
       throw new Error("Grok returned empty content");
     }
 
-    const parsed = extractJson(content);
-    const analysis = matchAnalysisSchema.parse(normalizeGrokAnalysis(parsed));
-
-    return {
-      analysis,
-      rawResponse: payload,
-      model,
-    };
+    return { json: extractJson(content), rawResponse: payload, model };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error("Grok API 逾時，請稍後再試");
@@ -111,6 +110,22 @@ async function callGrok(matchOddsBlock: string): Promise<GrokAnalysisResult> {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function callGrok(matchOddsBlock: string): Promise<GrokAnalysisResult> {
+  const { json, rawResponse, model } = await requestGrokJson({
+    system: MATCH_ANALYSIS_SYSTEM_PROMPT,
+    user: buildMatchAnalysisUserPrompt(matchOddsBlock),
+    temperature: 0.2,
+    maxTokens: 900,
+  });
+  const analysis = matchAnalysisSchema.parse(normalizeGrokAnalysis(json));
+
+  return {
+    analysis,
+    rawResponse,
+    model,
+  };
 }
 
 export async function generateMatchAnalysis(

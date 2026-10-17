@@ -1,3 +1,5 @@
+import { localizeApiError, readApiError } from "@/lib/i18n/api-errors";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 export type UserRole = "member" | "admin";
@@ -15,14 +17,7 @@ type AuthResponse = {
   user: AuthUser;
 };
 
-async function parseError(response: Response): Promise<string> {
-  try {
-    const data = (await response.json()) as { error?: string };
-    return data.error ?? "請求失敗，請稍後再試";
-  } catch {
-    return "請求失敗，請稍後再試";
-  }
-}
+const parseError = readApiError;
 
 export async function signupRequest(
   username: string,
@@ -74,7 +69,7 @@ export async function meRequest(token: string): Promise<AuthUser> {
   });
 
   if (!response.ok) {
-    throw new Error("登入已過期，請重新登入");
+    throw new Error(localizeApiError("登入已過期，請重新登入"));
   }
 
   const data = (await response.json()) as { user: AuthUser };

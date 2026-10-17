@@ -10,6 +10,7 @@ import {
   upload,
 } from "../lib/upload.js";
 import { requireAdmin, requireAuth, type AuthedRequest } from "../middleware/auth.js";
+import { exceedsLength, readEnglishField } from "../lib/english-fields.js";
 
 const router = Router();
 
@@ -57,6 +58,22 @@ router.patch(
       return;
     }
 
+    const english = {
+      titleEn: readEnglishField(req.body, "titleEn"),
+      tagEn: readEnglishField(req.body, "tagEn"),
+      durationEn: readEnglishField(req.body, "durationEn"),
+      statEn: readEnglishField(req.body, "statEn"),
+    };
+    if (
+      exceedsLength(english.titleEn, 120) ||
+      exceedsLength(english.tagEn, 60) ||
+      exceedsLength(english.durationEn, 60) ||
+      exceedsLength(english.statEn, 60)
+    ) {
+      res.status(400).json({ error: "文字內容過長" });
+      return;
+    }
+
     let imageSrc: string | undefined;
 
     if (req.file) {
@@ -75,6 +92,7 @@ router.patch(
         duration,
         stat,
         imageSrc,
+        ...english,
       });
 
       if (!item) {

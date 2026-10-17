@@ -32,12 +32,17 @@ import {
 } from "@/lib/hkjc/past-dates";
 import { fetchHkjcMatchesFromApi } from "@/lib/hkjc/matches-api";
 import { useAuth } from "@/context/AuthContext";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { formatWeekdayFromKey } from "@/lib/i18n/format";
 import type { HkjcDateItem, HkjcMatch, HkjcMatchesResponse } from "@/types/hkjc";
+
+/** Key into `t.analysis.matchList`, resolved at render so it follows the locale. */
+type HkjcLoadError = "refreshFailed" | "loadFailed";
 
 type HkjcContextValue = {
   data: HkjcMatchesResponse | null;
   loading: boolean;
-  error: string | null;
+  error: HkjcLoadError | null;
   selectedIndex: number;
   setSelectedIndex: (index: number) => void;
   reload: (refresh?: boolean) => Promise<void>;
@@ -58,7 +63,7 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<HkjcMatchesResponse | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<HkjcLoadError | null>(null);
   const [archivedHasEventByKey, setArchivedHasEventByKey] = useState<
     Record<string, boolean>
   >({});
@@ -127,9 +132,9 @@ export function HkjcProvider({ children }: { children: React.ReactNode }) {
     } catch {
       setData((current) => {
         if (current?.total) {
-          setError("無法更新賽事資料，顯示上次快取結果。");
+          setError("refreshFailed");
         } else {
-          setError("無法載入馬會賽事資料，請稍後再試。");
+          setError("loadFailed");
         }
         return current;
       });
@@ -312,6 +317,7 @@ function useHkjc() {
 export { useHkjc };
 
 export function HkjcDatePicker() {
+  const { locale } = useI18n();
   const {
     loading,
     selectedIndex,
@@ -324,7 +330,7 @@ export function HkjcDatePicker() {
   const datePickerItems = useMemo(
     () => {
       const liveItems = pickerLiveDates.map((date) => ({
-        day: date.day,
+        day: formatWeekdayFromKey(date.key, locale),
         date: date.date,
         hasEvent: date.hasEvent,
       }));
@@ -334,14 +340,14 @@ export function HkjcDatePicker() {
       }
 
       const archivedItems = archivedDates.map((date) => ({
-        day: date.day,
+        day: formatWeekdayFromKey(date.key, locale),
         date: date.date,
         hasEvent: date.hasEvent,
       }));
 
       return [...archivedItems, ...liveItems];
     },
-    [pickerLiveDates, archivedDates, adminPastTabCount],
+    [pickerLiveDates, archivedDates, adminPastTabCount, locale],
   );
 
   if (loading || datePickerItems.length === 0) {
@@ -379,6 +385,7 @@ export function HkjcMatchesSection({
   } = useHkjc();
   const { token, isAuthenticated, isMember, isAdmin, isLoading: authLoading } =
     useAuth();
+  const { t } = useI18n();
   const [analysisScores, setAnalysisScores] = useState<Record<string, number>>(
     {},
   );
@@ -541,13 +548,13 @@ export function HkjcMatchesSection({
   if (error) {
     return (
       <div className="rounded-[24px] bg-gray-90 p-6 text-center">
-        <p className="text-sm text-gray-40">{error}</p>
+        <p className="text-sm text-gray-40">{t.analysis.matchList[error]}</p>
         <button
           type="button"
           onClick={() => void reload(true)}
           className="mt-3 text-sm font-medium text-orange-50"
         >
-          重試
+          {t.common.retry}
         </button>
       </div>
     );
@@ -565,37 +572,39 @@ export function HkjcMatchesSection({
     <section className="flex flex-col gap-4">
       <div className="flex items-end justify-between gap-3">
         <SubNav
-          title={isTopPicks ? "AI 精選預測" : "賽事列表"}
+          title={isTopPicks ? t.analysis.topPicksTitle : t.analysis.matchList.title}
           count={isTopPicks ? scoredCount || displayMatches.length : matches.length}
         />
         {data?.updatedAt && (
           <p className="pb-0.5 text-[10px] font-medium text-gray-60">
             {viewingArchived
-              ? `資料庫 · ${matches.length} 場過往賽事`
+              ? t.analysis.matchList.archivedSummary(matches.length)
               : mergeTodayPassed && todayPassedMatches.length > 0
-                ? `馬會 · 含 ${todayPassedMatches.length} 場今日已開賽`
+                ? t.analysis.matchList.todayPassedSummary(todayPassedMatches.length)
                 : isTopPicks
-                  ? `按 AI 評分排序 · ${scoredCount} 場`
-                  : `馬會 · ${data.total} 場進行中`}
+                  ? t.analysis.matchList.topPicksSummary(scoredCount)
+                  : t.analysis.matchList.liveSummary(data.total)}
           </p>
         )}
       </div>
 
       {isTopPicks && scoresLoading && (
-        <p className="text-xs text-gray-40">正在載入 AI 評分…</p>
+        <p className="text-xs text-gray-40">{t.analysis.matchList.loadingScores}</p>
       )}
 
       {displayMatches.length === 0 ? (
         <div className="rounded-[24px] bg-gray-90 p-6 text-center">
           <p className="text-sm text-gray-40">
-            {viewingArchived ? "此日期暫無已儲存的過往賽事。" : "此日期暫無馬會賽事。"}
+            {viewingArchived
+              ? t.analysis.matchList.emptyArchived
+              : t.analysis.matchList.empty}
           </p>
           <button
             type="button"
             onClick={() => void reload(true)}
             className="mt-3 text-sm font-medium text-orange-50"
           >
-            重新載入
+            {t.analysis.matchList.reload}
           </button>
         </div>
       ) : (

@@ -3,22 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { ImageIcon, Loader2, Star, Upload, Video, X } from "lucide-react";
 import { usePosts } from "@/context/PostsContext";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import type { Post } from "@/types";
 
-const MEDIA_TYPES: { value: "photo" | "video"; label: string }[] = [
-  { value: "photo", label: "相片" },
-  { value: "video", label: "影片" },
-];
+const MEDIA_TYPES = ["photo", "video"] as const;
 
 const fieldClass =
   "shrink-0 rounded-[14px] bg-gray-80 px-4 py-3 text-sm leading-normal text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40";
 
-const TYPE_LABEL: Record<"photo" | "video", string> = {
-  photo: "相片",
-  video: "影片",
-};
-
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
+
+const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1024 * 1024);
 
 const VIDEO_ACCEPT =
   "video/mp4,video/quicktime,video/webm,video/x-m4v,.mp4,.mov,.m4v,.webm,.avi,.mkv,.3gp";
@@ -55,12 +50,16 @@ export function CreateRecordModal({
   record?: Post | null;
 }) {
   const { addPost, editPost } = usePosts();
+  const { t } = useI18n();
+  const copy = t.records.form;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditing = !!record;
   const [type, setType] = useState<"photo" | "video">("photo");
   const [title, setTitle] = useState("");
+  const [titleEn, setTitleEn] = useState("");
   const [displayDate, setDisplayDate] = useState(todayDateInputValue());
   const [content, setContent] = useState("");
+  const [contentEn, setContentEn] = useState("");
   const [starRating, setStarRating] = useState("5.0");
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -74,8 +73,10 @@ export function CreateRecordModal({
     if (record) {
       setType(record.type === "video" ? "video" : "photo");
       setTitle(record.title);
+      setTitleEn(record.titleEn ?? "");
       setDisplayDate(resolveDisplayDate(record));
       setContent(record.content ?? "");
+      setContentEn(record.contentEn ?? "");
       setStarRating(
         record.starRating !== undefined ? String(record.starRating) : "0",
       );
@@ -87,8 +88,10 @@ export function CreateRecordModal({
     }
     setType("photo");
     setTitle("");
+    setTitleEn("");
     setDisplayDate(todayDateInputValue());
     setContent("");
+    setContentEn("");
     setStarRating("5.0");
     setFile(null);
       setPreviewUrl(null);
@@ -137,7 +140,7 @@ export function CreateRecordModal({
     }
 
     if (selected.size > MAX_UPLOAD_BYTES) {
-      setError(`檔案大小不能超過 ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB`);
+      setError(copy.fileTooLarge(MAX_UPLOAD_MB));
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
@@ -148,7 +151,7 @@ export function CreateRecordModal({
     } else if (isPhotoFile(selected)) {
       if (type !== "photo") setType("photo");
     } else {
-      setError("請選擇有效的圖片或影片檔案（例如 JPG、PNG、MP4、MOV）");
+      setError(copy.invalidFile);
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
@@ -156,11 +159,7 @@ export function CreateRecordModal({
 
     setFile(selected);
     setError("");
-    setVideoNotice(
-      isVideoFile(selected)
-        ? "iPhone 影片上傳後會自動轉換為網頁可播放格式，轉換可能需要 1–2 分鐘。"
-        : "",
-    );
+    setVideoNotice(isVideoFile(selected) ? copy.videoNotice : "");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -169,7 +168,7 @@ export function CreateRecordModal({
 
     const rating = Number(starRating);
     if (!Number.isFinite(rating) || rating < 0 || rating > 5) {
-      setError("請填寫 0 至 5 的星級評分");
+      setError(copy.invalidRating);
       return;
     }
 
@@ -177,7 +176,7 @@ export function CreateRecordModal({
       !file && (!isEditing || !record?.mediaUrl || type !== record.type);
 
     if (needsNewFile) {
-      setError(`請選擇要上傳的${TYPE_LABEL[type]}檔案`);
+      setError(copy.fileRequired[type]);
       return;
     }
 
@@ -189,7 +188,10 @@ export function CreateRecordModal({
       const payload = {
         type,
         title: title.trim(),
+        // Always sent (even empty) so editing can clear an English override.
+        titleEn: titleEn.trim(),
         content: content.trim() || undefined,
+        contentEn: contentEn.trim(),
         displayDate,
         starRating: Math.round(rating * 10) / 10,
         file: file ?? undefined,
@@ -206,7 +208,7 @@ export function CreateRecordModal({
       }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "儲存紀錄失敗");
+      setError(err instanceof Error ? err.message : copy.saveFailed);
     } finally {
       setSubmitting(false);
       setUploadProgress(null);
@@ -218,17 +220,17 @@ export function CreateRecordModal({
   const isUploading = submitting && uploadProgress !== null;
   const submitLabel = submitting
     ? isUploading
-      ? `上傳中… ${uploadProgress}%`
-      : "儲存中…"
+      ? copy.uploadingPercent(uploadProgress)
+      : t.common.saving
     : isEditing
-      ? "儲存變更"
-      : "發佈至紀錄";
+      ? t.common.saveChanges
+      : copy.publish;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
       <button
         type="button"
-        aria-label="關閉"
+        aria-label={t.common.close}
         className="absolute inset-0 bg-black/70"
         onClick={handleClose}
         disabled={submitting}
@@ -246,9 +248,9 @@ export function CreateRecordModal({
               <p className="text-sm font-medium text-white">
                 {isUploading
                   ? uploadProgress !== null && uploadProgress >= 100
-                    ? "上傳完成，正在轉換影片格式…"
-                    : `上傳影片中… ${uploadProgress}%`
-                  : "儲存紀錄中…"}
+                    ? copy.converting
+                    : copy.uploadingVideo(uploadProgress ?? 0)
+                  : copy.savingRecord}
               </p>
               {isUploading && (
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-70">
@@ -265,12 +267,10 @@ export function CreateRecordModal({
         <div className="flex shrink-0 items-center justify-between border-b border-gray-80 px-5 py-4">
           <div>
             <h2 className="text-base font-bold text-white">
-              {isEditing ? "編輯紀錄" : "新增紀錄"}
+              {isEditing ? copy.editTitle : copy.createTitle}
             </h2>
             <p className="text-xs text-gray-40">
-              {isEditing
-                ? "更新標題、日期、描述、星級或媒體內容。"
-                : "上傳相片或影片，並填寫標題、日期、描述與星級。"}
+              {isEditing ? copy.editSubtitle : copy.createSubtitle}
             </p>
           </div>
           <button
@@ -289,7 +289,7 @@ export function CreateRecordModal({
         >
           <div className="flex flex-col gap-4 overflow-y-auto p-5">
             <div className="flex gap-2">
-              {MEDIA_TYPES.map(({ value, label }) => (
+              {MEDIA_TYPES.map((value) => (
                 <button
                   key={value}
                   type="button"
@@ -301,14 +301,14 @@ export function CreateRecordModal({
                       : "bg-gray-80 text-gray-40"
                   }`}
                 >
-                  {label}
+                  {copy.mediaTypes[value]}
                 </button>
               ))}
             </div>
 
             <input
               type="text"
-              placeholder="標題"
+              placeholder={copy.titlePlaceholder}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -316,8 +316,19 @@ export function CreateRecordModal({
               className={fieldClass}
             />
 
+            <input
+              type="text"
+              placeholder={copy.titleEnPlaceholder}
+              value={titleEn}
+              onChange={(e) => setTitleEn(e.target.value)}
+              disabled={submitting}
+              className={fieldClass}
+            />
+
             <label className="flex shrink-0 flex-col gap-1.5">
-              <span className="text-xs font-medium text-gray-30">日期</span>
+              <span className="text-xs font-medium text-gray-30">
+                {copy.dateLabel}
+              </span>
               <input
                 type="date"
                 value={displayDate}
@@ -329,9 +340,11 @@ export function CreateRecordModal({
             </label>
 
             <label className="flex shrink-0 flex-col gap-1.5">
-              <span className="text-xs font-medium text-gray-30">描述</span>
+              <span className="text-xs font-medium text-gray-30">
+                {copy.descriptionLabel}
+              </span>
               <textarea
-                placeholder="描述"
+                placeholder={copy.descriptionPlaceholder}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={4}
@@ -341,7 +354,26 @@ export function CreateRecordModal({
             </label>
 
             <label className="flex shrink-0 flex-col gap-1.5">
-              <span className="text-xs font-medium text-gray-30">星級（0–5）</span>
+              <span className="text-xs font-medium text-gray-30">
+                {copy.descriptionEnLabel}
+              </span>
+              <textarea
+                placeholder={copy.descriptionEnPlaceholder}
+                value={contentEn}
+                onChange={(e) => setContentEn(e.target.value)}
+                rows={4}
+                disabled={submitting}
+                className={`${fieldClass} min-h-[6.5rem] resize-none`}
+              />
+              <span className="text-xs text-gray-40">
+                {t.common.englishFallbackHint}
+              </span>
+            </label>
+
+            <label className="flex shrink-0 flex-col gap-1.5">
+              <span className="text-xs font-medium text-gray-30">
+                {copy.ratingLabel}
+              </span>
               <div className="flex min-h-12 shrink-0 items-center gap-3 rounded-[14px] bg-gray-80 px-4 py-3">
                 <Star className="size-4 shrink-0 fill-amber-400 text-amber-400" />
                 <input
@@ -381,12 +413,12 @@ export function CreateRecordModal({
                   {file
                     ? file.name
                     : isEditing && record?.mediaUrl && type === record.type
-                      ? "點擊以替換現有檔案"
-                      : `點擊上傳${TYPE_LABEL[type]}（或選擇其他媒體類型）`}
+                      ? copy.replaceFile
+                      : copy.uploadPrompt[type]}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-gray-40">
                   <Upload className="size-3" />
-                  上限 100 MB
+                  {copy.sizeLimit(MAX_UPLOAD_MB)}
                 </span>
               </button>
 
@@ -394,7 +426,7 @@ export function CreateRecordModal({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={previewUrl}
-                  alt="預覽"
+                  alt={copy.previewAlt}
                   className="max-h-48 w-full rounded-[14px] object-contain"
                 />
               )}

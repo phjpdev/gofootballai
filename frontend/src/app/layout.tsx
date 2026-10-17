@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
 import { PreventMobileZoom } from "@/components/layout/PreventMobileZoom";
 import { AppProviders } from "@/components/providers/AppProviders";
+import { getServerI18n, getServerLocale } from "@/lib/i18n/server";
 
 const workSans = Work_Sans({
   variable: "--font-work-sans",
@@ -21,21 +22,25 @@ export const viewport: Viewport = {
   interactiveWidget: "overlays-content",
 };
 
-export const metadata: Metadata = {
-  title: "Go Football AI",
-  description:
-    "專為香港球迷而設的 2026 世界盃 AI 分析平台，提供賽事預測、戰術拆解、球隊數據及會員最新資訊。",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerI18n();
+  return {
+    title: "Go Football AI",
+    description: t.layout.metaDescription,
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getServerLocale();
+
   return (
-    <html lang="zh-HK" className={`${workSans.variable} antialiased`}>
+    <html lang={locale} className={`${workSans.variable} antialiased`}>
       <body className="max-w-full overflow-x-hidden min-h-svh bg-gray-100 text-white lg:min-h-dvh">
-        <AppProviders>
+        <AppProviders initialLocale={locale}>
           <PreventMobileZoom />
           <AppShell>{children}</AppShell>
         </AppProviders>

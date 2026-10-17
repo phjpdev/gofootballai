@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useHomeSections } from "@/context/HomeSectionsContext";
 import type { HomeSectionId } from "@/lib/data/home-sections";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 type HomeSectionEditButtonProps = {
   sectionId: HomeSectionId;
@@ -16,6 +17,7 @@ export function HomeSectionEditButton({
 }: HomeSectionEditButtonProps) {
   const { isAdmin } = useAuth();
   const { openEditor } = useHomeSections();
+  const { t } = useI18n();
 
   if (!isAdmin) return null;
 
@@ -23,7 +25,7 @@ export function HomeSectionEditButton({
     <button
       type="button"
       onClick={() => openEditor(sectionId)}
-      aria-label="編輯區塊內容"
+      aria-label={t.home.editButton}
       className={`flex size-8 shrink-0 items-center justify-center rounded-[12px] bg-gray-90/90 text-orange-50 shadow-[0_4px_12px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:bg-gray-80 ${className}`}
     >
       <Pencil className="size-4" strokeWidth={2.25} />

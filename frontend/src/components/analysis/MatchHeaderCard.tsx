@@ -4,30 +4,60 @@ import { useEffect, useMemo, useState } from "react";
 import { Calendar, Clock, Trophy } from "lucide-react";
 import { TeamLogoImage } from "@/components/cards/TeamLogoImage";
 import type { Match } from "@/types";
+import type { Locale } from "@/lib/i18n/config";
+import { formatDate } from "@/lib/i18n/format";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import {
+  localizedTeamName,
+  localizedTournamentName,
+} from "@/lib/i18n/localized";
 import { cn } from "@/lib/utils";
 
+/** `venue` holds the Chinese tournament name; HKJC matches also carry its English name. */
+export type MatchHeaderMatch = Match;
+
 type MatchHeaderCardProps = {
-  match: Match;
+  match: MatchHeaderMatch;
   showMeta?: boolean;
   onVsClick?: () => void;
 };
 
-function parseTeamsFromTitle(title: string): { home: string; away: string } {
-  const parts = title.split(/\s*對\s*/);
-  if (parts.length === 2) {
-    return { home: parts[0].trim(), away: parts[1].trim() };
+export type MatchTeams = {
+  homeTeam: string;
+  awayTeam: string;
+  homeTeamEn?: string;
+  awayTeamEn?: string;
+};
+
+/**
+ * Chinese team names (the source of truth for picks), plus HKJC English names.
+ * Static fallback matches only have a Chinese "A 對 B" title, so split it.
+ */
+export function getMatchTeams(match: Match): MatchTeams {
+  if (match.homeTeam && match.awayTeam) {
+    return {
+      homeTeam: match.homeTeam,
+      awayTeam: match.awayTeam,
+      homeTeamEn: match.homeTeamEn,
+      awayTeamEn: match.awayTeamEn,
+    };
   }
-  return { home: title, away: "" };
+  const parts = match.title.split(/\s*對\s*/);
+  return {
+    homeTeam: parts.length === 2 ? parts[0].trim() : match.title,
+    awayTeam: parts.length === 2 ? parts[1].trim() : "",
+    homeTeamEn: match.homeTeamEn,
+    awayTeamEn: match.awayTeamEn,
+  };
 }
 
-function formatMatchDate(dateKey: string): string {
+function formatMatchDate(dateKey: string, locale: Locale): string {
   const date = new Date(`${dateKey}T12:00:00+08:00`);
   if (Number.isNaN(date.getTime())) return dateKey;
-  return date.toLocaleDateString("zh-HK", {
+  return formatDate(date, locale, {
     month: "short",
     day: "numeric",
     weekday: "short",
-    timeZone: "Asia/Hong_Kong",
   });
 }
 
@@ -44,6 +74,7 @@ function TeamColumn({
   side: "home" | "away";
   active: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <div
       className={cn(
@@ -75,7 +106,7 @@ function TeamColumn({
             : "bg-orange-50/15 text-orange-50",
         )}
       >
-        {side === "home" ? "主場" : "客場"}
+        {side === "home" ? t.matchDetail.header.home : t.matchDetail.header.away}
       </span>
       <p className="max-w-[108px] truncate text-center text-sm font-bold tracking-[-0.04px] text-white sm:max-w-[120px] sm:text-base">
         {name}
@@ -89,6 +120,7 @@ export function MatchHeaderCard({
   showMeta = true,
   onVsClick,
 }: MatchHeaderCardProps) {
+  const { locale, t } = useI18n();
   const [active, setActive] = useState(false);
 
   useEffect(() => {
@@ -101,22 +133,14 @@ export function MatchHeaderCard({
   }, []);
 
   const teams = useMemo(() => {
-    if (match.homeTeam && match.awayTeam) {
-      return {
-        home: match.homeTeam,
-        away: match.awayTeam,
-        homeEn: match.homeTeamEn,
-        awayEn: match.awayTeamEn,
-      };
-    }
-    const parsed = parseTeamsFromTitle(match.title);
+    const { homeTeam, awayTeam, homeTeamEn, awayTeamEn } = getMatchTeams(match);
     return {
-      home: parsed.home,
-      away: parsed.away,
-      homeEn: match.homeTeamEn,
-      awayEn: match.awayTeamEn,
+      home: localizedTeamName(locale, homeTeam, homeTeamEn),
+      away: localizedTeamName(locale, awayTeam, awayTeamEn),
+      homeEn: homeTeamEn,
+      awayEn: awayTeamEn,
     };
-  }, [match]);
+  }, [match, locale]);
 
   const hasScore =
     match.homeScore !== undefined && match.awayScore !== undefined;
@@ -147,7 +171,7 @@ export function MatchHeaderCard({
             <button
               type="button"
               onClick={onVsClick}
-              aria-label="編輯預測結果"
+              aria-label={t.matchDetail.header.editPick}
               className={cn(
                 "match-header-vs flex shrink-0 flex-col items-center gap-1.5 rounded-xl px-1 transition-colors hover:bg-white/8",
                 active && "match-header-vs--in",
@@ -172,7 +196,7 @@ export function MatchHeaderCard({
                 />
               )}
               <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-40">
-                {hasScore ? "完場" : "對賽"}
+                {hasScore ? t.matchDetail.header.fullTime : t.matchDetail.header.matchup}
               </span>
             </button>
           ) : (
@@ -201,7 +225,7 @@ export function MatchHeaderCard({
                 />
               )}
               <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-40">
-                {hasScore ? "完場" : "對賽"}
+                {hasScore ? t.matchDetail.header.fullTime : t.matchDetail.header.matchup}
               </span>
             </div>
           )}
@@ -228,12 +252,15 @@ export function MatchHeaderCard({
             </span>
             <span className="match-header-chip inline-flex items-center gap-1.5 rounded-full bg-white/8 px-3 py-1.5 text-xs font-medium text-white">
               <Trophy className="size-3.5 text-blue-40" strokeWidth={2.25} />
-              {match.venue}
+              {localizedTournamentName(locale, {
+                tournamentName: match.venue,
+                tournamentNameEn: match.tournamentNameEn,
+              })}
             </span>
             {match.date && (
               <span className="match-header-chip inline-flex items-center gap-1.5 rounded-full bg-white/8 px-3 py-1.5 text-xs font-medium text-gray-30">
                 <Calendar className="size-3.5 text-gray-40" strokeWidth={2.25} />
-                {formatMatchDate(match.date)}
+                {formatMatchDate(match.date, locale)}
               </span>
             )}
           </div>

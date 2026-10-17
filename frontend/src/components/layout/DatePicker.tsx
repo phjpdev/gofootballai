@@ -2,6 +2,7 @@
 
 import { Fragment, type ReactNode } from "react";
 import { AnimateIn } from "@/components/motion/AnimateIn";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 
 export type DateItem = {
@@ -75,6 +76,7 @@ export function DatePicker({
   showAll = false,
   animate = true,
 }: DatePickerProps) {
+  const { t } = useI18n();
   const allActive = showAll && selectedIndex === 0;
 
   function wrap(index: number, node: ReactNode) {
@@ -99,7 +101,7 @@ export function DatePicker({
           <DatePickerButton
             active={allActive}
             onClick={() => onSelect?.(0)}
-            day="全部"
+            day={t.layout.datePickerAll}
             date="·"
           />,
         )}

@@ -17,7 +17,9 @@ export type RecordItem = {
   authorName: string;
   type: RecordType;
   title: string;
+  titleEn: string | null;
   content: string | null;
+  contentEn: string | null;
   mediaUrl: string | null;
   displayDate: string | null;
   starRating: number | null;

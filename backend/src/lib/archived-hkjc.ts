@@ -142,6 +142,7 @@ function snapshotToMatch(snapshot: HkjcInputSnapshot): HkjcMatch | null {
     tournamentId: "",
     tournamentCode: snapshot.tournamentCode ?? "",
     tournamentName: snapshot.tournamentName,
+    tournamentNameEn: snapshot.tournamentNameEn,
     matchDate,
     kickOffTime: snapshot.kickOffTime,
     kickOffLabel: formatKickOff(snapshot.kickOffTime),

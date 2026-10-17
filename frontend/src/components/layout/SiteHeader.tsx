@@ -6,28 +6,27 @@ import {
   BarChart3,
   FolderOpen,
   Home,
-  LayoutDashboard,
   LogOut,
   Users,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { TelegramIcon, TELEGRAM_URL } from "@/components/icons/TelegramIcon";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
 import { useAuth } from "@/context/AuthContext";
-import { formatRole, NAV } from "@/lib/i18n/zh-hk";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import type { Messages } from "@/lib/i18n/messages";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
-  { href: "/home", label: NAV.home, icon: Home },
-  { href: "/analysis", label: NAV.analysis, icon: BarChart3 },
-  { href: "/records", label: NAV.records, icon: FolderOpen },
-  { href: "/member", label: NAV.member, icon: Users },
-] as const;
+function navItems(nav: Messages["layout"]["nav"]) {
+  return [
+    { href: "/home", label: nav.home, icon: Home },
+    { href: "/analysis", label: nav.analysis, icon: BarChart3 },
+    { href: "/records", label: nav.records, icon: FolderOpen },
+    { href: "/member", label: nav.member, icon: Users },
+  ] as const;
+}
 
-const ADMIN_NAV = {
-  href: "/admin",
-  label: NAV.manage,
-  icon: LayoutDashboard,
-} as const;
+const ADMIN_NAV_HREF = "/admin";
 
 function isNavActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -46,6 +45,7 @@ function UserMenu({
 }) {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { t } = useI18n();
 
   if (!user) return null;
 
@@ -61,7 +61,7 @@ function UserMenu({
         <p className="truncate text-sm font-semibold text-white">
           {user.username}
         </p>
-        <p className="text-xs text-orange-50">{formatRole(user.role)}</p>
+        <p className="text-xs text-orange-50">{t.common.roles[user.role]}</p>
       </div>
       <button
         type="button"
@@ -69,7 +69,7 @@ function UserMenu({
         className="flex shrink-0 items-center gap-2 rounded-[14px] bg-gray-90 px-3 py-2 text-sm font-medium text-gray-20 transition-colors hover:text-white"
       >
         <LogOut className="size-4" />
-        <span className="hidden sm:inline">登出</span>
+        <span className="hidden sm:inline">{t.layout.logout}</span>
       </button>
     </div>
   );
@@ -78,9 +78,10 @@ function UserMenu({
 export function SiteHeader() {
   const pathname = usePathname();
   const { isAdmin, isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const showOnMobile = isMemberRoute(pathname);
 
-  const mainNavItems = NAV_ITEMS;
+  const mainNavItems = navItems(t.layout.nav);
   const showAdminNav = isAdmin;
 
   return (
@@ -119,7 +120,7 @@ export function SiteHeader() {
               href={TELEGRAM_URL}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={NAV.telegram}
+              aria-label={t.layout.nav.telegram}
               className="flex size-10 items-center justify-center rounded-xl text-gray-40 transition-colors hover:bg-gray-90 hover:text-white"
             >
               <TelegramIcon className="size-[18px]" />
@@ -127,18 +128,20 @@ export function SiteHeader() {
 
             {showAdminNav && (
               <Link
-                href={ADMIN_NAV.href}
+                href={ADMIN_NAV_HREF}
                 className={cn(
                   "rounded-xl px-4 py-2 text-sm font-medium transition-colors",
-                  isNavActive(pathname, ADMIN_NAV.href)
+                  isNavActive(pathname, ADMIN_NAV_HREF)
                     ? "bg-gray-90 text-orange-50"
                     : "text-gray-40 hover:text-white",
                 )}
               >
-                {ADMIN_NAV.label}
+                {t.layout.nav.manage}
               </Link>
             )}
           </nav>
+
+          <LanguageToggle />
 
           {isAuthenticated && (
             <div className="border-l border-gray-90 pl-4">

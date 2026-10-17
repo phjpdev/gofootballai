@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { updateMatchPickOverride } from "@/lib/match-pick-overrides-api";
+import { flipOverUnderPickSelection } from "@/lib/analysis-pick-display";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import {
+  containsCjk,
+  formatPickSelection,
+  type PickContext,
+} from "@/lib/i18n/localized";
 
 const fieldClass =
   "w-full rounded-[14px] bg-gray-80 px-4 py-3 text-sm leading-normal text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40";
@@ -12,6 +19,8 @@ type EditMatchPickModalProps = {
   matchId: string;
   token: string;
   initialPickSelection: string;
+  /** Team names for the English preview, so team handicaps translate too. */
+  pickContext?: Omit<PickContext, "fallbackEn">;
   onClose: () => void;
   onSaved: (pickSelection: string) => void;
 };
@@ -21,9 +30,11 @@ export function EditMatchPickModal({
   matchId,
   token,
   initialPickSelection,
+  pickContext,
   onClose,
   onSaved,
 }: EditMatchPickModalProps) {
+  const { locale, t } = useI18n();
   const [pickSelection, setPickSelection] = useState(initialPickSelection);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -36,10 +47,20 @@ export function EditMatchPickModal({
 
   if (!open) return null;
 
+  // The override is stored (and flipped for display) in Chinese; preview the English result.
+  const englishPreview =
+    locale === "en" && pickSelection.trim()
+      ? formatPickSelection(
+          flipOverUnderPickSelection(pickSelection.trim()),
+          "en",
+          pickContext,
+        )
+      : "";
+
   const handleSubmit = async () => {
     const trimmed = pickSelection.trim();
     if (!trimmed) {
-      setError("請輸入預測結果");
+      setError(t.analysis.editPick.required);
       return;
     }
 
@@ -51,7 +72,7 @@ export function EditMatchPickModal({
       onSaved(saved);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "儲存失敗");
+      setError(err instanceof Error ? err.message : t.analysis.saveFailed);
     } finally {
       setSubmitting(false);
     }
@@ -71,16 +92,16 @@ export function EditMatchPickModal({
               id="edit-match-pick-title"
               className="text-base font-bold text-white"
             >
-              編輯預測結果
+              {t.analysis.editPick.title}
             </h2>
             <p className="mt-1 text-xs text-gray-40">
-              修改賽事覆盤頁面顯示的預測文字，例如「大 2.5」。
+              {t.analysis.editPick.description}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="關閉"
+            aria-label={t.common.close}
             className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-80 text-gray-40 hover:text-white"
           >
             <X className="size-4" />
@@ -88,16 +109,26 @@ export function EditMatchPickModal({
         </div>
 
         <label className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-white">預測結果</span>
+          <span className="text-sm font-medium text-white">
+            {t.analysis.editPick.label}
+          </span>
           <input
             type="text"
             value={pickSelection}
             onChange={(e) => setPickSelection(e.target.value)}
-            placeholder="例如：大 2.5"
+            placeholder={t.analysis.editPick.placeholder}
             className={fieldClass}
             maxLength={80}
           />
         </label>
+
+        {englishPreview && (
+          <p className="mt-2 text-xs text-gray-40">
+            {containsCjk(englishPreview)
+              ? t.analysis.editPick.englishUntranslated
+              : t.analysis.editPick.englishPreview(englishPreview)}
+          </p>
+        )}
 
         {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
 
@@ -107,7 +138,7 @@ export function EditMatchPickModal({
             onClick={onClose}
             className="flex-1 rounded-[14px] bg-gray-80 py-3 text-sm font-semibold text-white"
           >
-            取消
+            {t.common.cancel}
           </button>
           <button
             type="button"
@@ -115,7 +146,7 @@ export function EditMatchPickModal({
             disabled={submitting}
             className="flex-1 rounded-[14px] bg-orange-50 py-3 text-sm font-semibold text-white disabled:opacity-50"
           >
-            {submitting ? "儲存中…" : "儲存"}
+            {submitting ? t.common.saving : t.common.save}
           </button>
         </div>
       </div>

@@ -13,10 +13,12 @@ import { fetchFeaturedItems } from "@/lib/featured-api";
 import { getFeaturedScoreLookupIds } from "@/lib/hkjc/world-cup-featured";
 import { buildTopPicksHref } from "@/lib/top-match";
 import { resolveFeaturedPicksDateKey } from "@/lib/hkjc/past-dates";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import type { FeaturedItem } from "@/lib/data/featured";
 
 export function FeaturedSection() {
   const { token, isAdmin, isAuthenticated, isMember } = useAuth();
+  const { t } = useI18n();
   const { selectedDateKey, selectedIndex, adminPastTabCount, data, todayPassedMatches } =
     useHkjc();
   const featuredPicksDateKey = resolveFeaturedPicksDateKey({
@@ -97,7 +99,7 @@ export function FeaturedSection() {
   return (
     <section className="flex flex-col gap-2">
       <SubNav
-        title="精選賽事"
+        title={t.analysis.featured.title}
         count={FEATURED_COUNT}
         seeAllHref={buildTopPicksHref(featuredPicksDateKey)}
         onTitleClick={isAdmin ? () => setModalOpen(true) : undefined}
