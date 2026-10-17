@@ -1,3 +1,6 @@
+import { readApiError } from "@/lib/i18n/api-errors";
+import { DEFAULT_LOCALE, INTL_LOCALE, type Locale } from "@/lib/i18n/config";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 export type WinRateStats = {
@@ -11,14 +14,7 @@ export type WinRateStats = {
   totalSettled?: number;
 };
 
-async function parseError(response: Response): Promise<string> {
-  try {
-    const data = (await response.json()) as { error?: string };
-    return data.error ?? "請求失敗，請稍後再試";
-  } catch {
-    return "請求失敗，請稍後再試";
-  }
-}
+const parseError = readApiError;
 
 export async function fetchWinRateStats(token: string): Promise<WinRateStats> {
   const response = await fetch(`${API_URL}/api/win-rate-stats`, {
@@ -43,20 +39,25 @@ export function formatWinRateRecord(
   wins: number | undefined,
   settled: number | undefined,
   dateKey?: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): string {
   if (!settled || settled <= 0) {
+    const none = locale === "en" ? "No settled picks yet" : "尚無已結算預測";
     if (dateKey) {
-      return `${formatHkDateLabel(dateKey)} · 尚無已結算預測`;
+      return `${formatHkDateLabel(dateKey, locale)} · ${none}`;
     }
-    return "尚無已結算預測";
+    return none;
   }
   return `${wins ?? 0} / ${settled}`;
 }
 
-export function formatHkDateLabel(dateKey: string): string {
+export function formatHkDateLabel(
+  dateKey: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
   const date = new Date(`${dateKey}T12:00:00+08:00`);
   if (Number.isNaN(date.getTime())) return dateKey;
-  return date.toLocaleDateString("zh-HK", {
+  return date.toLocaleDateString(INTL_LOCALE[locale], {
     month: "numeric",
     day: "numeric",
     timeZone: "Asia/Hong_Kong",

@@ -1,3 +1,6 @@
+import type { Locale } from "@/lib/i18n/config";
+import { localizedText } from "@/lib/i18n/localized";
+
 export type HomeSectionId =
   | "hero"
   | "score"
@@ -15,15 +18,13 @@ export type HomeSection = {
   ctaText: string | null;
   loginPrompt: string | null;
   loginLinkText: string | null;
-};
-
-export const HOME_SECTION_LABELS: Record<HomeSectionId, string> = {
-  hero: "首頁英雄區",
-  score: "精準分析",
-  daily: "全球聯賽",
-  metrics: "專業分析",
-  records: "會員紀錄",
-  rating: "5星體驗",
+  /** Optional English overrides; English readers fall back to the Chinese field. */
+  eyebrowEn?: string | null;
+  titleEn?: string | null;
+  descriptionEn?: string | null;
+  ctaTextEn?: string | null;
+  loginPromptEn?: string | null;
+  loginLinkTextEn?: string | null;
 };
 
 export const DEFAULT_HOME_SECTIONS: HomeSection[] = [
@@ -37,6 +38,13 @@ export const DEFAULT_HOME_SECTIONS: HomeSection[] = [
     ctaText: "立即開始",
     loginPrompt: "已有帳戶？",
     loginLinkText: "登入",
+    eyebrowEn: "GO Football AI",
+    titleEn: "Welcome to GO Football AI",
+    descriptionEn:
+      "An AI-driven football analysis platform built for bettors who want rational decisions and steady returns.",
+    ctaTextEn: "Get started",
+    loginPromptEn: "Already have an account?",
+    loginLinkTextEn: "Log in",
   },
   {
     id: "score",
@@ -48,6 +56,9 @@ export const DEFAULT_HOME_SECTIONS: HomeSection[] = [
     ctaText: null,
     loginPrompt: null,
     loginLinkText: null,
+    titleEn: "Every match, precisely calculated",
+    descriptionEn:
+      "In-depth professional analysis with high-accuracy confidence scores (90%+) to help you find real value bets.",
   },
   {
     id: "daily",
@@ -59,6 +70,9 @@ export const DEFAULT_HOME_SECTIONS: HomeSection[] = [
     ctaText: null,
     loginPrompt: null,
     loginLinkText: null,
+    titleEn: "Leagues from around the world",
+    descriptionEn:
+      "Every major competition updated live, every day. Follow top leagues and lesser-known fixtures with ease.",
   },
   {
     id: "metrics",
@@ -70,6 +84,9 @@ export const DEFAULT_HOME_SECTIONS: HomeSection[] = [
     ctaText: null,
     loginPrompt: null,
     loginLinkText: null,
+    titleEn: "Committed to professional analysis",
+    descriptionEn:
+      "No proxy betting, no shady syndicates: only purely data-driven, rational advice to help you build a lasting edge.",
   },
   {
     id: "records",
@@ -81,6 +98,9 @@ export const DEFAULT_HOME_SECTIONS: HomeSection[] = [
     ctaText: null,
     loginPrompt: null,
     loginLinkText: null,
+    titleEn: "Member profit records",
+    descriptionEn:
+      "Real member betting records and profit statistics, shown transparently. See the steady returns and follow professional analysis with confidence.",
   },
   {
     id: "rating",
@@ -92,6 +112,9 @@ export const DEFAULT_HOME_SECTIONS: HomeSection[] = [
     ctaText: null,
     loginPrompt: null,
     loginLinkText: null,
+    titleEn: "Easy to use · 5-star betting experience",
+    descriptionEn:
+      "A clean, intuitive interface and smart recommendations make professional analysis fast and enjoyable, anytime, anywhere.",
   },
 ];
 
@@ -110,4 +133,66 @@ export function homeSectionsById(
   }
 
   return map;
+}
+
+const ENGLISH_FIELD = {
+  eyebrow: "eyebrowEn",
+  title: "titleEn",
+  description: "descriptionEn",
+  ctaText: "ctaTextEn",
+  loginPrompt: "loginPromptEn",
+  loginLinkText: "loginLinkTextEn",
+} as const satisfies Record<string, keyof HomeSection>;
+
+export type HomeSectionTextField = keyof typeof ENGLISH_FIELD;
+
+/** A section's text already resolved to the reader's language. */
+export type LocalizedHomeSection = {
+  id: HomeSectionId;
+  imageSrc: string;
+  eyebrow: string | null;
+  title: string;
+  description: string;
+  ctaText: string | null;
+  loginPrompt: string | null;
+  loginLinkText: string | null;
+};
+
+/**
+ * The stored English override, or the built-in translation while the Chinese
+ * still matches the default copy (rows saved before English existed have none).
+ */
+export function homeSectionEnglish(
+  section: HomeSection,
+  field: HomeSectionTextField,
+): string {
+  const stored = section[ENGLISH_FIELD[field]]?.trim();
+  if (stored) return stored;
+  const fallback = DEFAULT_HOME_SECTIONS.find((item) => item.id === section.id);
+  const chinese = section[field]?.trim();
+  if (!fallback || !chinese || chinese !== fallback[field]?.trim()) return "";
+  return fallback[ENGLISH_FIELD[field]] ?? "";
+}
+
+export function localizeHomeSection(
+  section: HomeSection,
+  locale: Locale,
+): LocalizedHomeSection {
+  const text = (field: HomeSectionTextField) =>
+    localizedText(
+      locale,
+      section[field],
+      locale === "en" ? homeSectionEnglish(section, field) : null,
+    ) || null;
+
+  return {
+    id: section.id,
+    imageSrc: section.imageSrc,
+    eyebrow: text("eyebrow"),
+    title: text("title") ?? "",
+    description: text("description") ?? "",
+    ctaText: text("ctaText"),
+    loginPrompt: text("loginPrompt"),
+    loginLinkText: text("loginLinkText"),
+  };
 }

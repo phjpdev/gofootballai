@@ -6,14 +6,15 @@ import { ImageIcon, Upload, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useHomeSections } from "@/context/HomeSectionsContext";
 import {
-  HOME_SECTION_LABELS,
+  homeSectionEnglish,
   type HomeSection,
-  type HomeSectionId,
+  type HomeSectionTextField,
 } from "@/lib/data/home-sections";
 import {
   resolveHomeSectionImageUrl,
   updateHomeSection,
 } from "@/lib/home-sections-api";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 const fieldClass =
   "w-full rounded-[14px] bg-gray-80 px-4 py-3 text-sm leading-normal text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40";
@@ -25,11 +26,19 @@ type SectionDraft = {
   ctaText: string;
   loginPrompt: string;
   loginLinkText: string;
+  eyebrowEn: string;
+  titleEn: string;
+  descriptionEn: string;
+  ctaTextEn: string;
+  loginPromptEn: string;
+  loginLinkTextEn: string;
   previewUrl: string;
   file?: File;
 };
 
 function createDraft(section: HomeSection): SectionDraft {
+  const english = (field: HomeSectionTextField) =>
+    homeSectionEnglish(section, field);
   return {
     eyebrow: section.eyebrow ?? "",
     title: section.title,
@@ -37,12 +46,20 @@ function createDraft(section: HomeSection): SectionDraft {
     ctaText: section.ctaText ?? "",
     loginPrompt: section.loginPrompt ?? "",
     loginLinkText: section.loginLinkText ?? "",
+    eyebrowEn: english("eyebrow"),
+    titleEn: english("title"),
+    descriptionEn: english("description"),
+    ctaTextEn: english("ctaText"),
+    loginPromptEn: english("loginPrompt"),
+    loginLinkTextEn: english("loginLinkText"),
     previewUrl: resolveHomeSectionImageUrl(section.imageSrc),
   };
 }
 
 export function EditHomeSectionModal() {
   const { token } = useAuth();
+  const { t } = useI18n();
+  const copy = t.home.editor;
   const { editingId, closeEditor, sections, updateSection } = useHomeSections();
   const [draft, setDraft] = useState<SectionDraft | null>(null);
   const [error, setError] = useState("");
@@ -76,7 +93,7 @@ export function EditHomeSectionModal() {
     if (!editingId || !draft || !token) return;
 
     if (!draft.title.trim() || !draft.description.trim()) {
-      setError("請填寫標題與描述");
+      setError(copy.errors.titleAndDescription);
       return;
     }
 
@@ -87,7 +104,7 @@ export function EditHomeSectionModal() {
         !draft.loginPrompt.trim() ||
         !draft.loginLinkText.trim())
     ) {
-      setError("請填寫首頁英雄區所有文字欄位");
+      setError(copy.errors.heroFields);
       return;
     }
 
@@ -102,12 +119,19 @@ export function EditHomeSectionModal() {
         ctaText: isHero ? draft.ctaText.trim() : undefined,
         loginPrompt: isHero ? draft.loginPrompt.trim() : undefined,
         loginLinkText: isHero ? draft.loginLinkText.trim() : undefined,
+        // English is optional; "" clears a previously saved override.
+        titleEn: draft.titleEn.trim(),
+        descriptionEn: draft.descriptionEn.trim(),
+        eyebrowEn: isHero ? draft.eyebrowEn.trim() : undefined,
+        ctaTextEn: isHero ? draft.ctaTextEn.trim() : undefined,
+        loginPromptEn: isHero ? draft.loginPromptEn.trim() : undefined,
+        loginLinkTextEn: isHero ? draft.loginLinkTextEn.trim() : undefined,
         file: draft.file,
       });
       updateSection(updated);
       closeEditor();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "儲存失敗");
+      setError(err instanceof Error ? err.message : copy.errors.saveFailed);
     } finally {
       setSubmitting(false);
     }
@@ -119,7 +143,7 @@ export function EditHomeSectionModal() {
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
       <button
         type="button"
-        aria-label="關閉"
+        aria-label={t.common.close}
         className="absolute inset-0 bg-black/70"
         onClick={closeEditor}
       />
@@ -128,11 +152,9 @@ export function EditHomeSectionModal() {
         <div className="flex shrink-0 items-center justify-between border-b border-gray-80 px-5 py-4">
           <div>
             <h2 className="text-base font-bold text-white">
-              編輯{HOME_SECTION_LABELS[editingId]}
+              {copy.heading(t.home.sectionLabels[editingId])}
             </h2>
-            <p className="text-xs text-gray-40">
-              更新此區塊的文字與圖片，所有用戶將會看到最新內容。
-            </p>
+            <p className="text-xs text-gray-40">{copy.subtitle}</p>
           </div>
           <button
             type="button"
@@ -148,87 +170,172 @@ export function EditHomeSectionModal() {
           className="flex min-h-0 flex-1 flex-col"
         >
           <div className="flex flex-col gap-4 overflow-y-auto p-5">
+            <p className="text-xs text-gray-40">
+              {t.common.englishFallbackHint}
+            </p>
+
             {isHero && (
-              <label className="flex flex-col gap-2 text-sm text-gray-30">
-                副標題
-                <input
-                  className={fieldClass}
-                  value={draft.eyebrow}
-                  onChange={(e) =>
-                    setDraft({ ...draft, eyebrow: e.target.value })
-                  }
-                  placeholder="例如：GO Football AI"
-                />
-              </label>
+              <>
+                <label className="flex flex-col gap-2 text-sm text-gray-30">
+                  {copy.eyebrow}
+                  <input
+                    className={fieldClass}
+                    value={draft.eyebrow}
+                    onChange={(e) =>
+                      setDraft({ ...draft, eyebrow: e.target.value })
+                    }
+                    placeholder={copy.eyebrowPlaceholder}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2 text-sm text-gray-30">
+                  {copy.eyebrowEn}
+                  <input
+                    className={fieldClass}
+                    value={draft.eyebrowEn}
+                    onChange={(e) =>
+                      setDraft({ ...draft, eyebrowEn: e.target.value })
+                    }
+                    placeholder={copy.eyebrowEnPlaceholder}
+                    lang="en"
+                  />
+                </label>
+              </>
             )}
 
             <label className="flex flex-col gap-2 text-sm text-gray-30">
-              標題
+              {copy.title}
               <input
                 className={fieldClass}
                 value={draft.title}
                 onChange={(e) =>
                   setDraft({ ...draft, title: e.target.value })
                 }
-                placeholder="區塊標題"
+                placeholder={copy.titlePlaceholder}
               />
             </label>
 
             <label className="flex flex-col gap-2 text-sm text-gray-30">
-              描述
+              {copy.titleEn}
+              <input
+                className={fieldClass}
+                value={draft.titleEn}
+                onChange={(e) =>
+                  setDraft({ ...draft, titleEn: e.target.value })
+                }
+                placeholder={copy.titleEnPlaceholder}
+                lang="en"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm text-gray-30">
+              {copy.description}
               <textarea
                 className={`${fieldClass} min-h-[96px] resize-y`}
                 value={draft.description}
                 onChange={(e) =>
                   setDraft({ ...draft, description: e.target.value })
                 }
-                placeholder="區塊描述"
+                placeholder={copy.descriptionPlaceholder}
                 rows={4}
+              />
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm text-gray-30">
+              {copy.descriptionEn}
+              <textarea
+                className={`${fieldClass} min-h-[96px] resize-y`}
+                value={draft.descriptionEn}
+                onChange={(e) =>
+                  setDraft({ ...draft, descriptionEn: e.target.value })
+                }
+                placeholder={copy.descriptionEnPlaceholder}
+                rows={4}
+                lang="en"
               />
             </label>
 
             {isHero && (
               <>
                 <label className="flex flex-col gap-2 text-sm text-gray-30">
-                  按鈕文字
+                  {copy.ctaText}
                   <input
                     className={fieldClass}
                     value={draft.ctaText}
                     onChange={(e) =>
                       setDraft({ ...draft, ctaText: e.target.value })
                     }
-                    placeholder="例如：立即開始"
+                    placeholder={copy.ctaTextPlaceholder}
                   />
                 </label>
 
                 <label className="flex flex-col gap-2 text-sm text-gray-30">
-                  登入提示
+                  {copy.ctaTextEn}
+                  <input
+                    className={fieldClass}
+                    value={draft.ctaTextEn}
+                    onChange={(e) =>
+                      setDraft({ ...draft, ctaTextEn: e.target.value })
+                    }
+                    placeholder={copy.ctaTextEnPlaceholder}
+                    lang="en"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2 text-sm text-gray-30">
+                  {copy.loginPrompt}
                   <input
                     className={fieldClass}
                     value={draft.loginPrompt}
                     onChange={(e) =>
                       setDraft({ ...draft, loginPrompt: e.target.value })
                     }
-                    placeholder="例如：已有帳戶？"
+                    placeholder={copy.loginPromptPlaceholder}
                   />
                 </label>
 
                 <label className="flex flex-col gap-2 text-sm text-gray-30">
-                  登入連結文字
+                  {copy.loginPromptEn}
+                  <input
+                    className={fieldClass}
+                    value={draft.loginPromptEn}
+                    onChange={(e) =>
+                      setDraft({ ...draft, loginPromptEn: e.target.value })
+                    }
+                    placeholder={copy.loginPromptEnPlaceholder}
+                    lang="en"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2 text-sm text-gray-30">
+                  {copy.loginLinkText}
                   <input
                     className={fieldClass}
                     value={draft.loginLinkText}
                     onChange={(e) =>
                       setDraft({ ...draft, loginLinkText: e.target.value })
                     }
-                    placeholder="例如：登入"
+                    placeholder={copy.loginLinkTextPlaceholder}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2 text-sm text-gray-30">
+                  {copy.loginLinkTextEn}
+                  <input
+                    className={fieldClass}
+                    value={draft.loginLinkTextEn}
+                    onChange={(e) =>
+                      setDraft({ ...draft, loginLinkTextEn: e.target.value })
+                    }
+                    placeholder={copy.loginLinkTextEnPlaceholder}
+                    lang="en"
                   />
                 </label>
               </>
             )}
 
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-gray-30">區塊圖片</span>
+              <span className="text-sm text-gray-30">{copy.image}</span>
               <div className="relative aspect-[4/3] overflow-hidden rounded-[16px] bg-gray-80">
                 {draft.previewUrl ? (
                   <Image
@@ -267,7 +374,7 @@ export function EditHomeSectionModal() {
                 className="inline-flex items-center justify-center gap-2 rounded-[14px] border border-gray-70 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-80"
               >
                 <Upload className="size-4" />
-                上傳圖片
+                {copy.upload}
               </button>
             </div>
 
@@ -280,14 +387,14 @@ export function EditHomeSectionModal() {
               onClick={closeEditor}
               className="flex-1 rounded-[14px] border border-gray-70 px-4 py-3 text-sm font-semibold text-white"
             >
-              取消
+              {t.common.cancel}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="flex-1 rounded-[14px] bg-orange-50 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {submitting ? "儲存中…" : "儲存"}
+              {submitting ? t.common.saving : t.common.save}
             </button>
           </div>
         </form>

@@ -1,10 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EditMatchPickModal } from "@/components/analysis/EditMatchPickModal";
-import { MatchAnalysisView } from "@/components/analysis/MatchAnalysisView";
+import {
+  getMatchTeams,
+  type MatchHeaderMatch,
+} from "@/components/analysis/MatchHeaderCard";
+import {
+  MatchAnalysisView,
+  type AnalysisLanguageStatus,
+} from "@/components/analysis/MatchAnalysisView";
 import { useAuth } from "@/context/AuthContext";
 import {
   fetchAnalysisStatus,
@@ -13,29 +19,45 @@ import {
 } from "@/lib/analyses-api";
 import { fetchMatchPickOverride } from "@/lib/match-pick-overrides-api";
 import { flipOverUnderPickSelection } from "@/lib/analysis-pick-display";
+import { localizeApiError } from "@/lib/i18n/api-errors";
+import type { Locale } from "@/lib/i18n/config";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import type { PickContext } from "@/lib/i18n/localized";
 import type { AnalysisResponse, MatchAnalysisResult } from "@/types/analysis";
-import type { Match } from "@/types";
 
 type MatchAnalysisClientProps = {
-  match: Match;
+  match: MatchHeaderMatch;
 };
+
+/** Kept as a kind (not text) so it re-renders in the right language after a toggle. */
+type AnalysisError =
+  | { kind: "failed" }
+  | { kind: "loadFailed" }
+  | { kind: "retryFailed" }
+  | { kind: "message"; message: string };
 
 const POLL_INTERVAL_MS = 2_500;
 const MAX_PENDING_MS = 90_000;
 
 export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
   const pathname = usePathname();
+  const { locale, t } = useI18n();
   const { token, isAuthenticated, isMember, isAdmin, isLoading, user, canViewVipAnalysis } =
     useAuth();
   const [analysisState, setAnalysisState] = useState<AnalysisResponse | null>(
     null,
   );
+  /** Language the shown analysis text is actually in. */
+  const [analysisLanguage, setAnalysisLanguage] = useState<Locale | null>(null);
+  /** Locale of the last finished request (success or failure). */
+  const [settledLocale, setSettledLocale] = useState<Locale | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AnalysisError | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [pendingSince, setPendingSince] = useState<number | null>(null);
   const [pickOverride, setPickOverride] = useState("");
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const latestRequest = useRef(0);
 
   const canAccess = isAuthenticated && (isMember || isAdmin);
 
@@ -63,24 +85,53 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
     };
   }, [analysisState?.analysis, pickOverride]);
 
+  const pickContext = useMemo((): PickContext => {
+    const pick = analysisState?.analysis?.pick;
+    // The AI's English wording only describes its own pick, un-overridden and un-flipped.
+    const isOriginalPick =
+      pick !== undefined &&
+      !pickOverride.trim() &&
+      flipOverUnderPickSelection(pick.selection) === pick.selection;
+    return {
+      ...getMatchTeams(match),
+      fallbackEn: isOriginalPick ? pick.selectionEn : undefined,
+    };
+  }, [analysisState?.analysis, pickOverride, match]);
+
   const loadAnalysis = useCallback(async () => {
     if (!token || !canAccess) return;
 
+    const requestId = ++latestRequest.current;
     try {
-      const data = await fetchMatchAnalysis(token, match.id);
+      const data = await fetchMatchAnalysis(token, match.id, locale);
+      // A language toggle or a newer poll superseded this request.
+      if (requestId !== latestRequest.current) return;
       setAnalysisState(data);
+      // Older backends omit `language`; assume the requested one.
+      setAnalysisLanguage(data.language ?? locale);
       setError(
         data.status === "failed"
-          ? "分析生成失敗，請點擊重新分析"
-          : (data.error ?? null),
+          ? { kind: "failed" }
+          : data.error
+            ? { kind: "message", message: localizeApiError(data.error, locale) }
+            : null,
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "無法載入分析");
+      if (requestId !== latestRequest.current) return;
+      setError(
+        err instanceof Error
+          ? { kind: "message", message: err.message }
+          : { kind: "loadFailed" },
+      );
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) {
+        setSettledLocale(locale);
+        setLoading(false);
+      }
     }
-  }, [token, canAccess, match.id]);
+  }, [token, canAccess, match.id, locale]);
 
+  // Also re-runs when the locale changes, refetching the analysis in that language.
   useEffect(() => {
     if (isLoading) return;
     if (!canAccess) {
@@ -148,7 +199,11 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
       await regenerateAnalysis(token, match.id);
       await loadAnalysis();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "重試失敗");
+      setError(
+        err instanceof Error
+          ? { kind: "message", message: err.message }
+          : { kind: "retryFailed" },
+      );
     } finally {
       setRetrying(false);
     }
@@ -159,27 +214,44 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
     analysisState?.analysis?.pick.selection ||
     "";
 
+  const errorText = (value: AnalysisError | null): string | undefined => {
+    if (!value) return undefined;
+    if (value.kind === "message") return value.message;
+    return t.matchDetail.errors[value.kind];
+  };
+
+  let languageStatus: AnalysisLanguageStatus = null;
+  if (displayAnalysis) {
+    if (settledLocale !== locale) {
+      languageStatus = "switching";
+    } else if (locale === "en" && analysisLanguage === "zh-HK") {
+      languageStatus = "untranslated";
+    }
+  }
+
   return (
     <>
       <MatchAnalysisView
         match={match}
         analysis={displayAnalysis}
+        pickContext={pickContext}
+        languageStatus={languageStatus}
         loading={isLoading || (canAccess && loading && !analysisState)}
         pending={analysisState?.status === "pending" && !timedOut}
         locked={!isLoading && !canAccess}
         canViewVipContent={canViewVipAnalysis}
         lockedHint={
           isAuthenticated && user && !canAccess
-            ? "此帳戶無法查看會員分析，請使用會員帳戶登入。"
-            : "請登入或註冊會員帳戶，以查看 AI 賽事量化分析。"
+            ? t.matchDetail.lockedHint.notMember
+            : t.matchDetail.lockedHint.default
         }
         loginRedirectTo={pathname}
         error={
           timedOut
-            ? "分析逾時，請點擊重新分析"
+            ? t.matchDetail.errors.timedOut
             : analysisState?.status === "failed"
-              ? (error ?? "分析生成失敗，請點擊重新分析")
-              : error ?? undefined
+              ? (errorText(error) ?? t.matchDetail.errors.failed)
+              : errorText(error)
         }
         onRetry={handleRetry}
         retrying={retrying}
@@ -194,6 +266,7 @@ export function MatchAnalysisClient({ match }: MatchAnalysisClientProps) {
           matchId={match.id}
           token={token}
           initialPickSelection={modalPickSelection}
+          pickContext={getMatchTeams(match)}
           onClose={() => setEditModalOpen(false)}
           onSaved={setPickOverride}
         />

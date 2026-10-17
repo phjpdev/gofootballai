@@ -1,4 +1,8 @@
+"use client";
+
 import { figmaAsset } from "@/lib/figma-assets";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { formatPickSelection, type PickContext } from "@/lib/i18n/localized";
 import type {
   AnalysisDimensions,
   AnalysisGoalProbabilities,
@@ -9,16 +13,17 @@ const MATCH_MINUTES = ["15'", "30'", "45'", "60'", "75'", "90'"] as const;
 const CHEVRON = figmaAsset("44fa759040c464414aab1abfac01547773dd8246");
 
 function SectionHeader() {
+  const { t } = useI18n();
   return (
     <div className="flex h-[22px] w-full items-center gap-4">
       <p className="min-w-0 flex-1 text-base font-bold leading-[22px] tracking-[-0.112px] text-white">
-        賽事數據
+        {t.matchDetail.metrics.title}
       </p>
       <button
         type="button"
         className="shrink-0 text-sm font-medium leading-5 tracking-[-0.084px] text-[#f97316]"
       >
-        查看全部
+        {t.common.seeAll}
       </button>
     </div>
   );
@@ -33,6 +38,7 @@ function CardHeader({
   iconInset: string;
   title: string;
 }) {
+  const { t } = useI18n();
   return (
     <div className="flex w-full items-center gap-4">
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -52,7 +58,7 @@ function CardHeader({
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <p className="text-sm font-normal leading-5 tracking-[-0.084px] text-[#d4d4d8]">
-          本場
+          {t.matchDetail.metrics.thisMatch}
         </p>
         <div className="relative size-5">
           <div className="absolute inset-[12.84%_28.44%_12.84%_31.69%]">
@@ -233,6 +239,7 @@ type FitnessMetricsProps = {
   momentum: number[];
   roi: number;
   pick: AnalysisPick;
+  pickContext?: PickContext;
 };
 
 export function FitnessMetrics({
@@ -241,7 +248,9 @@ export function FitnessMetrics({
   momentum,
   roi,
   pick,
+  pickContext,
 }: FitnessMetricsProps) {
+  const { locale, t } = useI18n();
   const xg = (
     (goalProbabilities.over2 / 100) * 2.8 +
     (goalProbabilities.exactly2 / 100) * 2
@@ -258,13 +267,13 @@ export function FitnessMetrics({
             <CardHeader
               iconSrc="3828572d53de36e9a9f754969a933d536579e779"
               iconInset="inset-[9.33%_6.16%_9.71%_6.15%]"
-              title="控球率"
+              title={t.matchDetail.metrics.possession}
             />
             <div className="flex w-full items-center gap-3">
               <ValueBlock
                 value={String(dimensions.possession)}
                 unit="%"
-                subtitle="主隊優勢"
+                subtitle={t.matchDetail.metrics.homeEdge}
               />
               <WeightChart values={momentum} />
             </div>
@@ -276,7 +285,7 @@ export function FitnessMetrics({
             <CardHeader
               iconSrc="7852f61e478f16e05a54fc12a8e9a1648b49cfdb"
               iconInset="inset-[9.93%_12.96%_8.94%_12.96%]"
-              title="預期進球 (xG)"
+              title={t.matchDetail.metrics.xg}
             />
             <div className="flex w-full items-center gap-3">
               <ValueBlock
@@ -303,16 +312,16 @@ export function FitnessMetrics({
             <CardHeader
               iconSrc="d875ca6469c77364cca0fb8f503099d9d04a3005"
               iconInset="inset-[13.09%_4.47%_9.1%_4.48%]"
-              title="射門次數"
+              title={t.matchDetail.metrics.shots}
             />
             <div className="flex w-full items-center gap-3">
               <ValueBlock
                 value={String(shots)}
-                unit="次"
+                unit={t.matchDetail.metrics.shotsUnit}
                 subtitle={
                   pick.market && pick.selection
-                    ? `${pick.market} · ${pick.selection}`
-                    : "VIP 會員專屬"
+                    ? `${pick.market} · ${formatPickSelection(pick.selection, locale, pickContext)}`
+                    : t.matchDetail.metrics.vipOnly
                 }
               />
               <HeartRateChart />

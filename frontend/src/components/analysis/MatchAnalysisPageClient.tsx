@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MatchAnalysisClient } from "@/components/analysis/MatchAnalysisClient";
+import type { MatchHeaderMatch } from "@/components/analysis/MatchHeaderCard";
 import { getMatchById } from "@/lib/data/matches";
 import { hkjcMatchToLegacy } from "@/lib/hkjc/fetch-matches";
 import { fetchHkjcMatchByIdFromApi } from "@/lib/hkjc/matches-api";
-import type { Match } from "@/types";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import { ChevronLeft } from "lucide-react";
 
 type MatchAnalysisPageClientProps = {
@@ -14,7 +15,8 @@ type MatchAnalysisPageClientProps = {
 };
 
 export function MatchAnalysisPageClient({ matchId }: MatchAnalysisPageClientProps) {
-  const [match, setMatch] = useState<Match | null>(null);
+  const { locale, t } = useI18n();
+  const [match, setMatch] = useState<MatchHeaderMatch | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -34,7 +36,7 @@ export function MatchAnalysisPageClient({ matchId }: MatchAnalysisPageClientProp
           return;
         }
 
-        const fallback = getMatchById(matchId);
+        const fallback = getMatchById(matchId, locale);
         if (fallback) {
           setMatch(fallback);
           return;
@@ -43,7 +45,7 @@ export function MatchAnalysisPageClient({ matchId }: MatchAnalysisPageClientProp
         setNotFound(true);
       } catch {
         if (!cancelled) {
-          const fallback = getMatchById(matchId);
+          const fallback = getMatchById(matchId, locale);
           if (fallback) {
             setMatch(fallback);
           } else {
@@ -60,7 +62,7 @@ export function MatchAnalysisPageClient({ matchId }: MatchAnalysisPageClientProp
     return () => {
       cancelled = true;
     };
-  }, [matchId]);
+  }, [matchId, locale]);
 
   if (loading) {
     return (
@@ -70,7 +72,7 @@ export function MatchAnalysisPageClient({ matchId }: MatchAnalysisPageClientProp
           className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40"
         >
           <ChevronLeft className="size-4" />
-          返回賽事分析
+          {t.matchDetail.backToAnalysis}
         </Link>
         <div className="h-[180px] animate-pulse rounded-[24px] bg-gray-90" />
         <div className="h-40 animate-pulse rounded-[24px] bg-gray-90" />
@@ -86,15 +88,15 @@ export function MatchAnalysisPageClient({ matchId }: MatchAnalysisPageClientProp
           className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white"
         >
           <ChevronLeft className="size-4" />
-          返回賽事分析
+          {t.matchDetail.backToAnalysis}
         </Link>
         <div className="rounded-[24px] bg-gray-90 p-8 text-center">
-          <p className="text-sm text-gray-40">找不到此賽事，可能已結束或下架。</p>
+          <p className="text-sm text-gray-40">{t.matchDetail.notFound}</p>
           <Link
             href="/analysis"
             className="mt-4 inline-block text-sm font-medium text-orange-50"
           >
-            返回賽事列表
+            {t.matchDetail.backToMatches}
           </Link>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { MatchAnalysisData } from "./analysis-schema.js";
+import type { AnalysisEnglish } from "./analysis-translation.js";
 import { resolveConfidenceScore } from "./normalize-analysis.js";
 import { query } from "./db.js";
 import type { HkjcInputSnapshot } from "./hkjc/types.js";
@@ -16,6 +17,8 @@ export type MatchAnalysisRow = {
   prompt_version: string;
   input_snapshot: HkjcInputSnapshot | null;
   analysis: MatchAnalysisData | null;
+  /** Cached English translation of the text fields (see analysis-translation). */
+  analysis_en: AnalysisEnglish | null;
   raw_response: unknown | null;
   error_message: string | null;
   created_at: Date;

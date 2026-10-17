@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE } from "@/lib/i18n/config";
+import { formatWeekdayFromKey } from "@/lib/i18n/format";
 import type { HkjcDateItem } from "@/types/hkjc";
 import type { HkjcMatch } from "@/types/hkjc";
 
@@ -24,12 +26,9 @@ export function getPreviousHKDateKeys(count: number): string[] {
   return keys;
 }
 
+/** Matches the server's Chinese `day` field; UI renders `formatWeekdayFromKey(key, locale)`. */
 function formatDay(dateKey: string): string {
-  const date = new Date(`${dateKey}T12:00:00+08:00`);
-  return date.toLocaleDateString("zh-HK", {
-    weekday: "short",
-    timeZone: "Asia/Hong_Kong",
-  });
+  return formatWeekdayFromKey(dateKey, DEFAULT_LOCALE);
 }
 
 export function buildDateItem(

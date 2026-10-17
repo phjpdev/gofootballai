@@ -1,4 +1,7 @@
+"use client";
+
 import { figmaAsset } from "@/lib/figma-assets";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import type { AnalysisDimensions } from "@/types/analysis";
 
 function PolygonLayer({
@@ -26,13 +29,13 @@ function PolygonLayer({
   );
 }
 
-const AXES: Array<{ key: keyof AnalysisDimensions; label: string; angle: number }> = [
-  { key: "attack", label: "進攻", angle: -90 },
-  { key: "possession", label: "控球", angle: -30 },
-  { key: "defense", label: "防守", angle: 30 },
-  { key: "tactics", label: "戰術", angle: 90 },
-  { key: "morale", label: "士氣", angle: 150 },
-  { key: "fitness", label: "體能", angle: 210 },
+const AXES: Array<{ key: keyof AnalysisDimensions; angle: number }> = [
+  { key: "attack", angle: -90 },
+  { key: "possession", angle: -30 },
+  { key: "defense", angle: 30 },
+  { key: "tactics", angle: 90 },
+  { key: "morale", angle: 150 },
+  { key: "fitness", angle: 210 },
 ];
 
 const CENTER = 91;
@@ -59,6 +62,8 @@ type RadarChartProps = {
 };
 
 export function RadarChart({ dimensions }: RadarChartProps) {
+  const { t } = useI18n();
+  const labels = t.matchDetail.dimensions;
   const dataPoints = buildPolygonPoints(dimensions);
 
   return (
@@ -108,23 +113,23 @@ export function RadarChart({ dimensions }: RadarChartProps) {
         src="9773ef9e5952306356b7e56b2fdffcc6dcbbe174"
       />
 
-      <p className="absolute left-[150.5px] top-0 text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        進攻
+      <p className="absolute left-[162.5px] top-0 -translate-x-1/2 text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
+        {labels.attack}
       </p>
       <p className="absolute left-0 top-[78px] text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        控球
+        {labels.possession}
       </p>
       <p className="absolute left-[343px] top-[78px] -translate-x-full text-right text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        防守
+        {labels.defense}
       </p>
       <p className="absolute left-0 top-[252px] text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        體能
+        {labels.fitness}
       </p>
       <p className="absolute left-[343px] top-[252px] -translate-x-full text-right text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        戰術
+        {labels.tactics}
       </p>
       <p className="absolute left-[171.5px] top-[330px] -translate-x-1/2 text-center text-xs font-medium leading-4 tracking-[-0.06px] text-[#d4d4d8] whitespace-nowrap">
-        士氣
+        {labels.morale}
       </p>
 
       <div className="absolute left-[calc(50%-7.25px)] top-[calc(50%+6.5px)] h-[217px] w-[228.5px] -translate-x-1/2 -translate-y-1/2">

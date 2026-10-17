@@ -3,15 +3,17 @@
 import Image from "next/image";
 import { HomeDesktopSectionShell } from "@/components/home/HomeDesktopSectionShell";
 import { HomeSectionHeader } from "@/components/home/HomeSectionHeader";
-import { useHomeSection } from "@/context/HomeSectionsContext";
+import { useLocalizedHomeSection } from "@/context/HomeSectionsContext";
 import { resolveHomeSectionImageUrl } from "@/lib/home-sections-api";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 type HomeAiCoachSectionProps = {
   reverse?: boolean;
 };
 
 export function HomeAiCoachSection({ reverse }: HomeAiCoachSectionProps) {
-  const section = useHomeSection("records");
+  const { t } = useI18n();
+  const section = useLocalizedHomeSection("records");
   const imageUrl = resolveHomeSectionImageUrl(section.imageSrc);
 
   return (
@@ -25,7 +27,7 @@ export function HomeAiCoachSection({ reverse }: HomeAiCoachSectionProps) {
         <div className="relative h-full w-full max-w-[343px] lg:max-w-none">
           <Image
             src={imageUrl}
-            alt="會員營利紀錄預覽"
+            alt={t.home.imageAlt.records}
             fill
             unoptimized={imageUrl.includes("/uploads/")}
             className="object-contain object-center lg:drop-shadow-[0_24px_48px_rgba(0,0,0,0.45)]"

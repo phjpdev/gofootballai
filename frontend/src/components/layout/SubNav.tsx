@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 type SubNavProps = {
   title: string;
@@ -15,6 +18,7 @@ export function SubNav({
   titleAction,
   onTitleClick,
 }: SubNavProps) {
+  const { t } = useI18n();
   const titleContent = (
     <>
       {title}{" "}
@@ -46,7 +50,7 @@ export function SubNav({
         href={seeAllHref}
         className="shrink-0 text-sm font-medium tracking-[-0.028px] text-orange-50"
       >
-        查看全部
+        {t.common.seeAll}
       </Link>
     </div>
   );

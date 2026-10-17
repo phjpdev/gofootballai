@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { localizeApiError } from "@/lib/i18n/api-errors";
 import {
   createRecord,
   deleteRecord,
@@ -22,7 +23,9 @@ import type { Post, PostType } from "@/types";
 type PostInput = {
   type: PostType;
   title: string;
+  titleEn?: string;
   content?: string;
+  contentEn?: string;
   displayDate: string;
   starRating: number;
   file?: File;
@@ -73,7 +76,7 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
   const addPost = useCallback(
     async (input: PostInput, options?: RecordUploadOptions) => {
       if (!token) {
-        throw new Error("請先登入");
+        throw new Error(localizeApiError("請先登入"));
       }
       const record = await createRecord(token, input, options);
       setPosts((prev) => [record, ...prev]);
@@ -84,7 +87,7 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
   const editPost = useCallback(
     async (id: string, input: PostInput, options?: RecordUploadOptions) => {
       if (!token) {
-        throw new Error("請先登入");
+        throw new Error(localizeApiError("請先登入"));
       }
       const record = await updateRecord(token, id, input, options);
       setPosts((prev) =>
@@ -97,7 +100,7 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
   const removePost = useCallback(
     async (id: string) => {
       if (!token) {
-        throw new Error("請先登入");
+        throw new Error(localizeApiError("請先登入"));
       }
       await deleteRecord(token, id);
       setPosts((prev) => prev.filter((post) => post.id !== id));
@@ -108,7 +111,7 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
   const retranscodePost = useCallback(
     async (id: string) => {
       if (!token) {
-        throw new Error("請先登入");
+        throw new Error(localizeApiError("請先登入"));
       }
       const record = await retranscodeRecord(token, id);
       setPosts((prev) =>

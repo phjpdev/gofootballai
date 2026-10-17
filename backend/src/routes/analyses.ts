@@ -17,9 +17,14 @@ import {
 import { MATCH_ANALYSIS_PROMPT_VERSION } from "../lib/prompts/match-analysis-v1.js";
 import type { MatchAnalysisData } from "../lib/analysis-schema.js";
 import {
+  englishCacheVersion,
   getCachedAnalysis,
   setCachedAnalysis,
 } from "../lib/redis.js";
+import {
+  applyAnalysisEnglish,
+  getAnalysisEnglish,
+} from "../lib/analysis-translation.js";
 import {
   requireAuth,
   requireMember,
@@ -55,6 +60,61 @@ type CachedAnalysisPayload = {
   error?: string;
 };
 
+/** Load the stored analysis, queueing generation when it is missing or stale. */
+async function loadAnalysisRow(matchId: string, promptVersion: string) {
+  let row = await getAnalysisByMatchId(matchId, promptVersion);
+  if (needsAnalysis(row)) {
+    const force = row?.status === "failed";
+    enqueueAnalysis(matchId, force);
+    row = await getAnalysisByMatchId(matchId, promptVersion);
+  }
+  return row;
+}
+
+/**
+ * English view of an analysis. `language` reports what the text is actually in:
+ * "zh-HK" means translation is unavailable right now and Chinese is served.
+ */
+async function englishAnalysisPayload(
+  matchId: string,
+  promptVersion: string,
+  canViewVip: boolean,
+) {
+  const cacheVersion = englishCacheVersion(promptVersion);
+  const cached = await getCachedAnalysis<CachedAnalysisPayload>(
+    matchId,
+    cacheVersion,
+  );
+  if (cached?.status === "completed" && cached.analysis) {
+    const analysis = redactAnalysisForVip(
+      patchAnalysisConfidence(cached.analysis as MatchAnalysisData),
+      canViewVip,
+    );
+    return { ...cached, analysis, language: "en" as const };
+  }
+
+  const row = await loadAnalysisRow(matchId, promptVersion);
+  const base = toPublicAnalysis(row, canViewVip);
+
+  // Nothing to translate yet, or the text is redacted for this viewer anyway.
+  if (row?.status !== "completed" || !row.analysis || !canViewVip) {
+    return { ...base, language: "en" as const };
+  }
+
+  const english = await getAnalysisEnglish(row);
+  if (!english) {
+    return { ...base, language: "zh-HK" as const };
+  }
+
+  const payload = {
+    ...base,
+    analysis: applyAnalysisEnglish(patchAnalysisConfidence(row.analysis), english),
+    language: "en" as const,
+  };
+  await setCachedAnalysis(matchId, cacheVersion, payload);
+  return payload;
+}
+
 router.get(
   "/:matchId",
   requireAuth,
@@ -63,6 +123,11 @@ router.get(
     const matchId = paramId(req.params.matchId);
     const promptVersion = MATCH_ANALYSIS_PROMPT_VERSION;
     const canViewVip = await resolveCanViewVip(req);
+
+    if (req.query.lang === "en") {
+      res.json(await englishAnalysisPayload(matchId, promptVersion, canViewVip));
+      return;
+    }
 
     const cached = await getCachedAnalysis<CachedAnalysisPayload>(
       matchId,
@@ -77,13 +142,7 @@ router.get(
       return;
     }
 
-    let row = await getAnalysisByMatchId(matchId, promptVersion);
-
-    if (needsAnalysis(row)) {
-      const force = row?.status === "failed";
-      enqueueAnalysis(matchId, force);
-      row = await getAnalysisByMatchId(matchId, promptVersion);
-    }
+    const row = await loadAnalysisRow(matchId, promptVersion);
 
     const payload = toPublicAnalysis(row, canViewVip);
     if (row?.status === "completed" && row.analysis) {

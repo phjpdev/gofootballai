@@ -13,8 +13,10 @@ import {
 } from "@/components/analysis/HkjcMatchList";
 import { TopMatchPreviewSection } from "@/components/analysis/TopMatchPreviewSection";
 import { useAuth } from "@/context/AuthContext";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 function AnalysisPageContent() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const picksParam = searchParams.get("picks");
   const topPicks = picksParam === "top";
@@ -32,14 +34,14 @@ function AnalysisPageContent() {
           className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white"
         >
           <ChevronLeft className="size-4" />
-          返回全部賽事
+          {t.analysis.backToAllMatches}
         </Link>
         <AnalysisMemberGate
           variant="fullscreen"
           redirectTo={
             topPreview ? "/analysis?picks=preview" : "/analysis?picks=top"
           }
-          hint="請登入會員帳戶，以查看 AI 高信心精選賽事及評分。"
+          hint={t.analysis.picksGateHint}
         />
       </div>
     );
@@ -54,7 +56,7 @@ function AnalysisPageContent() {
             className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white"
           >
             <ChevronLeft className="size-4" />
-            返回全部賽事
+            {t.analysis.backToAllMatches}
           </Link>
         )}
 

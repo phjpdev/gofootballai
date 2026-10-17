@@ -1,11 +1,15 @@
 import { PredictionPickCard } from "@/components/analysis/PredictionPickCard";
 import { RadarChart } from "@/components/analysis/RadarChart";
 import { VipContentLock } from "@/components/analysis/VipContentLock";
+import type { PickContext } from "@/lib/i18n/localized";
 import type { AnalysisDimensions, AnalysisPick } from "@/types/analysis";
 
 type ScoreBreakdownProps = {
   dimensions: AnalysisDimensions;
+  /** `selection` stays Chinese; it is translated for display with `pickContext`. */
   pick: AnalysisPick;
+  /** Team names (and the AI's English wording, if it applies) for the English pick. */
+  pickContext?: PickContext;
   matchId: string;
   vipLocked?: boolean;
 };
@@ -13,6 +17,7 @@ type ScoreBreakdownProps = {
 export function ScoreBreakdown({
   dimensions,
   pick,
+  pickContext,
   matchId,
   vipLocked = false,
 }: ScoreBreakdownProps) {
@@ -29,7 +34,11 @@ export function ScoreBreakdown({
           size="compact"
           className="min-w-0 flex-1 rounded-2xl lg:flex"
         >
-          <PredictionPickCard pick={pick} matchId={matchId} />
+          <PredictionPickCard
+            pick={pick}
+            pickContext={pickContext}
+            matchId={matchId}
+          />
         </VipContentLock>
       </div>
     </section>

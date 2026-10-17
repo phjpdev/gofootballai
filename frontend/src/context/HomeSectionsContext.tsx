@@ -11,10 +11,13 @@ import {
 import {
   DEFAULT_HOME_SECTIONS,
   homeSectionsById,
+  localizeHomeSection,
   type HomeSection,
   type HomeSectionId,
+  type LocalizedHomeSection,
 } from "@/lib/data/home-sections";
 import { fetchHomeSections } from "@/lib/home-sections-api";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 type HomeSectionsContextValue = {
   sections: Record<HomeSectionId, HomeSection>;
@@ -91,4 +94,13 @@ export function useHomeSections() {
 export function useHomeSection(id: HomeSectionId) {
   const { sections } = useHomeSections();
   return sections[id];
+}
+
+/** The section's text in the reader's language, for rendering. */
+export function useLocalizedHomeSection(
+  id: HomeSectionId,
+): LocalizedHomeSection {
+  const section = useHomeSection(id);
+  const { locale } = useI18n();
+  return useMemo(() => localizeHomeSection(section, locale), [section, locale]);
 }

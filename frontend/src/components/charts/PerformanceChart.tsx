@@ -2,10 +2,12 @@
 
 import { ArrowRight, Clock, Lightbulb } from "lucide-react";
 import { TabGroup } from "@/components/ui/TabGroup";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 const GRID_LINES = ["900", "800", "700", "600", "500"];
 
 export function PerformanceChart() {
+  const { t } = useI18n();
   return (
     <div className="flex w-full flex-col gap-4 rounded-[32px] bg-gray-90 p-4">
       <TabGroup variant="dark" />
@@ -60,7 +62,7 @@ export function PerformanceChart() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <p className="text-[30px] font-bold leading-[38px] tracking-[-0.3px] text-white">
-            24 入球
+            {t.matchDetail.charts.goals(24)}
           </p>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -73,14 +75,14 @@ export function PerformanceChart() {
             <div className="flex items-center gap-1">
               <Lightbulb className="size-5 text-gray-20" strokeWidth={2} />
               <span className="text-sm font-medium tracking-[-0.028px] text-gray-20">
-                8 項 AI 洞察
+                {t.matchDetail.charts.insights(8)}
               </span>
             </div>
           </div>
         </div>
         <button
           type="button"
-          aria-label="查看詳情"
+          aria-label={t.matchDetail.charts.viewDetails}
           className="flex size-14 shrink-0 items-center justify-center rounded-[19px] bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.25)]"
         >
           <ArrowRight className="size-6 text-gray-100" strokeWidth={2.5} />

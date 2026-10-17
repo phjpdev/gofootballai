@@ -10,16 +10,18 @@ export type TopMatchPreviewSlot = {
   homeTeam: string;
   awayTeam: string;
   pickSelection: string;
+  /** Optional English overrides; otherwise derived from HKJC names / the pick mapper. */
+  homeTeamEn?: string;
+  awayTeamEn?: string;
+  pickSelectionEn?: string;
 };
 
 export const PREVIEW_SLOT_COUNT = 4;
 
-export const PREVIEW_SLOT_LABELS: Record<TopMatchPreviewId, string> = {
-  "preview-1": "精選 1",
-  "preview-2": "精選 2",
-  "preview-3": "精選 3",
-  "preview-4": "精選 4",
-};
+/** 1-based slot number, for labels like `t.analysis.editTopPreview.slotLabel(n)`. */
+export function previewSlotNumber(id: TopMatchPreviewId): number {
+  return Number(id.slice("preview-".length));
+}
 
 export const DEFAULT_TOP_MATCH_PREVIEWS: TopMatchPreviewSlot[] = [
   { id: "preview-1", matchId: "", homeTeam: "", awayTeam: "", pickSelection: "" },
@@ -65,6 +67,11 @@ export function mergePreviewMatchIds(
 
 export function hasPreviewOverrides(slot: TopMatchPreviewSlot): boolean {
   return Boolean(
-    slot.homeTeam.trim() || slot.awayTeam.trim() || slot.pickSelection.trim(),
+    slot.homeTeam.trim() ||
+      slot.awayTeam.trim() ||
+      slot.pickSelection.trim() ||
+      slot.homeTeamEn?.trim() ||
+      slot.awayTeamEn?.trim() ||
+      slot.pickSelectionEn?.trim(),
   );
 }

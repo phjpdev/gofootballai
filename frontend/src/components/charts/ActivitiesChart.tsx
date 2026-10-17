@@ -2,6 +2,8 @@
 
 import { TabGroup } from "@/components/ui/TabGroup";
 import { figmaAsset } from "@/lib/figma-assets";
+import { formatNumber } from "@/lib/i18n/format";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 const GRID_LINE = figmaAsset("e25c974c2802bd011ac275d5ce0e1607fd6a5128");
 const GRID_LABELS = ["900", "800", "700", "600", "500"] as const;
@@ -57,6 +59,7 @@ type ActivitiesChartProps = {
 };
 
 export function ActivitiesChart({ momentum = [48, 52, 55, 61, 58, 63, 67] }: ActivitiesChartProps) {
+  const { locale, t } = useI18n();
   const peak = Math.max(...momentum);
   const latest = momentum[momentum.length - 1] ?? 0;
   const total = momentum.reduce((sum, value) => sum + value, 0);
@@ -66,13 +69,13 @@ export function ActivitiesChart({ momentum = [48, 52, 55, 61, 58, 63, 67] }: Act
     <section className="flex w-full flex-col gap-2">
       <div className="flex h-6 w-full items-center justify-between">
         <p className="text-base font-bold leading-none tracking-[-0.048px] text-white">
-          進攻趨勢
+          {t.matchDetail.charts.attackTrend}
         </p>
         <button
           type="button"
           className="text-sm font-medium leading-none tracking-[-0.028px] text-[#f97316]"
         >
-          查看全部
+          {t.common.seeAll}
         </button>
       </div>
 
@@ -105,7 +108,7 @@ export function ActivitiesChart({ momentum = [48, 52, 55, 61, 58, 63, 67] }: Act
         <div className="flex w-full items-center justify-between">
           <div className="flex flex-col gap-1">
             <p className="text-[30px] font-bold leading-[38px] tracking-[-0.3px] text-white">
-              {total.toLocaleString()}
+              {formatNumber(total, locale)}
             </p>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
@@ -151,7 +154,7 @@ export function ActivitiesChart({ momentum = [48, 52, 55, 61, 58, 63, 67] }: Act
                   </div>
                 </div>
                 <p className="text-sm font-medium leading-none tracking-[-0.028px] text-[#d7d8d9]">
-                  {momentum.length} 節點
+                  {t.matchDetail.charts.dataPoints(momentum.length)}
                 </p>
               </div>
             </div>
@@ -159,7 +162,7 @@ export function ActivitiesChart({ momentum = [48, 52, 55, 61, 58, 63, 67] }: Act
 
           <button
             type="button"
-            aria-label="查看詳情"
+            aria-label={t.matchDetail.charts.viewDetails}
             className="relative size-14 shrink-0 overflow-hidden rounded-[19px] bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.25)]"
           >
             <div className="absolute left-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2">

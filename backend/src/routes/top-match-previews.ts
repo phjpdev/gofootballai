@@ -4,9 +4,10 @@ import {
   PREVIEW_SLOT_COUNT,
   updateTopMatchPreviews,
   type TopMatchPreviewId,
-  type TopMatchPreviewSlot,
+  type TopMatchPreviewUpdate,
 } from "../lib/top-match-previews.js";
 import { requireAdmin, requireAuth, type AuthedRequest } from "../middleware/auth.js";
+import { exceedsLength, readEnglishField } from "../lib/english-fields.js";
 
 const router = Router();
 
@@ -30,7 +31,7 @@ router.put("/", requireAuth, requireAdmin, async (req: AuthedRequest, res) => {
     return;
   }
 
-  const items: TopMatchPreviewSlot[] = [];
+  const items: TopMatchPreviewUpdate[] = [];
 
   for (const raw of rawItems) {
     const id = String(raw?.id ?? "") as TopMatchPreviewId;
@@ -63,7 +64,28 @@ router.put("/", requireAuth, requireAdmin, async (req: AuthedRequest, res) => {
       return;
     }
 
-    items.push({ id, matchId, homeTeam, awayTeam, pickSelection });
+    const homeTeamEn = readEnglishField(raw, "homeTeamEn");
+    const awayTeamEn = readEnglishField(raw, "awayTeamEn");
+    const pickSelectionEn = readEnglishField(raw, "pickSelectionEn");
+    if (
+      exceedsLength(homeTeamEn, 120) ||
+      exceedsLength(awayTeamEn, 120) ||
+      exceedsLength(pickSelectionEn, 120)
+    ) {
+      res.status(400).json({ error: "文字內容過長" });
+      return;
+    }
+
+    items.push({
+      id,
+      matchId,
+      homeTeam,
+      awayTeam,
+      pickSelection,
+      homeTeamEn,
+      awayTeamEn,
+      pickSelectionEn,
+    });
   }
 
   const sortedIds = items.map((item) => item.id).sort();

@@ -37,6 +37,7 @@ import {
   type AuthedRequest,
 } from "../middleware/auth.js";
 import type { RecordType } from "../types.js";
+import { exceedsLength, readEnglishField } from "../lib/english-fields.js";
 
 const router = Router();
 
@@ -192,6 +193,13 @@ router.post(
       return;
     }
 
+    const titleEn = readEnglishField(req.body, "titleEn");
+    const contentEn = readEnglishField(req.body, "contentEn");
+    if (exceedsLength(titleEn, 300)) {
+      res.status(400).json({ error: "英文標題最多 300 個字元" });
+      return;
+    }
+
     const uploadId = String(req.body.uploadId ?? "").trim();
 
     if ((type === "photo" || type === "video") && !req.file && !uploadId) {
@@ -258,7 +266,9 @@ router.post(
           authorId: req.user!.sub,
           type,
           title,
+          titleEn,
           content: content || undefined,
+          contentEn,
           mediaUrl: mediaUrlFromSession,
           displayDate,
           starRating,
@@ -307,7 +317,9 @@ router.post(
         authorId: req.user!.sub,
         type,
         title,
+        titleEn,
         content: content || undefined,
+        contentEn,
         mediaUrl,
         displayDate,
         starRating,
@@ -363,6 +375,13 @@ router.patch(
       return;
     }
 
+    const titleEn = readEnglishField(req.body, "titleEn");
+    const contentEn = readEnglishField(req.body, "contentEn");
+    if (exceedsLength(titleEn, 300)) {
+      res.status(400).json({ error: "英文標題最多 300 個字元" });
+      return;
+    }
+
     let mediaUrl: string | null | undefined = undefined;
 
     if (type === "text") {
@@ -408,6 +427,8 @@ router.patch(
         mediaUrl,
         displayDate,
         starRating,
+        titleEn,
+        contentEn,
       });
 
       if (!record) {

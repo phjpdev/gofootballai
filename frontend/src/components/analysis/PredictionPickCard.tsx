@@ -1,14 +1,36 @@
+"use client";
+
 import Image from "next/image";
 import { LedBorder } from "@/components/motion/LedBorder";
+import type { Locale } from "@/lib/i18n/config";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { formatPickSelection, type PickContext } from "@/lib/i18n/localized";
+import { cn } from "@/lib/utils";
 import type { AnalysisPick } from "@/types/analysis";
 
 type PredictionPickCardProps = {
   pick: AnalysisPick;
+  /** Team names (and the AI's English wording, if it applies) for the English pick. */
+  pickContext?: PickContext;
   matchId: string;
 };
 
-function splitPickSelection(selection: string): { label: string; value: string } {
+/** Labels longer than this get a smaller font so English team names fit the card. */
+const LONG_LABEL_CHARS = 9;
+
+function splitPickSelection(
+  selection: string,
+  locale: Locale,
+): { label: string; value: string } {
   const normalized = selection.trim();
+  if (locale === "en") {
+    // "Over 2.5", "Home -0.5/-1", "Germany -1"
+    const lineMatch = normalized.match(/^(.+?)\s+([-+]?\d[\d./+-]*)$/);
+    if (lineMatch?.[2]) {
+      return { label: lineMatch[1], value: lineMatch[2] };
+    }
+    return { label: normalized, value: "" };
+  }
   const handicapMatch = normalized.match(/^([\u4e00-\u9fff]+)\s*([-+]?[\d./]+.*)$/);
   if (handicapMatch?.[2]) {
     return { label: handicapMatch[1], value: handicapMatch[2].trim() };
@@ -20,8 +42,11 @@ function splitPickSelection(selection: string): { label: string; value: string }
   return { label: normalized, value: "" };
 }
 
-export function PredictionPickCard({ pick }: PredictionPickCardProps) {
-  const { label, value } = splitPickSelection(pick.selection);
+export function PredictionPickCard({ pick, pickContext }: PredictionPickCardProps) {
+  const { locale, t } = useI18n();
+  const selection = formatPickSelection(pick.selection, locale, pickContext);
+  const { label, value } = splitPickSelection(selection, locale);
+  const longLabel = locale === "en" && label.length > LONG_LABEL_CHARS;
 
   return (
     <LedBorder
@@ -30,7 +55,7 @@ export function PredictionPickCard({ pick }: PredictionPickCardProps) {
       borderRadius={16}
     >
       <div
-        aria-label={`預測 ${pick.selection}`}
+        aria-label={t.matchDetail.pick.ariaLabel(selection)}
         className="relative block h-full w-full bg-gray-90 text-left"
       >
         <Image
@@ -43,11 +68,17 @@ export function PredictionPickCard({ pick }: PredictionPickCardProps) {
         />
         <div className="absolute inset-0 flex flex-col items-center text-white">
           <p className="mt-3 rounded-xl bg-black/50 px-3 py-1 text-sm font-bold leading-none">
-            預測:
+            {t.matchDetail.pick.heading}
           </p>
-          <div className="flex flex-1 items-center justify-center px-2">
-            <div className="flex flex-col items-center gap-1 rounded-xl bg-black/50 px-3 py-2.5 text-center sm:px-4 sm:py-3">
-              <span className="max-w-full text-[28px] font-bold leading-tight tracking-tight sm:text-[32px] lg:text-5xl">
+          <div className="flex min-w-0 max-w-full flex-1 items-center justify-center px-2">
+            <div className="flex min-w-0 max-w-full flex-col items-center gap-1 rounded-xl bg-black/50 px-3 py-2.5 text-center sm:px-4 sm:py-3">
+              <span
+                className={cn(
+                  "max-w-full text-[28px] font-bold leading-tight tracking-tight sm:text-[32px] lg:text-5xl",
+                  longLabel &&
+                    "break-words text-lg leading-snug sm:text-xl lg:text-3xl",
+                )}
+              >
                 {label}
               </span>
               {value && (

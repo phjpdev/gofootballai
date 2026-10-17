@@ -1,4 +1,5 @@
 import type { TopMatchPreviewSlot } from "@/lib/data/top-match-previews";
+import { readApiError } from "@/lib/i18n/api-errors";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -8,6 +9,9 @@ type ApiTopMatchPreviewSlot = {
   homeTeam: string;
   awayTeam: string;
   pickSelection: string;
+  homeTeamEn: string | null;
+  awayTeamEn: string | null;
+  pickSelectionEn: string | null;
 };
 
 function mapSlot(slot: ApiTopMatchPreviewSlot): TopMatchPreviewSlot {
@@ -17,17 +21,13 @@ function mapSlot(slot: ApiTopMatchPreviewSlot): TopMatchPreviewSlot {
     homeTeam: slot.homeTeam,
     awayTeam: slot.awayTeam,
     pickSelection: slot.pickSelection,
+    homeTeamEn: slot.homeTeamEn ?? undefined,
+    awayTeamEn: slot.awayTeamEn ?? undefined,
+    pickSelectionEn: slot.pickSelectionEn ?? undefined,
   };
 }
 
-async function parseError(response: Response): Promise<string> {
-  try {
-    const data = (await response.json()) as { error?: string };
-    return data.error ?? "請求失敗，請稍後再試";
-  } catch {
-    return "請求失敗，請稍後再試";
-  }
-}
+const parseError = readApiError;
 
 export async function fetchTopMatchPreviews(): Promise<TopMatchPreviewSlot[]> {
   const response = await fetch(`${API_URL}/api/top-match-previews/public`, {

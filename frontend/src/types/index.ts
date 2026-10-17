@@ -4,7 +4,10 @@ export type Post = {
   id: string;
   type: PostType;
   title: string;
+  /** Optional English override; English readers fall back to `title`. */
+  titleEn?: string;
   content?: string;
+  contentEn?: string;
   mediaUrl?: string;
   displayDate?: string;
   starRating?: number;
@@ -23,6 +26,8 @@ export type Match = {
   date: string;
   time: string;
   venue: string;
+  /** English for `venue` (the HKJC tournament name), when known. */
+  tournamentNameEn?: string;
   homeScore?: number;
   awayScore?: number;
   homeTeam?: string;

@@ -4,10 +4,12 @@ import { useState } from "react";
 import { CreateRecordModal } from "@/components/records/CreateRecordModal";
 import { RecordList } from "@/components/records/RecordList";
 import { useAuth } from "@/context/AuthContext";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import { Plus } from "lucide-react";
 
 export default function RecordsPage() {
   const { isAdmin, isLoading } = useAuth();
+  const { t } = useI18n();
   const [modalOpen, setModalOpen] = useState(false);
 
   if (isLoading) {
@@ -24,11 +26,11 @@ export default function RecordsPage() {
         {isAdmin ? (
           <div className="flex items-start justify-between gap-4">
             <p className="text-sm leading-[1.6] text-gray-40">
-              點擊 + 上傳相片、影片或文字公告。
+              {t.records.page.adminHint}
             </p>
             <button
               type="button"
-              aria-label="新增紀錄"
+              aria-label={t.records.page.addRecord}
               onClick={() => setModalOpen(true)}
               className="flex size-12 shrink-0 items-center justify-center rounded-full bg-orange-50 text-white shadow-lg lg:size-16"
             >
@@ -37,7 +39,7 @@ export default function RecordsPage() {
           </div>
         ) : (
           <p className="text-sm leading-[1.6] text-gray-40">
-            Go football 每日紀錄
+            {t.records.page.publicIntro}
           </p>
         )}
 

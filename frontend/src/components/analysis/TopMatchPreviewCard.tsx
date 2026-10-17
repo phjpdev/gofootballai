@@ -13,8 +13,18 @@ import { getMatchById } from "@/lib/data/matches";
 import { hkjcMatchToLegacy } from "@/lib/hkjc/fetch-matches";
 import { fetchHkjcMatchByIdFromApi } from "@/lib/hkjc/matches-api";
 import { flipOverUnderPickSelection } from "@/lib/analysis-pick-display";
+import type { Locale } from "@/lib/i18n/config";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import type { PickContext } from "@/lib/i18n/localized";
 import type { MatchAnalysisResult } from "@/types/analysis";
 import type { Match } from "@/types";
+
+/** Key into `t.analysis.topPreview`, resolved at render so it follows the locale. */
+type PreviewError =
+  | "matchNotFound"
+  | "analysisPending"
+  | "noAnalysis"
+  | "analysisFailed";
 
 type TopMatchPreviewCardProps = {
   matchId: string;
@@ -22,7 +32,10 @@ type TopMatchPreviewCardProps = {
   delay?: number;
 };
 
-async function loadMatch(matchId: string): Promise<Match | null> {
+async function loadMatch(
+  matchId: string,
+  locale: Locale,
+): Promise<Match | null> {
   try {
     const hkjcMatch = await fetchHkjcMatchByIdFromApi(matchId);
     if (hkjcMatch) {
@@ -32,7 +45,25 @@ async function loadMatch(matchId: string): Promise<Match | null> {
     // fall through to static data
   }
 
-  return getMatchById(matchId) ?? null;
+  return getMatchById(matchId, locale) ?? null;
+}
+
+/**
+ * English name for one side: the slot's English override, else the HKJC
+ * English name while the slot's Chinese name is still this match's team.
+ * Otherwise leave it empty so the slot's Chinese name is resolved/shown as is.
+ */
+function previewTeamEn(
+  overrideZh: string,
+  overrideEn: string | undefined,
+  matchZh: string | undefined,
+  matchEn: string | undefined,
+): string | undefined {
+  const english = overrideEn?.trim();
+  if (english) return english;
+  const chinese = overrideZh.trim();
+  if (!chinese || chinese === matchZh?.trim()) return matchEn;
+  return undefined;
 }
 
 export function TopMatchPreviewCard({
@@ -41,10 +72,11 @@ export function TopMatchPreviewCard({
   delay = 0,
 }: TopMatchPreviewCardProps) {
   const { token, canViewVipAnalysis } = useAuth();
+  const { locale, t } = useI18n();
   const [match, setMatch] = useState<Match | null>(null);
   const [analysis, setAnalysis] = useState<MatchAnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<PreviewError | null>(null);
 
   const overrides = slot && hasPreviewOverrides(slot) ? slot : undefined;
 
@@ -54,6 +86,19 @@ export function TopMatchPreviewCard({
       ...match,
       homeTeam: overrides.homeTeam || match.homeTeam,
       awayTeam: overrides.awayTeam || match.awayTeam,
+      homeTeamEn: previewTeamEn(
+        overrides.homeTeam,
+        overrides.homeTeamEn,
+        match.homeTeam,
+        match.homeTeamEn,
+      ),
+      awayTeamEn: previewTeamEn(
+        overrides.awayTeam,
+        overrides.awayTeamEn,
+        match.awayTeam,
+        match.awayTeamEn,
+      ),
+      // Chinese data title (split on "對" by consumers); display text comes from the team fields.
       title: `${overrides.homeTeam || match.homeTeam} 對 ${overrides.awayTeam || match.awayTeam}`,
     };
   }, [match, overrides]);
@@ -71,6 +116,28 @@ export function TopMatchPreviewCard({
     };
   }, [analysis, overrides]);
 
+  // The pick stays Chinese; PredictionPickCard translates it with this context.
+  const pickContext = useMemo((): PickContext | undefined => {
+    if (!displayMatch || !analysis) return undefined;
+    const slotPick = Boolean(overrides?.pickSelection);
+    // The AI's English wording only describes its own, untouched pick.
+    const isOriginalPick =
+      !slotPick &&
+      flipOverUnderPickSelection(analysis.pick.selection) ===
+        analysis.pick.selection;
+    return {
+      homeTeam: displayMatch.homeTeam,
+      awayTeam: displayMatch.awayTeam,
+      homeTeamEn: displayMatch.homeTeamEn,
+      awayTeamEn: displayMatch.awayTeamEn,
+      fallbackEn: slotPick
+        ? overrides?.pickSelectionEn
+        : isOriginalPick
+          ? analysis.pick.selectionEn
+          : undefined,
+    };
+  }, [displayMatch, analysis, overrides]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -79,11 +146,11 @@ export function TopMatchPreviewCard({
       setError(null);
 
       try {
-        const loadedMatch = await loadMatch(matchId);
+        const loadedMatch = await loadMatch(matchId, locale);
         if (cancelled) return;
 
         if (!loadedMatch) {
-          setError("找不到賽事資料");
+          setError("matchNotFound");
           return;
         }
 
@@ -91,19 +158,19 @@ export function TopMatchPreviewCard({
 
         if (!token) return;
 
-        const response = await fetchMatchAnalysis(token, matchId);
+        const response = await fetchMatchAnalysis(token, matchId, locale);
         if (cancelled) return;
 
         if (response.analysis) {
           setAnalysis(response.analysis);
         } else if (response.status === "pending") {
-          setError("AI 分析生成中");
+          setError("analysisPending");
         } else {
-          setError("暫無分析資料");
+          setError("noAnalysis");
         }
       } catch {
         if (!cancelled) {
-          setError("無法載入分析");
+          setError("analysisFailed");
         }
       } finally {
         if (!cancelled) {
@@ -117,7 +184,7 @@ export function TopMatchPreviewCard({
     return () => {
       cancelled = true;
     };
-  }, [matchId, token]);
+  }, [matchId, token, locale]);
 
   return (
     <AnimateIn variant="slide-right" delay={delay}>
@@ -133,7 +200,9 @@ export function TopMatchPreviewCard({
         )}
 
         {!loading && error && (
-          <p className="py-8 text-center text-sm text-gray-40">{error}</p>
+          <p className="py-8 text-center text-sm text-gray-40">
+            {t.analysis.topPreview[error]}
+          </p>
         )}
 
         {!loading && displayMatch && analysis && displayPick && (
@@ -142,6 +211,7 @@ export function TopMatchPreviewCard({
             <ScoreBreakdown
               dimensions={analysis.dimensions}
               pick={displayPick}
+              pickContext={pickContext}
               matchId={displayMatch.id}
               vipLocked={!canViewVipAnalysis && !overrides?.pickSelection}
             />
@@ -151,7 +221,7 @@ export function TopMatchPreviewCard({
         {!loading && match && !analysis && !error && (
           <div className="flex flex-col items-center gap-3 py-10">
             <Loader2 className="size-6 animate-spin text-orange-50" />
-            <p className="text-sm text-gray-40">AI 正在量化分析中…</p>
+            <p className="text-sm text-gray-40">{t.analysis.topPreview.analysing}</p>
           </div>
         )}
       </Link>

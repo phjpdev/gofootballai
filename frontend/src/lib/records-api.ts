@@ -1,4 +1,5 @@
 import type { Post, PostType } from "@/types";
+import { localizeApiError, readApiError } from "@/lib/i18n/api-errors";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -8,7 +9,9 @@ type ApiRecord = {
   authorName: string;
   type: PostType;
   title: string;
+  titleEn: string | null;
   content: string | null;
+  contentEn: string | null;
   mediaUrl: string | null;
   displayDate: string | null;
   starRating: number | null;
@@ -39,7 +42,9 @@ function mapRecord(record: ApiRecord, cacheKey?: string): Post {
     id: record.id,
     type: record.type,
     title: record.title,
+    titleEn: record.titleEn ?? undefined,
     content: record.content ?? undefined,
+    contentEn: record.contentEn ?? undefined,
     mediaUrl: resolveMediaUrl(record.mediaUrl, cacheKey ?? record.id),
     displayDate: record.displayDate ?? undefined,
     starRating: record.starRating ?? undefined,
@@ -48,14 +53,7 @@ function mapRecord(record: ApiRecord, cacheKey?: string): Post {
   };
 }
 
-async function parseError(response: Response): Promise<string> {
-  try {
-    const data = (await response.json()) as { error?: string };
-    return data.error ?? "請求失敗，請稍後再試";
-  } catch {
-    return "請求失敗，請稍後再試";
-  }
-}
+const parseError = readApiError;
 
 export async function fetchPublicRecords(): Promise<Post[]> {
   const response = await fetch(`${API_URL}/api/records/public`, {
@@ -86,7 +84,9 @@ export async function fetchRecords(token: string): Promise<Post[]> {
 export type RecordInput = {
   type: PostType;
   title: string;
+  titleEn?: string;
   content?: string;
+  contentEn?: string;
   displayDate: string;
   starRating: number;
   file?: File;
@@ -103,6 +103,9 @@ function buildRecordFormData(input: RecordInput, uploadId?: string): FormData {
   formData.append("displayDate", input.displayDate);
   formData.append("starRating", String(input.starRating));
   if (input.content) formData.append("content", input.content);
+  // Sent even when empty so an admin can clear an English override.
+  if (input.titleEn !== undefined) formData.append("titleEn", input.titleEn);
+  if (input.contentEn !== undefined) formData.append("contentEn", input.contentEn);
   if (uploadId) {
     formData.append("uploadId", uploadId);
   } else if (input.file) {
@@ -167,7 +170,7 @@ async function withRetry<T>(
       if (attempt < attempts) await sleep(backoffMs(attempt));
     }
   }
-  throw lastError instanceof Error ? lastError : new Error(label);
+  throw lastError instanceof Error ? lastError : new Error(localizeApiError(label));
 }
 
 class PermanentUploadError extends Error {}
@@ -186,10 +189,10 @@ async function uploadFileInChunks(
     if (!response.ok || !data.uploadId) {
       if (!isTransientStatus(response.status)) {
         throw new PermanentUploadError(
-          data.error ?? parseXhrError(response.status, ""),
+          localizeApiError(data.error ?? parseXhrError(response.status, "")),
         );
       }
-      throw new Error(data.error ?? "無法建立上傳工作階段");
+      throw new Error(localizeApiError(data.error ?? "無法建立上傳工作階段"));
     }
     return { uploadId: data.uploadId };
   });
@@ -205,7 +208,7 @@ async function uploadFileInChunks(
     for (let attempt = 1; attempt <= CHUNK_MAX_ATTEMPTS && !placed; attempt += 1) {
       spent += 1;
       if (spent > CHUNK_ATTEMPT_BUDGET) {
-        throw new Error("上傳重試次數過多，請稍後再試");
+        throw new Error(localizeApiError("上傳重試次數過多，請稍後再試"));
       }
 
       try {
@@ -233,10 +236,10 @@ async function uploadFileInChunks(
         if (!response.ok) {
           if (!isTransientStatus(response.status)) {
             throw new PermanentUploadError(
-              data.error ?? parseXhrError(response.status, ""),
+              localizeApiError(data.error ?? parseXhrError(response.status, "")),
             );
           }
-          throw new Error(data.error ?? "上傳中斷");
+          throw new Error(localizeApiError(data.error ?? "上傳中斷"));
         }
 
         offset = typeof data.received === "number" ? data.received : end;
@@ -244,7 +247,7 @@ async function uploadFileInChunks(
       } catch (error) {
         if (error instanceof PermanentUploadError) throw error;
         if (attempt >= CHUNK_MAX_ATTEMPTS) {
-          throw error instanceof Error ? error : new Error("上傳中斷");
+          throw error instanceof Error ? error : new Error(localizeApiError("上傳中斷"));
         }
         await sleep(backoffMs(attempt));
       }
@@ -280,10 +283,10 @@ async function finalizeChunkedRecord(
       const data = await readJsonSafe(response);
       if (!isTransientStatus(response.status)) {
         throw new PermanentUploadError(
-          data.error ?? parseXhrError(response.status, ""),
+          localizeApiError(data.error ?? parseXhrError(response.status, "")),
         );
       }
-      throw new Error(data.error ?? parseXhrError(response.status, ""));
+      throw new Error(localizeApiError(data.error ?? parseXhrError(response.status, "")));
     }
 
     const data = (await response.json()) as { record: ApiRecord };
@@ -297,12 +300,14 @@ function shouldChunk(file?: File): boolean {
 
 function parseXhrError(status: number, responseText: string): string {
   if (status === 413) {
-    return "檔案太大，伺服器拒絕上傳（413）。請聯絡管理員將 Nginx client_max_body_size 設為至少 100M。";
+    return localizeApiError(
+      "檔案太大，伺服器拒絕上傳（413）。請聯絡管理員將 Nginx client_max_body_size 設為至少 100M。",
+    );
   }
 
   try {
     const data = JSON.parse(responseText) as { error?: string };
-    if (data.error) return data.error;
+    if (data.error) return localizeApiError(data.error);
   } catch {
     // Nginx/HTML error pages are not JSON
   }
@@ -313,13 +318,15 @@ function parseXhrError(status: number, responseText: string): string {
   // check blocks it and onload never fires. Either way the API went away
   // mid-request -- blaming the user's connection sent us hunting the wrong bug.
   if (status === 0) {
-    return "與伺服器的連線中斷（伺服器可能剛重新啟動），請再試一次。";
+    return localizeApiError("與伺服器的連線中斷（伺服器可能剛重新啟動），請再試一次。");
   }
   if (status === 502 || status === 503 || status === 504) {
-    return `伺服器暫時無法處理請求（${status}），可能正在重新啟動，請稍候再試一次。`;
+    return localizeApiError(
+      `伺服器暫時無法處理請求（${status}），可能正在重新啟動，請稍候再試一次。`,
+    );
   }
-  if (status >= 500) return "伺服器錯誤，請稍後再試";
-  return "請求失敗，請稍後再試";
+  if (status >= 500) return localizeApiError("伺服器錯誤，請稍後再試");
+  return localizeApiError("請求失敗，請稍後再試");
 }
 
 function submitRecordForm(
@@ -350,7 +357,7 @@ function submitRecordForm(
           const data = JSON.parse(xhr.responseText) as { record: ApiRecord };
           resolve(mapRecord(data.record));
         } catch {
-          reject(new Error("伺服器回應格式錯誤"));
+          reject(new Error(localizeApiError("伺服器回應格式錯誤")));
         }
         return;
       }
@@ -358,7 +365,7 @@ function submitRecordForm(
     };
 
     xhr.onerror = () => reject(new Error(parseXhrError(0, "")));
-    xhr.onabort = () => reject(new Error("上傳已取消"));
+    xhr.onabort = () => reject(new Error(localizeApiError("上傳已取消")));
 
     xhr.send(buildRecordFormData(input));
   });

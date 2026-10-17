@@ -3,16 +3,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 export function AnalysisMemberGate({
   redirectTo,
-  hint = "請登入或註冊會員帳戶，以查看 AI 賽事量化分析。",
+  hint: hintProp,
   variant = "card",
 }: {
   redirectTo: string;
   hint?: string;
   variant?: "card" | "fullscreen";
 }) {
+  const { t } = useI18n();
+  const hint = hintProp ?? t.matchDetail.lockedHint.default;
   const memberLoginHref = `/member?redirect=${encodeURIComponent(redirectTo)}`;
 
   if (variant === "fullscreen") {
@@ -32,7 +35,7 @@ export function AnalysisMemberGate({
 
           <div className="mb-10 flex w-full flex-col items-center gap-3 text-center">
             <h1 className="text-[28px] font-bold leading-[34px] tracking-[-0.4px] text-white">
-              AI 精選預測
+              {t.matchDetail.memberGate.fullscreenTitle}
             </h1>
             <p className="max-w-[320px] text-sm leading-[1.6] text-gray-40">{hint}</p>
           </div>
@@ -42,11 +45,11 @@ export function AnalysisMemberGate({
             className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-orange-50 text-base font-semibold text-white"
           >
             <LogIn className="size-5" />
-            前往會員登入
+            {t.matchDetail.memberGate.login}
           </Link>
 
           <p className="mt-4 text-center text-sm leading-[1.6] text-gray-40">
-            未有帳戶？登入頁面可免費註冊會員。
+            {t.matchDetail.memberGate.signupHint}
           </p>
         </div>
       </div>
@@ -63,7 +66,9 @@ export function AnalysisMemberGate({
         className="h-[100px] w-[100px] object-contain"
       />
       <div className="flex flex-col items-center gap-2 text-center">
-        <h2 className="text-xl font-bold text-white">會員專屬分析</h2>
+        <h2 className="text-xl font-bold text-white">
+          {t.matchDetail.memberGate.cardTitle}
+        </h2>
         <p className="max-w-[300px] text-sm leading-[1.6] text-gray-40">{hint}</p>
       </div>
       <Link
@@ -71,10 +76,10 @@ export function AnalysisMemberGate({
         className="flex h-14 w-full max-w-[320px] items-center justify-center gap-2 rounded-2xl bg-orange-50 text-base font-semibold text-white"
       >
         <LogIn className="size-5" />
-        前往會員登入
+        {t.matchDetail.memberGate.login}
       </Link>
       <p className="text-center text-sm text-gray-40">
-        未有帳戶？登入頁面可免費註冊會員。
+        {t.matchDetail.memberGate.signupHint}
       </p>
     </section>
   );

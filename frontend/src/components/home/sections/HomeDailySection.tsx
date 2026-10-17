@@ -3,15 +3,17 @@
 import Image from "next/image";
 import { HomeDesktopSectionShell } from "@/components/home/HomeDesktopSectionShell";
 import { HomeSectionHeader } from "@/components/home/HomeSectionHeader";
-import { useHomeSection } from "@/context/HomeSectionsContext";
+import { useLocalizedHomeSection } from "@/context/HomeSectionsContext";
 import { resolveHomeSectionImageUrl } from "@/lib/home-sections-api";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 type HomeDailySectionProps = {
   reverse?: boolean;
 };
 
 export function HomeDailySection({ reverse }: HomeDailySectionProps) {
-  const section = useHomeSection("daily");
+  const { t } = useI18n();
+  const section = useLocalizedHomeSection("daily");
   const imageUrl = resolveHomeSectionImageUrl(section.imageSrc);
 
   return (
@@ -24,7 +26,7 @@ export function HomeDailySection({ reverse }: HomeDailySectionProps) {
       <div className="relative min-h-0 w-full flex-1 lg:h-[min(560px,65vh)] lg:flex-none">
         <Image
           src={imageUrl}
-          alt="全球聯賽賽事列表預覽"
+          alt={t.home.imageAlt.daily}
           fill
           unoptimized={imageUrl.includes("/uploads/")}
           className="object-contain object-center shadow-[0px_4px_8px_rgba(15,23,42,0.03),0px_8px_16px_rgba(15,23,42,0.02)] lg:drop-shadow-[0_24px_48px_rgba(0,0,0,0.45)]"

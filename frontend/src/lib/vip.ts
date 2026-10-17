@@ -1,14 +1,17 @@
+import type { Locale } from "@/lib/i18n/config";
+import { formatDate } from "@/lib/i18n/format";
+
 export function isActiveVip(vipExpiresAt?: string | null): boolean {
   if (!vipExpiresAt) return false;
   return new Date(vipExpiresAt).getTime() > Date.now();
 }
 
-export function formatVipExpiryDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("zh-HK", {
+/** "2026年9月28日" / "28 Sept 2026", in HK time. */
+export function formatVipExpiryDate(iso: string, locale: Locale): string {
+  return formatDate(iso, locale, {
     year: "numeric",
-    month: "long",
+    month: locale === "en" ? "short" : "long",
     day: "numeric",
-    timeZone: "Asia/Hong_Kong",
   });
 }
 

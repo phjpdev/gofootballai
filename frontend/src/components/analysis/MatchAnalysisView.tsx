@@ -1,5 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import { MatchHeaderCard } from "@/components/analysis/MatchHeaderCard";
+import { useEffect, useState } from "react";
+import {
+  MatchHeaderCard,
+  type MatchHeaderMatch,
+} from "@/components/analysis/MatchHeaderCard";
 import { SandowScoreCard } from "@/components/analysis/SandowScoreCard";
 import { ScoreBreakdown } from "@/components/analysis/ScoreBreakdown";
 import { AthleticSlider } from "@/components/analysis/AthleticSlider";
@@ -10,13 +16,23 @@ import { StepsStatsChart } from "@/components/charts/StepsStatsChart";
 import { AnimateIn } from "@/components/motion/AnimateIn";
 import { AnalysisMemberGate } from "@/components/analysis/AnalysisLockScreen";
 import { VipContentLock } from "@/components/analysis/VipContentLock";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import type { PickContext } from "@/lib/i18n/localized";
 import type { MatchAnalysisResult } from "@/types/analysis";
-import type { Match } from "@/types";
 import { ChevronLeft, Loader2 } from "lucide-react";
 
+/**
+ * "switching": the shown text is still in the previous language while the new one loads.
+ * "untranslated": English was requested but the AI text is still Chinese.
+ */
+export type AnalysisLanguageStatus = "switching" | "untranslated" | null;
+
 type MatchAnalysisViewProps = {
-  match: Match;
+  match: MatchHeaderMatch;
   analysis: MatchAnalysisResult | null;
+  /** Team names (and the AI's English pick wording) for showing the pick in English. */
+  pickContext?: PickContext;
+  languageStatus?: AnalysisLanguageStatus;
   loading?: boolean;
   pending?: boolean;
   locked?: boolean;
@@ -31,9 +47,26 @@ type MatchAnalysisViewProps = {
   pickOverridden?: boolean;
 };
 
+const SLOW_HINT_DELAY_MS = 2_000;
+
 function AnalysisSkeleton() {
+  const { locale, t } = useI18n();
+  const [slow, setSlow] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSlow(true), SLOW_HINT_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <div className="flex flex-col gap-4">
+      {/* The first English request waits for an AI translation, so say why it's slow. */}
+      {locale === "en" && slow && (
+        <p role="status" className="px-2 text-center text-xs leading-[1.5] text-gray-40">
+          <Loader2 className="mr-1.5 inline size-3.5 animate-spin align-[-3px] text-orange-50" />
+          {t.matchDetail.loadingSlowHint}
+        </p>
+      )}
       <div className="h-[346px] animate-pulse rounded-[24px] bg-gray-90" />
       <div className="h-32 animate-pulse rounded-[24px] bg-gray-90" />
       <div className="h-48 animate-pulse rounded-[24px] bg-gray-90" />
@@ -42,11 +75,12 @@ function AnalysisSkeleton() {
 }
 
 function PendingState() {
+  const { t } = useI18n();
   return (
-    <div className="flex flex-col items-center gap-3 rounded-[24px] bg-gray-90 py-10">
+    <div className="flex flex-col items-center gap-3 rounded-[24px] bg-gray-90 px-4 py-10 text-center">
       <Loader2 className="size-8 animate-spin text-orange-50" />
-      <p className="text-sm font-medium text-white">AI 正在量化分析中…</p>
-      <p className="text-xs text-gray-40">十四代演算法運算中，通常需 10–30 秒</p>
+      <p className="text-sm font-medium text-white">{t.matchDetail.pending.title}</p>
+      <p className="text-xs text-gray-40">{t.matchDetail.pending.hint}</p>
     </div>
   );
 }
@@ -64,11 +98,13 @@ function MemberGate({
 export function MatchAnalysisView({
   match,
   analysis,
+  pickContext,
+  languageStatus = null,
   loading = false,
   pending = false,
   locked = false,
   canViewVipContent = true,
-  lockedHint = "請登入或註冊會員帳戶，以查看 AI 賽事量化分析。",
+  lockedHint,
   loginRedirectTo = "/analysis",
   error,
   onRetry,
@@ -77,6 +113,7 @@ export function MatchAnalysisView({
   onEditPick,
   pickOverridden = false,
 }: MatchAnalysisViewProps) {
+  const { t } = useI18n();
   const showPending = pending && !analysis;
   const showLoading = loading && !analysis && !locked;
   const vipLocked = !canViewVipContent;
@@ -89,7 +126,7 @@ export function MatchAnalysisView({
           className="flex w-fit items-center gap-1 text-sm font-medium text-gray-40 hover:text-white lg:text-base"
         >
           <ChevronLeft className="size-4" />
-          返回賽事分析
+          {t.matchDetail.backToAnalysis}
         </Link>
 
         <AnimateIn variant="slide-right" delay={0}>
@@ -103,7 +140,10 @@ export function MatchAnalysisView({
       </div>
 
       {locked && (
-        <MemberGate hint={lockedHint} redirectTo={loginRedirectTo} />
+        <MemberGate
+          hint={lockedHint ?? t.matchDetail.lockedHint.default}
+          redirectTo={loginRedirectTo}
+        />
       )}
 
       {!locked && showLoading && <AnalysisSkeleton />}
@@ -120,7 +160,7 @@ export function MatchAnalysisView({
               disabled={retrying}
               className="mt-3 text-sm font-medium text-orange-50 disabled:opacity-50"
             >
-              {retrying ? "重試中…" : "重新分析"}
+              {retrying ? t.matchDetail.retrying : t.matchDetail.reanalyse}
             </button>
           )}
         </div>
@@ -135,6 +175,7 @@ export function MatchAnalysisView({
                 <ScoreBreakdown
                   dimensions={analysis.dimensions}
                   pick={analysis.pick}
+                  pickContext={pickContext}
                   matchId={match.id}
                   vipLocked={vipLocked && !pickOverridden}
                 />
@@ -147,7 +188,7 @@ export function MatchAnalysisView({
                   score={analysis.confidenceScore}
                   level={analysis.recommendationLevel}
                   label={analysis.recommendationLabel}
-                  description="球隊具備應對高強度對抗的戰術能力"
+                  description={t.matchDetail.slider.description}
                   vipLocked={vipLocked}
                   middleContent={
                     vipLocked ? (
@@ -156,6 +197,7 @@ export function MatchAnalysisView({
                       <AnalysisNarrative
                         narrative={analysis.narrative}
                         riskFlags={analysis.riskFlags}
+                        languageStatus={languageStatus}
                       />
                     )
                   }
@@ -171,6 +213,7 @@ export function MatchAnalysisView({
               momentum={analysis.momentum}
               roi={analysis.roi}
               pick={analysis.pick}
+              pickContext={pickContext}
             />
           </AnimateIn>
 

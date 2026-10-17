@@ -1,0 +1,93 @@
+import { defineMessages } from "../define";
+
+/** Admin page (/admin): access gate and user management. */
+export const admin = defineMessages({
+  "zh-HK": {
+    page: {
+      adminOnlyTitle: "管理員專用",
+      adminOnlyBody: "此頁面僅供管理員使用，會員請前往會員頁面。",
+      goToMember: "前往會員頁面",
+      loginTitle: "管理員登入",
+      loginBody: "請在上方登入或註冊管理員帳戶，以管理用戶及平台內容。",
+    },
+    users: {
+      title: "管理用戶",
+      add: "新增用戶",
+      searchPlaceholder: "搜尋帳戶名稱或角色...",
+      empty: "暫無用戶。",
+      noMatch: (query: string) => `找不到符合「${query}」的用戶。`,
+      columns: {
+        username: "帳戶名稱",
+        role: "角色",
+        joined: "加入日期",
+        actions: "操作",
+      },
+      you: "你",
+      joinedOn: (date: string) => `加入 ${date}`,
+      vip: "VIP",
+      vipExpired: "VIP 已過期",
+      expiresOn: (date: string) => `到期 ${date}`,
+      editUser: (username: string) => `編輯 ${username}`,
+      deleteUser: (username: string) => `刪除 ${username}`,
+      confirmDelete: "確定刪除此用戶？此操作無法復原。",
+    },
+    form: {
+      createTitle: "新增用戶",
+      createSubmit: "建立用戶",
+      editTitle: "編輯用戶",
+      usernamePlaceholder: "帳戶名稱",
+      passwordPlaceholder: "密碼",
+      newPasswordPlaceholder: "新密碼（選填）",
+      vipMember: "VIP 會員",
+      vipExpiry: "VIP 到期日",
+      passwordRequired: "請輸入密碼",
+      vipExpiryRequired: "請選擇 VIP 到期日",
+      saveFailed: "儲存用戶失敗",
+    },
+  },
+  en: {
+    page: {
+      adminOnlyTitle: "Admins only",
+      adminOnlyBody:
+        "This page is for admins only. Members, please head to the Member page.",
+      goToMember: "Go to Member page",
+      loginTitle: "Admin login",
+      loginBody:
+        "Log in or sign up for an admin account above to manage users and site content.",
+    },
+    users: {
+      title: "Manage users",
+      add: "Add user",
+      searchPlaceholder: "Search username or role...",
+      empty: "No users yet.",
+      noMatch: (query: string) => `No users match “${query}”.`,
+      columns: {
+        username: "Username",
+        role: "Role",
+        joined: "Joined",
+        actions: "Actions",
+      },
+      you: "You",
+      joinedOn: (date: string) => `Joined ${date}`,
+      vip: "VIP",
+      vipExpired: "VIP expired",
+      expiresOn: (date: string) => `Expires ${date}`,
+      editUser: (username: string) => `Edit ${username}`,
+      deleteUser: (username: string) => `Delete ${username}`,
+      confirmDelete: "Delete this user? This can't be undone.",
+    },
+    form: {
+      createTitle: "Add user",
+      createSubmit: "Create user",
+      editTitle: "Edit user",
+      usernamePlaceholder: "Username",
+      passwordPlaceholder: "Password",
+      newPasswordPlaceholder: "New password (optional)",
+      vipMember: "VIP member",
+      vipExpiry: "VIP expiry date",
+      passwordRequired: "Please enter a password.",
+      vipExpiryRequired: "Please choose a VIP expiry date.",
+      saveFailed: "Couldn't save the user.",
+    },
+  },
+});

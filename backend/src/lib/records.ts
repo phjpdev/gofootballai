@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { query } from "./db.js";
+import { pushEnglishSets } from "./english-fields.js";
 import type { RecordItem, RecordType } from "../types.js";
 
 type RecordRow = {
@@ -8,7 +9,9 @@ type RecordRow = {
   author_name: string;
   type: RecordType;
   title: string;
+  title_en: string | null;
   content: string | null;
+  content_en: string | null;
   media_url: string | null;
   display_date: string | Date | null;
   star_rating: number | null;
@@ -37,7 +40,9 @@ function mapRecord(row: RecordRow): RecordItem {
     authorName: row.author_name,
     type: row.type,
     title: row.title,
+    titleEn: row.title_en,
     content: row.content,
+    contentEn: row.content_en,
     mediaUrl: row.media_url,
     displayDate: formatDisplayDate(row.display_date),
     starRating: row.star_rating,
@@ -47,7 +52,8 @@ function mapRecord(row: RecordRow): RecordItem {
 
 const RECORD_SELECT = `
   SELECT r.id, r.author_id, u.username AS author_name, r.type, r.title,
-         r.content, r.media_url, r.display_date, r.star_rating, r.created_at
+         r.title_en, r.content, r.content_en, r.media_url, r.display_date,
+         r.star_rating, r.created_at
   FROM records r
   JOIN users u ON u.id = r.author_id
 `;
@@ -65,7 +71,9 @@ export async function createRecord(input: {
   authorId: string;
   type: RecordType;
   title: string;
+  titleEn?: string | null;
   content?: string;
+  contentEn?: string | null;
   mediaUrl?: string;
   displayDate: string;
   starRating: number;
@@ -74,13 +82,16 @@ export async function createRecord(input: {
   const result = await query<RecordRow>(
     `WITH inserted AS (
        INSERT INTO records (
-         id, author_id, type, title, content, media_url, display_date, star_rating
+         id, author_id, type, title, content, media_url, display_date, star_rating,
+         title_en, content_en
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id, author_id, type, title, content, media_url, display_date, star_rating, created_at
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING id, author_id, type, title, title_en, content, content_en,
+                 media_url, display_date, star_rating, created_at
      )
      SELECT i.id, i.author_id, u.username AS author_name, i.type, i.title,
-            i.content, i.media_url, i.display_date, i.star_rating, i.created_at
+            i.title_en, i.content, i.content_en, i.media_url, i.display_date,
+            i.star_rating, i.created_at
      FROM inserted i
      JOIN users u ON u.id = i.author_id`,
     [
@@ -92,6 +103,8 @@ export async function createRecord(input: {
       input.mediaUrl ?? null,
       input.displayDate,
       input.starRating,
+      input.titleEn ?? null,
+      input.contentEn ?? null,
     ],
   );
 
@@ -123,6 +136,9 @@ export async function updateRecord(
     mediaUrl?: string | null;
     displayDate: string;
     starRating: number;
+    /** undefined = keep stored value, null = clear. */
+    titleEn?: string | null;
+    contentEn?: string | null;
   },
 ): Promise<RecordItem | null> {
   const sets = [
@@ -146,15 +162,22 @@ export async function updateRecord(
     params.push(input.mediaUrl);
   }
 
+  pushEnglishSets(sets, params, [
+    ["title_en", input.titleEn],
+    ["content_en", input.contentEn],
+  ]);
+
   const result = await query<RecordRow>(
     `WITH updated AS (
        UPDATE records
        SET ${sets.join(", ")}
        WHERE id = $1
-       RETURNING id, author_id, type, title, content, media_url, display_date, star_rating, created_at
+       RETURNING id, author_id, type, title, title_en, content, content_en,
+                 media_url, display_date, star_rating, created_at
      )
      SELECT u.id, u.author_id, usr.username AS author_name, u.type, u.title,
-            u.content, u.media_url, u.display_date, u.star_rating, u.created_at
+            u.title_en, u.content, u.content_en, u.media_url, u.display_date,
+            u.star_rating, u.created_at
      FROM updated u
      JOIN users usr ON usr.id = u.author_id`,
     params,

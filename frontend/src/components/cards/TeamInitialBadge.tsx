@@ -2,12 +2,19 @@ import { getTeamColor, getTeamInitials } from "@/lib/hkjc/team-badge";
 import { cn } from "@/lib/utils";
 
 type TeamInitialBadgeProps = {
+  /** Source name; keeps the badge colour the same in every language. */
   name: string;
+  /** Name in the reader's language, used for the initials (defaults to `name`). */
+  label?: string;
   compact?: boolean;
 };
 
-export function TeamInitialBadge({ name, compact = false }: TeamInitialBadgeProps) {
-  const initials = getTeamInitials(name);
+export function TeamInitialBadge({
+  name,
+  label,
+  compact = false,
+}: TeamInitialBadgeProps) {
+  const initials = getTeamInitials(label || name);
   const color = getTeamColor(name);
 
   return (

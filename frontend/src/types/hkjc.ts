@@ -30,6 +30,8 @@ export type HkjcMatch = {
   tournamentId: string;
   tournamentCode: string;
   tournamentName: string;
+  /** Missing on rows archived before English names were kept. */
+  tournamentNameEn?: string;
   matchDate: string;
   kickOffTime: string;
   kickOffLabel: string;

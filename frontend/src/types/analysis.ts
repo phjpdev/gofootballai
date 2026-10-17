@@ -15,7 +15,10 @@ export type AnalysisGoalProbabilities = {
 
 export type AnalysisPick = {
   market: string;
+  /** Always Chinese (it is flipped/overridden as Chinese); format for display. */
   selection: string;
+  /** AI translation of `selection`, used only when it can't be mapped in code. */
+  selectionEn?: string;
   odds: number;
   ev: string;
 };
@@ -42,6 +45,8 @@ export type AnalysisResponse = {
   analysis: MatchAnalysisResult | null;
   error?: string;
   expiresAt?: string;
+  /** Language of the text fields. "zh-HK" when English was requested but translation failed. */
+  language?: "zh-HK" | "en";
 };
 
 export type PrewarmResult = {

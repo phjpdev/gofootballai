@@ -5,6 +5,7 @@ import { CreateRecordModal } from "@/components/records/CreateRecordModal";
 import { RecordCard } from "@/components/records/RecordCard";
 import { RecordDetailModal } from "@/components/records/RecordDetailModal";
 import { usePosts } from "@/context/PostsContext";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import type { Post } from "@/types";
 
 export function RecordList({
@@ -13,11 +14,12 @@ export function RecordList({
   showAdminActions?: boolean;
 }) {
   const { posts, isLoading, removePost } = usePosts();
+  const { t } = useI18n();
   const [editingRecord, setEditingRecord] = useState<Post | null>(null);
   const [viewingRecord, setViewingRecord] = useState<Post | null>(null);
 
   async function handleDelete(id: string) {
-    const confirmed = window.confirm("確定刪除此紀錄？此操作無法復原。");
+    const confirmed = window.confirm(t.records.list.confirmDelete);
     if (!confirmed) return;
     await removePost(id);
     setViewingRecord((current) => (current?.id === id ? null : current));
@@ -45,7 +47,7 @@ export function RecordList({
     return (
       <div className="flex h-[320px] items-center justify-center rounded-[20px] bg-gray-90 p-6 text-center lg:max-w-md">
         <p className="text-sm leading-[1.6] text-gray-40">
-          暫無紀錄，管理員上傳後會顯示於此。
+          {t.records.list.empty}
         </p>
       </div>
     );

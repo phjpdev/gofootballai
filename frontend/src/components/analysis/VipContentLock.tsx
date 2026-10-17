@@ -1,5 +1,8 @@
+"use client";
+
 import { Lock, Sparkles } from "lucide-react";
 import { TELEGRAM_URL } from "@/components/icons/TelegramIcon";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 
 export type VipLockSize = "compact" | "default" | "feature";
@@ -24,6 +27,7 @@ function VipLockPanel({
   size: VipLockSize;
   className?: string;
 }) {
+  const { t } = useI18n();
   const isCompact = size === "compact";
 
   return (
@@ -67,7 +71,7 @@ function VipLockPanel({
       >
         <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-50/20 bg-orange-50/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-orange-50">
           <Sparkles className="size-3" strokeWidth={2.25} />
-          VIP 會員專屬
+          {t.matchDetail.vipLock.badge}
         </span>
         <p
           className={cn(
@@ -75,7 +79,7 @@ function VipLockPanel({
             isCompact ? "text-sm leading-tight" : "text-base",
           )}
         >
-          解鎖完整 AI 預測
+          {t.matchDetail.vipLock.title}
         </p>
         <p
           className={cn(
@@ -83,16 +87,16 @@ function VipLockPanel({
             isCompact ? "text-[11px]" : "text-xs",
           )}
         >
-          請聯絡
+          {t.matchDetail.vipLock.contactBefore}
           <a
             href={TELEGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-orange-50 underline decoration-orange-50/40 underline-offset-2 hover:text-orange-30"
           >
-            管理員
+            {t.matchDetail.vipLock.contactLink}
           </a>
-          升級 VIP，以查看完整 AI 預測及覆盤內容
+          {t.matchDetail.vipLock.contactAfter}
         </p>
       </div>
     </div>

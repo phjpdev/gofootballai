@@ -11,7 +11,9 @@ import {
   type ManagedUser,
 } from "@/lib/users-api";
 import type { UserRole } from "@/lib/auth-api";
-import { formatRole } from "@/lib/i18n/zh-hk";
+import type { Locale } from "@/lib/i18n/config";
+import { formatDate } from "@/lib/i18n/format";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 import {
   formatVipExpiryDate,
   isActiveVip,
@@ -35,10 +37,10 @@ const EMPTY_FORM: UserFormState = {
   vipExpiresAt: "",
 };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("zh-HK", {
+function formatJoinDate(iso: string, locale: Locale): string {
+  return formatDate(iso, locale, {
     year: "numeric",
-    month: "long",
+    month: locale === "en" ? "short" : "long",
     day: "numeric",
   });
 }
@@ -61,11 +63,12 @@ function userToForm(user: ManagedUser): UserFormState {
 }
 
 function UserRoleBadges({ user }: { user: ManagedUser }) {
+  const { locale, t } = useI18n();
   const vipActive = isActiveVip(user.vipExpiresAt);
 
   return (
     <div className="mt-1 flex flex-wrap items-center gap-1.5">
-      <span className="text-xs text-gray-40">{formatRole(user.role)}</span>
+      <span className="text-xs text-gray-40">{t.common.roles[user.role]}</span>
       {user.vipExpiresAt && (
         <span
           className={cn(
@@ -75,12 +78,14 @@ function UserRoleBadges({ user }: { user: ManagedUser }) {
               : "bg-gray-80 text-gray-40",
           )}
         >
-          {vipActive ? "VIP" : "VIP 已過期"}
+          {vipActive ? t.admin.users.vip : t.admin.users.vipExpired}
         </span>
       )}
       {user.vipExpiresAt && (
         <span className="text-[10px] text-gray-40">
-          到期 {formatVipExpiryDate(user.vipExpiresAt)}
+          {t.admin.users.expiresOn(
+            formatVipExpiryDate(user.vipExpiresAt, locale),
+          )}
         </span>
       )}
     </div>
@@ -104,6 +109,8 @@ function UserFormModal({
   onClose: () => void;
   onSubmit: (input: UserFormState) => Promise<void>;
 }) {
+  const { t } = useI18n();
+  const copy = t.admin.form;
   const [form, setForm] = useState(initial);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -127,11 +134,11 @@ function UserFormModal({
     e.preventDefault();
     if (!form.username.trim()) return;
     if (requirePassword && !form.password.trim()) {
-      setError("請輸入密碼");
+      setError(copy.passwordRequired);
       return;
     }
     if (form.role === "member" && form.isVip && !form.vipExpiresAt) {
-      setError("請選擇 VIP 到期日");
+      setError(copy.vipExpiryRequired);
       return;
     }
 
@@ -141,7 +148,7 @@ function UserFormModal({
       await onSubmit(form);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "儲存用戶失敗");
+      setError(err instanceof Error ? err.message : copy.saveFailed);
     } finally {
       setSubmitting(false);
     }
@@ -153,7 +160,7 @@ function UserFormModal({
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
       <button
         type="button"
-        aria-label="關閉"
+        aria-label={t.common.close}
         className="absolute inset-0 bg-black/70"
         onClick={onClose}
       />
@@ -175,7 +182,7 @@ function UserFormModal({
         >
           <input
             type="text"
-            placeholder="帳戶名稱"
+            placeholder={copy.usernamePlaceholder}
             value={form.username}
             onChange={(e) => setForm((prev) => ({ ...prev, username: e.target.value }))}
             required
@@ -184,7 +191,11 @@ function UserFormModal({
 
           <input
             type="password"
-            placeholder={requirePassword ? "密碼" : "新密碼（選填）"}
+            placeholder={
+              requirePassword
+                ? copy.passwordPlaceholder
+                : copy.newPasswordPlaceholder
+            }
             value={form.password}
             onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
             required={requirePassword}
@@ -210,7 +221,7 @@ function UserFormModal({
                     : "bg-gray-80 text-gray-40",
                 )}
               >
-                {formatRole(role)}
+                {t.common.roles[role]}
               </button>
             ))}
           </div>
@@ -218,7 +229,9 @@ function UserFormModal({
           {form.role === "member" && (
             <div className="flex flex-col gap-3 rounded-[14px] bg-gray-80 p-4">
               <label className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium text-white">VIP 會員</span>
+                <span className="text-sm font-medium text-white">
+                  {copy.vipMember}
+                </span>
                 <button
                   type="button"
                   role="switch"
@@ -245,7 +258,9 @@ function UserFormModal({
 
               {form.isVip && (
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-medium text-gray-30">VIP 到期日</span>
+                  <span className="text-xs font-medium text-gray-30">
+                    {copy.vipExpiry}
+                  </span>
                   <input
                     type="date"
                     value={form.vipExpiresAt}
@@ -280,6 +295,8 @@ function UserFormModal({
 
 export function UserManagement() {
   const { token, user: currentUser } = useAuth();
+  const { locale, t } = useI18n();
+  const copy = t.admin.users;
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -292,10 +309,10 @@ export function UserManagement() {
     return users.filter(
       (item) =>
         item.username.toLowerCase().includes(query) ||
-        formatRole(item.role).includes(query) ||
+        t.common.roles[item.role].toLowerCase().includes(query) ||
         item.role.toLowerCase().includes(query),
     );
-  }, [users, search]);
+  }, [users, search, t]);
 
   const loadUsers = useCallback(async () => {
     if (!token) return;
@@ -316,7 +333,7 @@ export function UserManagement() {
 
   async function handleDelete(id: string) {
     if (!token) return;
-    const confirmed = window.confirm("確定刪除此用戶？此操作無法復原。");
+    const confirmed = window.confirm(copy.confirmDelete);
     if (!confirmed) return;
     await deleteUser(token, id);
     setUsers((prev) => prev.filter((item) => item.id !== id));
@@ -325,14 +342,14 @@ export function UserManagement() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-white">管理用戶</h1>
+        <h1 className="text-xl font-bold text-white">{copy.title}</h1>
         <button
           type="button"
           onClick={() => setCreateOpen(true)}
           className="flex items-center gap-2 rounded-[14px] bg-orange-50 px-4 py-2 text-sm font-semibold text-white"
         >
           <Plus className="size-4" />
-          新增用戶
+          {copy.add}
         </button>
       </div>
 
@@ -340,7 +357,7 @@ export function UserManagement() {
         <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-gray-40" />
         <input
           type="search"
-          placeholder="搜尋帳戶名稱或角色..."
+          placeholder={copy.searchPlaceholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-[14px] bg-gray-90 py-2.5 pl-11 pr-4 text-base text-white placeholder:text-gray-40 outline-none focus:ring-2 focus:ring-orange-50/40 lg:text-sm"
@@ -351,19 +368,19 @@ export function UserManagement() {
         <div className="h-40 animate-pulse rounded-[24px] bg-gray-90" />
       ) : users.length === 0 ? (
         <div className="rounded-[24px] bg-gray-90 p-6 text-center text-sm text-gray-40">
-          暫無用戶。
+          {copy.empty}
         </div>
       ) : filteredUsers.length === 0 ? (
         <div className="rounded-[24px] bg-gray-90 p-6 text-center text-sm text-gray-40">
-          找不到符合「{search.trim()}」的用戶。
+          {copy.noMatch(search.trim())}
         </div>
       ) : (
         <div className="overflow-hidden rounded-[24px] bg-gray-90">
           <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_auto] gap-4 border-b border-gray-80 px-5 py-3 text-xs font-bold tracking-wide text-gray-40 lg:grid">
-            <span>帳戶名稱</span>
-            <span>角色</span>
-            <span>加入日期</span>
-            <span className="text-right">操作</span>
+            <span>{copy.columns.username}</span>
+            <span>{copy.columns.role}</span>
+            <span>{copy.columns.joined}</span>
+            <span className="text-right">{copy.columns.actions}</span>
           </div>
 
           <div className="flex flex-col">
@@ -380,39 +397,46 @@ export function UserManagement() {
                       </p>
                       {isActiveVip(item.vipExpiresAt) && (
                         <span className="shrink-0 rounded-md bg-orange-50/20 px-1.5 py-0.5 text-[10px] font-bold text-orange-50">
-                          VIP
+                          {copy.vip}
                         </span>
                       )}
                       {currentUser?.id === item.id && (
                         <span className="shrink-0 text-[10px] font-medium text-orange-50">
-                          你
+                          {copy.you}
                         </span>
                       )}
                     </div>
                     <div className="lg:hidden">
                       <UserRoleBadges user={item} />
                       <p className="mt-0.5 text-xs text-gray-40">
-                        加入 {formatDate(item.createdAt)}
+                        {copy.joinedOn(formatJoinDate(item.createdAt, locale))}
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="hidden min-w-0 lg:block">
-                  <p className="text-sm text-gray-20">{formatRole(item.role)}</p>
+                  <p className="text-sm text-gray-20">
+                    {t.common.roles[item.role]}
+                  </p>
                   {item.vipExpiresAt && (
                     <p className="mt-0.5 text-xs text-gray-40">
-                      {isActiveVip(item.vipExpiresAt) ? "VIP" : "VIP 已過期"} · 到期{" "}
-                      {formatVipExpiryDate(item.vipExpiresAt)}
+                      {isActiveVip(item.vipExpiresAt)
+                        ? copy.vip
+                        : copy.vipExpired}{" "}
+                      ·{" "}
+                      {copy.expiresOn(
+                        formatVipExpiryDate(item.vipExpiresAt, locale),
+                      )}
                     </p>
                   )}
                 </div>
                 <p className="hidden text-sm text-gray-40 lg:block">
-                  {formatDate(item.createdAt)}
+                  {formatJoinDate(item.createdAt, locale)}
                 </p>
                 <div className="flex shrink-0 gap-1.5 lg:justify-end">
                   <button
                     type="button"
-                    aria-label={`編輯 ${item.username}`}
+                    aria-label={copy.editUser(item.username)}
                     onClick={() => setEditingUser(item)}
                     className="flex size-8 items-center justify-center rounded-full bg-orange-50 text-white sm:size-9"
                   >
@@ -420,7 +444,7 @@ export function UserManagement() {
                   </button>
                   <button
                     type="button"
-                    aria-label={`刪除 ${item.username}`}
+                    aria-label={copy.deleteUser(item.username)}
                     onClick={() => void handleDelete(item.id)}
                     disabled={currentUser?.id === item.id}
                     className="flex size-8 items-center justify-center rounded-full bg-orange-50 text-white disabled:opacity-40 sm:size-9"
@@ -436,8 +460,8 @@ export function UserManagement() {
 
       <UserFormModal
         open={createOpen}
-        title="新增用戶"
-        submitLabel="建立用戶"
+        title={t.admin.form.createTitle}
+        submitLabel={t.admin.form.createSubmit}
         initial={EMPTY_FORM}
         requirePassword
         onClose={() => setCreateOpen(false)}
@@ -455,8 +479,8 @@ export function UserManagement() {
 
       <UserFormModal
         open={!!editingUser}
-        title="編輯用戶"
-        submitLabel="儲存變更"
+        title={t.admin.form.editTitle}
+        submitLabel={t.common.saveChanges}
         initial={editingUser ? userToForm(editingUser) : EMPTY_FORM}
         requirePassword={false}
         onClose={() => setEditingUser(null)}

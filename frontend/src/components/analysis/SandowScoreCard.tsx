@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { figmaAsset } from "@/lib/figma-assets";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 const CHEVRON = figmaAsset("a86a39395c1147b5e058f0c0f73491f1aac0eecb");
 
@@ -11,6 +12,7 @@ type SandowScoreCardProps = {
 };
 
 export function SandowScoreCard({ score = 61, animate = true }: SandowScoreCardProps) {
+  const { t } = useI18n();
   const [displayScore, setDisplayScore] = useState(animate ? 0 : score);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export function SandowScoreCard({ score = 61, animate = true }: SandowScoreCardP
 
       <div className="flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
         <p className="w-full text-base font-bold leading-[22px] tracking-[-0.112px] text-white lg:text-xl lg:leading-7">
-          AI 量化評分
+          {t.matchDetail.score.title}
         </p>
         <div className="flex w-full flex-wrap items-center gap-2 lg:gap-3">
           <div className="flex items-center gap-1">
@@ -65,7 +67,7 @@ export function SandowScoreCard({ score = 61, animate = true }: SandowScoreCardP
               </div>
             </div>
             <p className="text-sm font-normal leading-[1.6] text-white whitespace-nowrap lg:text-base">
-              綜合實力
+              {t.matchDetail.score.overall}
             </p>
           </div>
           <div className="relative size-1.5 shrink-0">
@@ -83,7 +85,7 @@ export function SandowScoreCard({ score = 61, animate = true }: SandowScoreCardP
               </div>
             </div>
             <p className="text-sm font-normal leading-[1.6] text-white whitespace-nowrap lg:text-base">
-              十四代演算法
+              {t.matchDetail.score.algorithm}
             </p>
           </div>
         </div>

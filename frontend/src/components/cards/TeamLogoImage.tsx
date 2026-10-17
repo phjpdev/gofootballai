@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { TeamInitialBadge } from "@/components/cards/TeamInitialBadge";
 import { resolveEnglishTeamName } from "@/lib/hkjc/team-names";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
+import { localizedTeamName } from "@/lib/i18n/localized";
 import { fetchTeamLogo } from "@/lib/team-logos/client-cache";
 
 type TeamLogoImageProps = {
@@ -28,9 +30,11 @@ export function TeamLogoImage({
   lookupName,
   fit = "default",
 }: TeamLogoImageProps) {
+  const { locale } = useI18n();
   const [logoUrl, setLogoUrl] = useState("");
   const [failed, setFailed] = useState(false);
   const candidates = buildLookupCandidates(name, lookupName);
+  const displayName = localizedTeamName(locale, name, lookupName);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +78,13 @@ export function TeamLogoImage({
   };
 
   if (!logoUrl || failed) {
-    return <TeamInitialBadge name={name} compact={fit === "triangle"} />;
+    return (
+      <TeamInitialBadge
+        name={name}
+        label={displayName}
+        compact={fit === "triangle"}
+      />
+    );
   }
 
   return (
@@ -82,7 +92,7 @@ export function TeamLogoImage({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={logoUrl}
-        alt={name}
+        alt={displayName}
         className={
           fit === "triangle"
             ? "absolute inset-0 m-auto max-h-full max-w-full object-contain"

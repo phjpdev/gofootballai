@@ -1,6 +1,11 @@
 import { AuthForm } from "@/components/member/AuthForm";
 import { MemberFaqSection } from "@/components/member/MemberFaqSection";
-import { QA_ITEMS, POLICY_SECTIONS, BETTING_DISCLAIMER } from "@/lib/data/member";
+import {
+  getBettingDisclaimer,
+  getPolicySections,
+  getQaItems,
+} from "@/lib/data/member";
+import { getServerI18n } from "@/lib/i18n/server";
 
 type MemberPageProps = {
   searchParams: Promise<{ redirect?: string }>;
@@ -8,6 +13,7 @@ type MemberPageProps = {
 
 export default async function MemberPage({ searchParams }: MemberPageProps) {
   const { redirect } = await searchParams;
+  const { locale, t } = await getServerI18n();
   const redirectTo =
     redirect && redirect.startsWith("/") && !redirect.startsWith("//")
       ? redirect
@@ -21,13 +27,13 @@ export default async function MemberPage({ searchParams }: MemberPageProps) {
         redirectTo={redirectTo}
       />
 
-      <MemberFaqSection items={QA_ITEMS} />
+      <MemberFaqSection items={getQaItems(locale)} />
 
       <section className="flex flex-col gap-3 scroll-mt-24">
         <h2 id="terms" className="text-base font-bold tracking-[-0.048px] text-white">
-          政策條款
+          {t.member.policies.title}
         </h2>
-        {POLICY_SECTIONS.map((section) => (
+        {getPolicySections(locale).map((section) => (
           <div
             key={section.id}
             id={section.id}
@@ -41,7 +47,7 @@ export default async function MemberPage({ searchParams }: MemberPageProps) {
         ))}
         <div className="rounded-[24px] border border-gray-80 bg-gray-90 p-4">
           <p className="whitespace-pre-line text-sm leading-[1.6] tracking-[-0.028px] text-gray-20">
-            {BETTING_DISCLAIMER}
+            {getBettingDisclaimer(locale)}
           </p>
         </div>
       </section>

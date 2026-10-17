@@ -2,6 +2,8 @@
 
 import { TabGroup } from "@/components/ui/TabGroup";
 import { figmaAsset } from "@/lib/figma-assets";
+import { formatNumber } from "@/lib/i18n/format";
+import { useI18n } from "@/lib/i18n/LocaleProvider";
 
 const GRID_LINE_TOP = figmaAsset("69924f3849c5c8526ac00831c57ba0941f64a0c9");
 const GRID_LINE = figmaAsset("ebe324ca7d3b816a4e52b79cbfcc80a40a655666");
@@ -36,6 +38,7 @@ type StepsStatsChartProps = {
 export function StepsStatsChart({
   scoreTrend = [400, 450, 520, 580, 540, 610, 650],
 }: StepsStatsChartProps) {
+  const { locale, t } = useI18n();
   const total = scoreTrend.reduce((sum, value) => sum + value, 0);
   const latest = scoreTrend[scoreTrend.length - 1] ?? 0;
 
@@ -43,13 +46,13 @@ export function StepsStatsChart({
     <section className="flex w-full flex-col gap-2">
       <div className="flex h-6 w-full items-center justify-between">
         <p className="text-base font-bold leading-none tracking-[-0.048px] text-white">
-          比分走勢
+          {t.matchDetail.charts.scoreTrend}
         </p>
         <button
           type="button"
           className="text-sm font-medium leading-none tracking-[-0.028px] text-[#f97316]"
         >
-          查看全部
+          {t.common.seeAll}
         </button>
       </div>
 
@@ -175,10 +178,10 @@ export function StepsStatsChart({
           <div className="flex w-full items-center justify-between">
             <div className="flex items-end">
               <p className="text-[36px] font-bold leading-[44px] tracking-[-0.432px] text-white">
-                {total.toLocaleString()}
+                {formatNumber(total, locale)}
               </p>
               <p className="h-[27px] w-11 text-lg font-medium leading-none tracking-[-0.072px] text-[#9ea0a5]">
-                總計
+                {t.matchDetail.charts.total}
               </p>
             </div>
             <div className="flex items-start gap-6">
@@ -196,7 +199,7 @@ export function StepsStatsChart({
                   </div>
                 </div>
                 <p className="text-xs font-medium leading-none tracking-[-0.018px] text-white">
-                  本場
+                  {t.matchDetail.charts.thisMatch}
                 </p>
               </div>
               <div className="flex items-center gap-1">
@@ -213,7 +216,7 @@ export function StepsStatsChart({
                   </div>
                 </div>
                 <p className="text-xs font-medium leading-none tracking-[-0.018px] text-white">
-                  上場
+                  {t.matchDetail.charts.lastMatch}
                 </p>
               </div>
             </div>
