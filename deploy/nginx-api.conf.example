@@ -1,4 +1,4 @@
-# Example Nginx site config for api.gofootball.ai
+# Example Nginx site config for api.example.com
 # Copy to /etc/nginx/sites-available/ and symlink to sites-enabled.
 #
 # Required for video uploads (up to 100 MB in the app).
@@ -6,7 +6,7 @@
 
 server {
     listen 443 ssl http2;
-    server_name api.gofootball.ai;
+    server_name api.example.com;
 
     # ssl_certificate ...
     # ssl_certificate_key ...
@@ -20,7 +20,7 @@ server {
         etag off;
         if_modified_since off;
         add_header Accept-Ranges bytes always;
-        add_header Access-Control-Allow-Origin https://gofootball.ai always;
+        add_header Access-Control-Allow-Origin https://example.com always;
         add_header Access-Control-Expose-Headers "Content-Length, Content-Range, Accept-Ranges" always;
         add_header Cross-Origin-Resource-Policy cross-origin always;
         add_header Cache-Control "public, max-age=3600" always;
